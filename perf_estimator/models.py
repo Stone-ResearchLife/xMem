@@ -1,0 +1,57 @@
+import torchvision
+from enum import Enum
+from torchvision.models.mobilenetv3 import InvertedResidualConfig
+
+
+
+inverted_residual_setting_large = [
+    InvertedResidualConfig(input_channels=16, kernel=3, expanded_channels=16, out_channels=16, use_se=False, activation="RE", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=16, kernel=3, expanded_channels=64, out_channels=24, use_se=False, activation="RE", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=24, kernel=3, expanded_channels=72, out_channels=24, use_se=False, activation="RE", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=24, kernel=5, expanded_channels=72, out_channels=40, use_se=True, activation="RE", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=40, kernel=5, expanded_channels=120, out_channels=40, use_se=True, activation="RE", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=40, kernel=5, expanded_channels=120, out_channels=40, use_se=True, activation="RE", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=40, kernel=3, expanded_channels=240, out_channels=80, use_se=False, activation="HS", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=80, kernel=3, expanded_channels=200, out_channels=80, use_se=False, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=80, kernel=3, expanded_channels=184, out_channels=80, use_se=False, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=80, kernel=3, expanded_channels=184, out_channels=80, use_se=False, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=80, kernel=3, expanded_channels=480, out_channels=112, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=112, kernel=3, expanded_channels=672, out_channels=112, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=112, kernel=5, expanded_channels=672, out_channels=160, use_se=True, activation="HS", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=160, kernel=5, expanded_channels=960, out_channels=160, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=160, kernel=5, expanded_channels=960, out_channels=160, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+]
+
+inverted_residual_setting_small = [
+    InvertedResidualConfig(input_channels=16, kernel=3, expanded_channels=16, out_channels=16, use_se=True, activation="RE", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=16, kernel=3, expanded_channels=72, out_channels=24, use_se=False, activation="RE", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=24, kernel=3, expanded_channels=88, out_channels=24, use_se=False, activation="RE", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=24, kernel=5, expanded_channels=96, out_channels=40, use_se=True, activation="HS", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=40, kernel=5, expanded_channels=240, out_channels=40, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=40, kernel=5, expanded_channels=240, out_channels=40, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=40, kernel=5, expanded_channels=120, out_channels=48, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=48, kernel=5, expanded_channels=144, out_channels=48, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=48, kernel=5, expanded_channels=288, out_channels=96, use_se=True, activation="HS", stride=2, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=96, kernel=5, expanded_channels=576, out_channels=96, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+    InvertedResidualConfig(input_channels=96, kernel=5, expanded_channels=576, out_channels=96, use_se=True, activation="HS", stride=1, dilation=1, width_mult=1.0),
+]
+
+
+
+class AllModels(Enum):
+    VGG11 = torchvision.models.vgg11(weights=None)
+    VGG16 = torchvision.models.vgg16(weights=None)
+    VGG19 = torchvision.models.vgg19(weights=None)
+    ResNet50 = torchvision.models.resnet50(weights=None)
+    ResNet101 = torchvision.models.resnet101(weights=None)
+    ResNet152 = torchvision.models.resnet152(weights=None)
+    MobileNetV2 = torchvision.models.mobilenet_v2(weights=None)
+    MobeNetV3Small = torchvision.models.MobileNetV3(inverted_residual_setting_small, last_channel=1024, num_classes=10)
+    MobeNetV3Large = torchvision.models.MobileNetV3(inverted_residual_setting_large, last_channel=1280, num_classes=10)
+    MnasNet = torchvision.models.MNASNet(alpha=1.0, num_classes=10)
+    ConvNeXtTiny = torchvision.models.convnext_tiny(weights=None)
+    ConvNeXtBase = torchvision.models.convnext_base(weights=None)
+    RegNetX400MF = torchvision.models.regnet_x_400mf(weights=None)
+    RegNetX32GF = torchvision.models.regnet_x_32gf(weights=None)
+    RegNetY400MF = torchvision.models.regnet_y_400mf(weights=None)
+    RegNetY32GF = torchvision.models.regnet_y_32gf(weights=None)
