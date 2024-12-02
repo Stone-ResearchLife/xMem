@@ -6,6 +6,7 @@ from .allocator import AllocatorSim, CachingAllocator
 from .config import Config
 
 
+
 class Estimator:
     def __init__(
             self,
@@ -15,44 +16,26 @@ class Estimator:
             max_gpu_memory_in_gb: int = 8,
             config: Optional[Config] = None
     ):
-        self.model = model
+        # self.model = model
         self.dataloader = dataloader
         self.profiler = ProfilerDataProcessing(profiler_file)
         self.allocator_sim = AllocatorSim(max_allocated_memory_gb=max_gpu_memory_in_gb, config=config)
+        self._model_memory: Optional[List[MemoryBlock]] = None
 
-    def model_memory(self) -> List[MemoryBlock]:
-        sorted_items = []
-        for module_name, module in self.model.named_modules():
-            if module_name == '':
-                prefix = ''
-            else:
-                prefix = module_name + '.'
+    def model_memory(self, iteration: int, reset: bool = False) -> List[MemoryBlock]:
+        if reset or self._model_memory is None:
+            layers_memory = self.get_an_iteration_memory(iteration, zero_grad=False)
+            layers_memory = copy.deepcopy(layers_memory)
+            layers_memory.reverse()
+            model_blocks = []
+            for index, memory in enumerate(layers_memory):
+                if memory.is_backward and memory.free_time is None:
+                    model_blocks_start_instant = memory._start
+                    model_blocks_start_instant._value['ts'] = index
+                    model_blocks.append(memory)
+            self._model_memory = model_blocks
+        return self._model_memory
 
-            for name, param in module.named_parameters(recurse=False):
-                full_name = prefix + name
-                sorted_items.append((full_name, param))
-
-            for name, buffer in module.named_buffers(recurse=False):
-                full_name = prefix + name
-                sorted_items.append((full_name, buffer))
-
-        mem_blocks = []
-        for index, (name, tensor) in enumerate(sorted_items):
-            # make a fake CPU_INSTANT event
-            cpu_instant_data = {
-                "ph": "i", "cat": "cpu_instant_event", "s": "t", "name": "[memory]",
-                "pid": 0, "tid": 0,
-                "ts": index,
-                "args": {
-                    "Bytes": tensor.nbytes, "Addr": 0x0,
-                    "Device Id": -1, "Device Type": 0, "Ev Idx":0
-                }
-            }
-            cpu_instant_node = CpuInstantNode(cpu_instant_data)
-            memory_block = MemoryBlock(cpu_instant_node)
-            memory_block._free_time = None
-            mem_blocks.append(memory_block)
-        return mem_blocks
 
     def data_memory(self) -> List[MemoryBlock]:
         data = next(iter(self.dataloader))
@@ -83,7 +66,7 @@ class Estimator:
     def loss_memory(self, iteration=1, persist_required: bool = True) -> List[MemoryBlock]:
         iteration_data = self.profiler.get_iteration(iteration)
         ops_memory = iteration_data.optimiser_memory()
-        model_mem = [mem.bytes for mem in self.model_memory()]
+        model_mem = [mem.bytes for mem in self.model_memory(iteration=iteration, reset=False)]
         filter_ops_memory = []
         for mem in ops_memory:
             if mem.bytes in model_mem:
@@ -121,15 +104,27 @@ class Estimator:
         if not zero_grad:
             for mem in layers:
                 for forward in mem.get("forward_memory", []):
+                    forward._comments.append(mem["name"])
+                    forward._forward = True
+                    forward._backward = False
                     memory_activity.append(forward)
                 for backward in mem.get("backward_memory", []):
+                    backward._comments.append(mem["name"])
+                    backward._forward = False
+                    backward._backward = True
                     memory_activity.append(backward)
         else:
             next_iteration = self.profiler.get_iteration(iteration_index + 1)
             for mem in layers:
                 for forward in mem.get("forward_memory", []):
+                    forward._comments.append(mem["name"])
+                    forward._forward = True
+                    forward._backward = False
                     memory_activity.append(forward)
                 for backward in mem.get("backward_memory", []):
+                    backward._comments.append(mem["name"])
+                    backward._forward = False
+                    backward._backward = True
                     if backward.free_time is None:
                         end_mem = self.create_memory_block((-1 * backward.bytes))
                         end_mem_cpu_instant = end_mem._start
@@ -156,7 +151,7 @@ class Estimator:
                 _memory._memory = target_iteration_memory
 
         # load memory blocks of model's parameters
-        memory_activity = self.model_memory()
+        memory_activity = self.model_memory(target_iteration, reset=True)
         for iteration in range(1, target_iteration + 1):
             if iteration == target_iteration:
                 dataset_need_released = False
@@ -164,6 +159,7 @@ class Estimator:
             else:
                 dataset_need_released = True
                 zero_grad = True
+
             if iteration == 1:
                 optimiser_required = True
             else:
@@ -188,6 +184,13 @@ class Estimator:
         ## supplement the memory section with the memory usage of forward and backward
         peak_seg = max(sim_result._trace.max_segment_changes)
         peak_tensor = max(sim_result._trace.max_usage_changes)
+        # estimated_result = {
+        #     "memory": {
+        #         "tensor": peak_tensor,
+        #         "segment": peak_seg,
+        #         "fast_est": None
+        #     }
+        # }
         estimated_result = {
             "OOM": sim_result.oom,
             "Max GPU Memory": sim_result.allowed_memory_maximum,

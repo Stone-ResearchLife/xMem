@@ -10,6 +10,7 @@ class MemoryBlock(AbstractMemoryBlock):
         self._end: Optional[CpuInstantNode] = None
         self._forward = False
         self._backward = False
+        self._comments = []
 
     @property
     def address(self) -> str:
@@ -48,6 +49,10 @@ class MemoryBlock(AbstractMemoryBlock):
         pass
 
     @property
+    def comments(self) -> List[str]:
+        return list(set(self._comments))
+
+    @property
     def duration(self) -> Optional[int]:
         return (self.free_time - self.alloc_time) if self.free_time is not None else None
 
@@ -58,7 +63,7 @@ class MemoryBlock(AbstractMemoryBlock):
             _mem_type = 'backward'
         else:
             _mem_type = 'other'
-        return f"Memory({_mem_type}|{self.address}|{'free' if self.is_freed else 'persis'}): Bytes:{self.bytes}, Start:{self.alloc_time}, End:{self.free_time}"
+        return f"Memory({_mem_type}|{self.address}|{'free' if self.is_freed else 'persis'}): Bytes:{self.bytes}, Start:{self.alloc_time}, End:{self.free_time}, Comments: {' '.join(self.comments)}"
 
     def set_forward(self):
         self._forward = True
