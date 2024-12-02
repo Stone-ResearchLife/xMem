@@ -39,7 +39,7 @@ class AllocatorSim:
         else:
             max_allocated_memory_gb = max_allocated_memory_gb * 1024**3
         self._allocator = CachingAllocator(allowed_memory_maximum=max_allocated_memory_gb)
-        self._config = config or default_setting()
+        self._config = config or default_setting
 
     def other_memory_sequence(self, data: List['MemoryBlock']):
         _time_base_blocks = {}
@@ -103,8 +103,7 @@ class AllocatorSim:
 
         _result = self._allocator
         _result._last_sequence_history = _sim_blocks
-        self._allocator = CachingAllocator()
-        self._allocator.allowed_memory_maximum = _result.allowed_memory_maximum
+        self._allocator = CachingAllocator(allowed_memory_maximum=_result.allowed_memory_maximum)
         return _result
 
 

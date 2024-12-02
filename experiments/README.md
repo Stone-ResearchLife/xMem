@@ -1,0 +1,89 @@
+# ⚖️ Experiments
+
+## 1️⃣ Dependencies
+Ensure all dependencies are installed, as shown in the [README](../README.md).
+
+
+## 2️⃣ Docker Pull a Base Image
+Pull the base image from Docker Hub. This image is used to build images for the experiments.
+Image Link: [here](https://hub.docker.com/layers/pytorch/pytorch/2.3.1-cuda12.1-cudnn8-devel/images/sha256-a22a1fca37f8361c8a1e859cd6eb6bd9d1fb384f9c0dcb2cfc691a178eb03d17?context=explore)
+```shell
+docker pull pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+```
+
+## 3️⃣ Build Runtime Image for Experiments
+
+⚠️ Ensure you set the right PYTHONPATH before running the experiments. The PYTHONPATH should be the root directory of the project.
+
+Execute a pre-configured Python script to build two images: 
+- one is the base image called `base-xmem-evaluation`
+- the other is the runtime image called `xmem-evaluation`.
+
+```shell
+python evaluate.py xMem build
+
+# Force mode to rebuild
+python evaluate.py xMem build --force
+```
+
+## 4️⃣ Check Runtime Image
+Check whether both image are built successfully
+```shell
+docker images
+```
+Shown as
+```text
+REPOSITORY                              TAG                           IMAGE ID       CREATED          SIZE
+xmem-evaluation                         latest                        598032aa0a09   6 minutes ago    18.4GB
+base-xmem-evaluation                    latest                        78fd57f2ba85   6 minutes ago    18.3GB
+```
+
+## 5️⃣ Run Experiments
+
+⚠️ Do not run any GPU-related tasks on the GPUs used during the experiment, as they will be occupied for specific purposes.
+
+⚠️ Two directories are created by any experiment:
+- `~/.cache/xMemExperiments` to store results
+- `~/pytorch_datasets` to store datasets used in the experiments.
+
+### Run ANOVA Experiment
+Run the below command to execute the ANOVA experiment, which may take 1-3 days depending on the performance of the machine.
+
+The parameter `-g` is used to set the GPU index. 
+If you have multiple GPUs, you can specify which one to use for running the experiment.Default is 0.
+
+```shell
+python evaluate.py xMem anova -g 0
+```
+
+### Run Monte Carlo Experiment
+Execute the Monte Carlo experiment using the command below. 
+This process may take days, depending on the total number of repetitions you want to run, 
+which can be passed as an argument to the script with `-t`.
+
+
+In our experiments, there are two GPUs involved, so we set `devices=[0,1]` under `monte_carlo` method in the `evaluate.py`.
+Otherwise, you can set `devices=[0]` if you only have one GPU.
+```shell
+python evaluate.py xMem monte_carlo -t 1000
+```
+
+## 6️⃣ Plot Results
+Please follow the instructions in the [README](../plot/README.md) to plot the results.
+
+### Location of the Results
+By default, all results are stored in the `~/.cache/xMemExperiments` directory.
+The directory is created during the run automatically.
+
+
+## 7️⃣ Clean Up (Optional)
+### ⚠️ The command will remove all stopped containers and all dangling images
+### ⚠️ Please do not execute this command if you have concerns about the code, as it involves a `delete` operation.
+```shell
+python evaluate.py xMem clean
+```
+
+
+# 📚 Resources
+- [SchedTune Source Code](https://github.com/hadeelalbahar/SchedTune)
+- [LLMem Source COde](https://github.com/taehokim20/LLMem)

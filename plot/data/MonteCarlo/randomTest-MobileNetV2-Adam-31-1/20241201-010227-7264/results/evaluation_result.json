@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 6.426838159561157,
+        "memory": 488636416,
+        "oom": false,
+        "ground": 838860800,
+        "error": 0.4175,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.013043478260869565
+        }
+    },
+    "dnnmem": {
+        "runtime": 9.869211196899414,
+        "memory": 322961408,
+        "oom": false,
+        "ground": 838860800,
+        "error": 0.615,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.26073598861694336,
+        "memory": 1359227125.76,
+        "oom": false,
+        "ground": 838860800,
+        "error": 0.6203249990940094,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 1.7463135577864566
+        }
+    },
+    "llmem": {
+        "runtime": 2.712475538253784,
+        "memory": 565182464.0,
+        "oom": false,
+        "ground": 838860800,
+        "error": 0.32625,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.1419491525423729
+        }
+    },
+    "train info": {
+        "model": "MobileNetV2",
+        "batch_size": 31,
+        "target_iteration": 2,
+        "optimiser": "Adam",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241201-010227-7264",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

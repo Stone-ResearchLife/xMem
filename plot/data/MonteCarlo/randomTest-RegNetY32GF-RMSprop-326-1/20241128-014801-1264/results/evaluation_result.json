@@ -1,0 +1,67 @@
+{
+    "solution": {
+        "runtime": 19.50595259666443,
+        "memory": 8204058624,
+        "oom": true,
+        "ground": 8206155776.0,
+        "error": 0.0002555583950932788,
+        "real_oom": true,
+        "correct_estimation": true,
+        "2nd verification": {}
+    },
+    "dnnmem": {
+        "runtime": 211.48990631103516,
+        "memory": 8128561152,
+        "oom": true,
+        "ground": 8206155776.0,
+        "error": 0.009455660618451316,
+        "real_oom": true,
+        "correct_estimation": true,
+        "2nd verification": {}
+    },
+    "schedtune": {
+        "runtime": 5.40502142906189,
+        "memory": 12945949982.72,
+        "oom": true,
+        "ground": 8206155776.0,
+        "error": 0.5775900842465314,
+        "real_oom": true,
+        "correct_estimation": true,
+        "2nd verification": {}
+    },
+    "llmem": {
+        "runtime": 11.47146201133728,
+        "memory": 1877999616.0,
+        "oom": false,
+        "ground": 8206155776.0,
+        "error": 0.7711474571939688,
+        "real_oom": true,
+        "correct_estimation": false,
+        "2nd verification": {}
+    },
+    "train info": {
+        "model": "RegNetY32GF",
+        "batch_size": 326,
+        "target_iteration": 2,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241128-014801-1264",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

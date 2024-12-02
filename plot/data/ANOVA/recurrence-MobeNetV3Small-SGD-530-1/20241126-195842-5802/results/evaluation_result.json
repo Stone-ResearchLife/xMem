@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 7.543649911880493,
+        "memory": 1621098496,
+        "oom": false,
+        "ground": 1956642816,
+        "error": 0.1714898177920686,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.005201560468140442
+        }
+    },
+    "dnnmem": {
+        "runtime": 11.145344257354736,
+        "memory": 1365245952,
+        "oom": false,
+        "ground": 1956642816,
+        "error": 0.3022508038585209,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.4306068420410156,
+        "memory": 2135173365.76,
+        "oom": false,
+        "ground": 1956642816,
+        "error": 0.0912433007905721,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.08890909052150135
+        }
+    },
+    "llmem": {
+        "runtime": 4.033355474472046,
+        "memory": 810549248.0,
+        "oom": false,
+        "ground": 1956642816,
+        "error": 0.5857449088960343,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 530,
+        "target_iteration": 2,
+        "optimiser": "SGD",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241126-195842-5802",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

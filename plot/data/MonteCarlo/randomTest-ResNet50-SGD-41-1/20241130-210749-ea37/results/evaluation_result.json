@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 3.8995933532714844,
+        "memory": 792723456,
+        "oom": false,
+        "ground": 1178599424,
+        "error": 0.3274021352313167,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "dnnmem": {
+        "runtime": 28.058255434036255,
+        "memory": 771751936,
+        "oom": false,
+        "ground": 1178599424,
+        "error": 0.34519572953736655,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.39626359939575195,
+        "memory": 1647019294.72,
+        "oom": false,
+        "ground": 1178599424,
+        "error": 0.39743772180903425,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.6889462358208113
+        }
+    },
+    "llmem": {
+        "runtime": 2.8954620361328125,
+        "memory": 678428672.0,
+        "oom": false,
+        "ground": 1178599424,
+        "error": 0.42437722419928825,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "ResNet50",
+        "batch_size": 41,
+        "target_iteration": 2,
+        "optimiser": "SGD",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241130-210749-ea37",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

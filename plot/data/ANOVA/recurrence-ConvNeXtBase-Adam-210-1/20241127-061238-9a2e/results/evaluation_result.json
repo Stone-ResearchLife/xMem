@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 24.647887468338013,
+        "memory": 7855931392,
+        "oom": false,
+        "ground": 8034189312,
+        "error": 0.02218741842860872,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "dnnmem": {
+        "runtime": 54.85460066795349,
+        "memory": 5045747712,
+        "oom": false,
+        "ground": 8034189312,
+        "error": 0.37196554424432265,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 1.541835069656372,
+        "memory": 5461550039.04,
+        "oom": false,
+        "ground": 8034189312,
+        "error": 0.32021143305118077,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "llmem": {
+        "runtime": 7.445484399795532,
+        "memory": 3289382912.0,
+        "oom": false,
+        "ground": 8034189312,
+        "error": 0.5905768728791438,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "ConvNeXtBase",
+        "batch_size": 210,
+        "target_iteration": 2,
+        "optimiser": "Adam",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241127-061238-9a2e",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 1.8218214511871338,
+        "memory": 5435817984,
+        "oom": false,
+        "ground": 5960105984,
+        "error": 0.08796622097114708,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.05066882853668423
+        }
+    },
+    "dnnmem": {
+        "runtime": 24.282092094421387,
+        "memory": 3812622336,
+        "oom": false,
+        "ground": 5960105984,
+        "error": 0.36030964109781843,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 1.434891939163208,
+        "memory": 8039945994.24,
+        "oom": false,
+        "ground": 5960105984,
+        "error": 0.3489602392278533,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.2991341917606096
+        }
+    },
+    "llmem": {
+        "runtime": 2.7928333282470703,
+        "memory": 3159359488.0,
+        "oom": false,
+        "ground": 5960105984,
+        "error": 0.4699155524278677,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "VGG16",
+        "batch_size": 220,
+        "target_iteration": 2,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241129-103156-61ff",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 11.112659692764282,
+        "memory": 4588568576,
+        "oom": false,
+        "ground": 5035261952,
+        "error": 0.08871303623490212,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "dnnmem": {
+        "runtime": 101.84212636947632,
+        "memory": 3814719488,
+        "oom": false,
+        "ground": 5035261952,
+        "error": 0.24239900041649312,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 1.068657398223877,
+        "memory": 5970686115.84,
+        "oom": false,
+        "ground": 5035261952,
+        "error": 0.18577467705100242,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.19573498513206922
+        }
+    },
+    "llmem": {
+        "runtime": 4.815946340560913,
+        "memory": 1267728384.0,
+        "oom": false,
+        "ground": 5035261952,
+        "error": 0.7482299042065806,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "RegNetX32GF",
+        "batch_size": 61,
+        "target_iteration": 2,
+        "optimiser": "Adam",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241201-035853-0a67",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

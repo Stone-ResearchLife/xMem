@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 7.681872367858887,
+        "memory": 5727322112,
+        "oom": false,
+        "ground": 6010437632,
+        "error": 0.0471039776692254,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0390570021111893
+        }
+    },
+    "dnnmem": {
+        "runtime": 14.112398386001587,
+        "memory": 4150263808,
+        "oom": false,
+        "ground": 6010437632,
+        "error": 0.30949057920446615,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.8989248275756836,
+        "memory": 4942295203.84,
+        "oom": false,
+        "ground": 6010437632,
+        "error": 0.1777145849269167,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "llmem": {
+        "runtime": 4.0666115283966064,
+        "memory": 1114636288.0,
+        "oom": false,
+        "ground": 6010437632,
+        "error": 0.8145498953244941,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "MobileNetV2",
+        "batch_size": 411,
+        "target_iteration": 2,
+        "optimiser": "SGD",
+        "device": 0,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 11.40625,
+        "used_gpu_memory": 0.2197265625
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241202-021440-14ad",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

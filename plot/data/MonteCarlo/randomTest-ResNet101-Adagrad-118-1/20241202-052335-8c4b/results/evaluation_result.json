@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 13.360551595687866,
+        "memory": 3250585600,
+        "oom": false,
+        "ground": 3556769792,
+        "error": 0.08608490566037735,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.010217113665389528
+        }
+    },
+    "dnnmem": {
+        "runtime": 96.74031472206116,
+        "memory": 3005218816,
+        "oom": false,
+        "ground": 3556769792,
+        "error": 0.15507075471698112,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.7814357280731201,
+        "memory": 4139778048.0,
+        "oom": false,
+        "ground": 3556769792,
+        "error": 0.16391509433962265,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.1652892561983471
+        }
+    },
+    "llmem": {
+        "runtime": 4.777102470397949,
+        "memory": 791674880.0,
+        "oom": false,
+        "ground": 3556769792,
+        "error": 0.7774174528301887,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 118,
+        "target_iteration": 2,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241202-052335-8c4b",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

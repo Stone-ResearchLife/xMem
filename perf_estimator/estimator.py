@@ -10,13 +10,11 @@ from .config import Config
 class Estimator:
     def __init__(
             self,
-            model: torch.nn.Module,
             dataloader: torch.utils.data.DataLoader,
             profiler_file: str,
             max_gpu_memory_in_gb: int = 8,
             config: Optional[Config] = None
     ):
-        # self.model = model
         self.dataloader = dataloader
         self.profiler = ProfilerDataProcessing(profiler_file)
         self.allocator_sim = AllocatorSim(max_allocated_memory_gb=max_gpu_memory_in_gb, config=config)
