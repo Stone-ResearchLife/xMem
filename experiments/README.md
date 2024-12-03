@@ -1,5 +1,21 @@
 # ⚖️ Experiments
 
+
+## ✅ Compatibility
+- ✅: checked
+- ❌: not work
+- ⚠️: Not Checked
+
+| **Hardware** | **Compatibility** |
+|:------------:|:-----------------:|
+|  NVIDIA GPU  |         ✅         |
+|  Intel CPU   |         ✅         |
+|   AMD CPU    |        ⚠️         |
+|   AMD CPU    |        ⚠️         |
+|     Mac      |         ❌         | 
+
+
+
 ## 1️⃣ Dependencies
 Ensure all dependencies are installed, as shown in the [README](../README.md).
 
@@ -82,6 +98,26 @@ The directory is created during the run automatically.
 ```shell
 python evaluate.py xMem clean
 ```
+
+# 🧩 Environment we used
+|    **Components**     |      **Version/SKU**      | **Comments** |
+|:---------------------:|:-------------------------:|:-----------:|
+|          CPU          |   Intel® Core™ i9-13900   |   24 cores  | 
+|     GPU (index:0)     | NVIDIA GeForce RTX 4070Ti | 12GB GDDR6X |
+|     GPU (index:1)     | NIVIDIA GeForce RTX 4060  |  8GB GDDR6  |
+|          RAM          |        128GB DDR4         |  5400MHz    |
+|          OS           |   Ubuntu 22.04.3 x86_64   |             |
+|     Docker (Host)     |          27.3.1           |             |
+|  CUDA Version (Host)  |           12.2            |             |
+| cuDNN Version (Host)  |           8.9.7           |             |
+| NVIDIA Driver Version |         555.42.06         |             |
+
+## Our Results
+You could create all figures in the paper by following the instructions in the [README](../plot/README.md).
+- ANOVA Result: `<root project>/plot/data/ANOVA`
+- Monte Carlo Result: `<root project>/plot/data/MonteCarlo`
+- Memory Change Result: `<root project>/plot/data/MemoryChange`
+- Simulation Assessment Result: `<root project>/plot/data/SimulationAssessment`
 
 
 # 📚 Resources
