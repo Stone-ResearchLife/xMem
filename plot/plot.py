@@ -8,6 +8,8 @@ from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
 
+from torch.distributed import group
+
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
 
@@ -695,9 +697,9 @@ class ExperimentPlot:
             font=self.font,
             legend=dict(
                 title=None,
-                orientation="h",
+                orientation="v",
                 yanchor="bottom",
-                y=0.95,
+                y=0.7,
                 xanchor="center",
                 x=0.5,
                 bgcolor="rgba(255,255,255,0.5)",  # Semi-transparent background
@@ -706,12 +708,117 @@ class ExperimentPlot:
                 font=self.legend_font
             ),
             xaxis=dict(title='Failed Estimation Probability (%)', titlefont=self.font, tickfont=dict(size=tickfont_size)),
-            yaxis=dict(title='Relative Error (%)', titlefont=self.font, tickfont=dict(size=tickfont_size), range=(0, 100)),
+            yaxis=dict(title='Median of Relative Errors (%)', titlefont=self.font, tickfont=dict(size=tickfont_size), range=(0, max(correctness_counts['Mean_Error']))),
             width=default_width,
             height=default_height,
             template=self._plotly_template,
             margin=dict(l=20, r=10, t=30, b=50),
         )
+        if view_mode is False:
+            # Show the plot
+            fig.write_image(
+                file=self.get_image_dir(title),
+                width=default_width,
+                height=default_height
+            )
+        return fig
+
+    def plot_probability_estimation_vs_runtime_scatter_diagram_model_base(
+            self,
+            title: str,
+            data_dir: Union[str, Path],
+            optimiser: Optional[str] = None,
+            group_by_list: list = ('model', 'tool'),
+            accurate_estimation_mode: bool = True,
+            image_size = (500, 500),
+            title_font_size = 35,
+            legend_font_size = 22,
+            tickfont_size = 25,
+            marker_size = 25,
+            view_mode: bool = False
+    ):
+        if view_mode:
+            image_size = (600, 600)
+            title_font_size = 20
+            legend_font_size = 12
+            tickfont_size = 20
+            quadrant_font_size = 20
+            marker_size = 12
+        self.font.update(dict(size=title_font_size))
+        self.legend_font.update(dict(size=legend_font_size))
+        df = self.data_processing(data_dir)
+        group_by_list = list(group_by_list)
+        if optimiser is not None:
+            df = df[df['optimiser'] == optimiser]
+        # Step 1: Create oom_counts with OOM counts and probability
+        result_field = "correct_estimation"
+        if accurate_estimation_mode:
+            result_field = "accurate_estimation"
+
+        # Step 1: Create oom_counts with OOM counts and probability
+        correctness_counts = df.groupby(group_by_list)[result_field].value_counts().unstack(fill_value=0).reset_index()
+        if True not in correctness_counts.columns:
+            correctness_counts[True] = 0
+        if False not in correctness_counts.columns:
+            correctness_counts[False] = 0
+
+        correctness_counts.columns = group_by_list + ['Correct_Estimation_False_Count', 'Correct_Estimation_True_Count']
+        correctness_counts['probability'] = (correctness_counts['Correct_Estimation_False_Count'] / (
+                correctness_counts['Correct_Estimation_False_Count'] + correctness_counts['Correct_Estimation_True_Count'])) * 100
+
+        # Step 2: Aggregate 'error' by mean
+        error_agg = df.groupby(group_by_list)['runtime'].mean().reset_index()
+
+        # Step 3: Merge the aggregated error data with oom_counts
+        correctness_counts = correctness_counts.merge(error_agg, on=group_by_list, how='left')
+        fig = px.scatter(
+            correctness_counts,
+            x='probability',  # Probability of successful estimation on X-axis
+            y='runtime',  # Relative error on Y-axis
+            labels={
+                'probability': 'Failed Estimation Probability  (%)',
+                'Mean_Error': 'Runtime (s)',
+                'name': 'Estimator'
+            },
+            color="tool",  # Differentiates points by 'name' using color
+            symbol='tool',  # Differentiates points by 'name' using marker symbols
+            hover_data=['Correct_Estimation_False_Count', 'Correct_Estimation_True_Count', 'runtime', 'model'],  # Additional info on hover
+            color_discrete_map=self._color_scheme
+        )
+
+        # Update all markers to have the same size
+        fig.update_traces(marker=dict(size=marker_size))  # Set a fixed size, e.g., 12
+
+        default_width = image_size[0]
+        default_height = image_size[1]
+
+        # Customize the layout for better aesthetics
+        fig.update_layout(
+            font=self.font,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+                bgcolor="rgba(255,255,255,0.5)",  # Semi-transparent background
+                bordercolor="Black",
+                borderwidth=2,
+                font=self.legend_font
+            ),
+            xaxis=dict(title='Failed Estimation Probability (%)', titlefont=self.font, tickfont=dict(size=tickfont_size)),
+            yaxis=dict(
+                title='Average Runtime (s)',
+                titlefont=self.font,
+                tickfont=dict(size=tickfont_size),
+                type="log"
+            ),
+            width=default_width,
+            height=default_height,
+            template=self._plotly_template,
+            margin=dict(l=30, r=10, t=30, b=30),
+        )
+
         if view_mode is False:
             # Show the plot
             fig.write_image(
@@ -837,6 +944,7 @@ class ExperimentPlot:
             font_size = 20,
             legend_font_size = 18,
             tickfont_size = 25,
+            overall: bool = False,
             view_mode: bool = False
 
     ):
@@ -845,7 +953,11 @@ class ExperimentPlot:
             font_size = 20
             legend_font_size = 15
             tickfont_size = 15
-        group_by = ("model", "tool")
+
+        if overall:
+            group_by = ["tool"]
+        else:
+            group_by = ("model", "tool")
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))
         df = self.data_processing(data_dir)
@@ -885,16 +997,28 @@ class ExperimentPlot:
         merged_memory = merged_memory.sort_values(by="save_memory_sum", ascending=False)
         model_order = sorted(df['model'].unique())
 
-        # Plot bar chart
-        fig = px.bar(
-            merged_memory,
-            x="model",
-            y="average",
-            color="tool",
-            barmode='group',
-            color_discrete_map=self._color_scheme,
-            category_orders={'model': model_order},
-        )
+        if overall:
+            # Plot bar chart
+            fig = px.bar(
+                merged_memory,
+                x="tool",
+                y="average",
+                color="tool",
+                barmode='group',
+                color_discrete_map=self._color_scheme,
+                category_orders={'model': model_order},
+            )
+        else:
+            # Plot bar chart
+            fig = px.bar(
+                merged_memory,
+                x="model",
+                y="average",
+                color="tool",
+                barmode='group',
+                color_discrete_map=self._color_scheme,
+                category_orders={'model': model_order},
+            )
 
         default_width = image_size[0]
         default_height = image_size[1]
@@ -909,15 +1033,16 @@ class ExperimentPlot:
             font=self.font,
             legend=dict(
                 title=None,
-                orientation="h",
+                orientation="v",
                 yanchor="bottom",
-                y=0.2,
+                y=0.05,
                 xanchor="center",
-                x=0.5,
+                x=0.27,
                 bgcolor="rgba(255,255,255,0.7)",  # Semi-transparent background
                 bordercolor="Black",
                 borderwidth=2,
                 font=self.legend_font,
+                itemsizing="trace"
             ),
             showlegend=True,
             template=self._plotly_template,
@@ -926,7 +1051,6 @@ class ExperimentPlot:
                 r=20,
                 t=20,
                 b=50,
-                pad=4
             ),
         )
         if view_mode is False:
@@ -965,6 +1089,10 @@ class ExperimentPlot:
         correctness_counts['probability'] = (correctness_counts['Correct_Estimation_False_Count'] / (
                 correctness_counts['Correct_Estimation_False_Count'] + correctness_counts[
             'Correct_Estimation_True_Count'])) * 100
+
+        # Runtime
+        runtime = df.groupby(groupby_list)['runtime'].mean().reset_index()
+
 
         # GPU Memory conservation
         memory_save = (
@@ -1049,14 +1177,15 @@ class ExperimentPlot:
         # Displaying the result
         merged_df = correctness_counts.merge(median_error, on=groupby_list, how="left")
         merged_df = merged_df.merge(merged_memory, on=groupby_list, how="left")
-        merged_df = merged_df.merge(first_ps_df, on="tool", how="left")
-        merged_df = merged_df.merge(second_ps_df, on="tool", how="left")
+        merged_df = merged_df.merge(runtime, on=groupby_list, how="left")
+        merged_df = merged_df.merge(first_ps_df, on=groupby_list, how="left")
+        merged_df = merged_df.merge(second_ps_df, on=groupby_list, how="left")
 
         # Calculate the average of the average memory saved
         summarized_result = {
             "key": ["xMem", "Baselines Average", "Improvement (%)"],
         }
-        field_list = ["probability", "average", "Median Error", "performance_score_1", "performance_score_2"]
+        field_list = ["probability", "average", "Median Error", "performance_score_1", "performance_score_2", "runtime"]
         for field in field_list:
             dnnmem_value = merged_df[merged_df['tool'] == 'DNNMem'][field].values[0]
             schedtune_value = merged_df[merged_df['tool'] == 'SchedTune'][field].values[0]
@@ -1066,7 +1195,10 @@ class ExperimentPlot:
             # average
             sum_list = [dnnmem_value, schedtune_value, llmem_value]
             average_value = sum(sum_list) / len(sum_list)
-            improved_value = abs(xmem_value - average_value)/average_value * 100
+            improved_value = (xmem_value - average_value)/average_value * 100
+            # Except for GPU memory conservation, the lower number is better. So, we need to flip the sign.
+            if field != "average":
+                improved_value = -improved_value
 
             summarized_result[field] = [xmem_value, average_value, improved_value]
 
