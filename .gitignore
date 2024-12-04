@@ -161,6 +161,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 .DS_Store
-
-# The Jupyter notebook is only used for determining whether the version here is completetly same as in the original repository
-estimator-validation.ipynb
+plot/output
