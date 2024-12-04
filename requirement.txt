@@ -1,8 +1,10 @@
 torch==2.3.0
 torchvision==0.18.0
 torchaudio==2.3.0
-sortedcontainers~=2.4.0
-plotly~=5.24.0
-pydantic~=2.9.2
-fire~=0.7.0
-matplotlib~=3.9.2
+sortedcontainers==2.4.0
+plotly==5.24.0
+pydantic==2.9.2
+fire==0.7.0
+matplotlib==3.9.2
+
+

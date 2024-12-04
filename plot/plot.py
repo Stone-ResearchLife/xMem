@@ -7,9 +7,6 @@ import numpy as np
 from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
-
-from torch.distributed import group
-
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
 
