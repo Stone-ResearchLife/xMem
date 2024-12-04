@@ -114,6 +114,11 @@ Install the required packages and read [here](plot/README.md) for more details
 ```shell
 pip install -r plot/requirement.txt
 ```
+## 📊 Our Results
+|      Plot Title       |   Section    |         Image Link         |
+|:---------------------:|:------------:|:--------------------------:|
+| Memory Change Diagram | Introduction | [Link](plot/outputimages/Motivation-Memory Change Impacted by zero out operation.pdf) |
+
 
 # ⚖️ Execute Experiments
 Install the required packages and read [here](experiments/README.md) for more details
