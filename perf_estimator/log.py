@@ -1,7 +1,5 @@
 import logging.config
-import os.path
 import datetime
-from pathlib import Path
 from .config import Config, default_setting
 
 __Basic_CONFIG = {
