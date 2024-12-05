@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 3.559465169906616,
+        "memory": 448790528,
+        "oom": false,
+        "ground": 708837376,
+        "error": 0.3668639053254438,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03167420814479638
+        }
+    },
+    "dnnmem": {
+        "runtime": 24.904345750808716,
+        "memory": 346030080,
+        "oom": false,
+        "ground": 708837376,
+        "error": 0.5118343195266272,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.2672383785247803,
+        "memory": 1326427668.48,
+        "oom": false,
+        "ground": 708837376,
+        "error": 0.8712721886719472,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 1.7619650645026994
+        }
+    },
+    "llmem": {
+        "runtime": 1.8072748184204102,
+        "memory": 661651456.0,
+        "oom": false,
+        "ground": 708837376,
+        "error": 0.06656804733727811,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.38377192982456143
+        }
+    },
+    "train info": {
+        "model": "ResNet50",
+        "batch_size": 10,
+        "target_iteration": 2,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241202-113511-4341",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

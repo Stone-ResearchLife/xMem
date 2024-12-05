@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 12.23790168762207,
+        "memory": 832569344,
+        "oom": false,
+        "ground": 1201668096,
+        "error": 0.30715532286212915,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.017948717948717947
+        }
+    },
+    "dnnmem": {
+        "runtime": 37.90016174316406,
+        "memory": 870318080,
+        "oom": false,
+        "ground": 1201668096,
+        "error": 0.2757417102966841,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06683804627249357
+        }
+    },
+    "schedtune": {
+        "runtime": 0.3348681926727295,
+        "memory": 1691395031.04,
+        "oom": false,
+        "ground": 1201668096,
+        "error": 0.40753926698241977,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.7803973509512726
+        }
+    },
+    "llmem": {
+        "runtime": 3.3626186847686768,
+        "memory": 789577728.0,
+        "oom": false,
+        "ground": 1201668096,
+        "error": 0.34293193717277487,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03461538461538462
+        }
+    },
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 130,
+        "target_iteration": 2,
+        "optimiser": "AdamW",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241204-214838-ed00",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

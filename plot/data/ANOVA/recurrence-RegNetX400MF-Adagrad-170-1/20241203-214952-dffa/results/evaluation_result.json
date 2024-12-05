@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 9.752427577972412,
+        "memory": 891289600,
+        "oom": false,
+        "ground": 1153433600,
+        "error": 0.22727272727272727,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.036585365853658534
+        }
+    },
+    "dnnmem": {
+        "runtime": 37.97586250305176,
+        "memory": 895483904,
+        "oom": false,
+        "ground": 1153433600,
+        "error": 0.22363636363636363,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.041463414634146344
+        }
+    },
+    "schedtune": {
+        "runtime": 0.43246984481811523,
+        "memory": 1770709319.68,
+        "oom": false,
+        "ground": 1153433600,
+        "error": 0.5351636357740922,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.5664935058919308
+        }
+    },
+    "llmem": {
+        "runtime": 3.2165439128875732,
+        "memory": 974127104.0,
+        "oom": false,
+        "ground": 1153433600,
+        "error": 0.15545454545454546,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.023127753303964757
+        }
+    },
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 170,
+        "target_iteration": 2,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241203-214952-dffa",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

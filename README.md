@@ -114,11 +114,11 @@ Install the required packages and
 follow [steps](plot/README.md) to generate all the plots mentioned in the paper.
 
 ```shell
-pip install -r requirement-experiment.txt
+pip install -r plot/requirement.txt
 ```
 
 # ⚖️ Execute Experiments
 Install the required packages and read [here](experiments/README.md) for more details
 ```shell
-pip install -r requirement-experiment.txt
+pip install -r experiments/requirement.txt
 ```

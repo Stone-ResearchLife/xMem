@@ -1,0 +1,79 @@
+{
+    "solution": {
+        "runtime": 5.311298131942749,
+        "memory": 488636416,
+        "oom": false,
+        "ground": 505413632,
+        "error": 0.03319502074688797,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "dnnmem": {
+        "runtime": 9.276726007461548,
+        "memory": 346030080,
+        "oom": false,
+        "ground": 505413632,
+        "error": 0.3153526970954357,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "schedtune": {
+        "runtime": 0.2629740238189697,
+        "memory": 1326427668.48,
+        "oom": false,
+        "ground": 505413632,
+        "error": 1.624439833075179,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 1.5299599990844726
+        }
+    },
+    "llmem": {
+        "runtime": 1.9124846458435059,
+        "memory": 1339031552.0,
+        "oom": false,
+        "ground": 505413632,
+        "error": 1.6493775933609958,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 1.554
+        }
+    },
+    "train info": {
+        "model": "ConvNeXtTiny",
+        "batch_size": 10,
+        "target_iteration": 2,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241202-121253-0e36",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}

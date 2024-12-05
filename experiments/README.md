@@ -122,4 +122,4 @@ You could create all figures in the paper by following the instructions in the [
 
 # 📚 Resources
 - [SchedTune Source Code](https://github.com/hadeelalbahar/SchedTune)
-- [LLMem Source COde](https://github.com/taehokim20/LLMem)
+- [LLMem Source Code](https://github.com/taehokim20/LLMem)

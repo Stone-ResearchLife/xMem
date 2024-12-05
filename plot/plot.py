@@ -7,6 +7,9 @@ import numpy as np
 from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
+
+from torch.distributed import group
+
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
 
@@ -254,37 +257,26 @@ class ExperimentPlot:
             normal_data = item['normal']
             showlegend = True if index == 0 else False
 
+
             # Point 0
-            fig.add_trace(
-                go.Scatter(
-                    y=normal_data['segment'],
-                    mode='lines',
-                    name='Segment (POS0)',
-                    line=dict(color='Red', width=line_width),
-                    showlegend=showlegend,
-                ),
-                row=row,
-                col=col
-            )
-            # Point 1
             fig.add_trace(
                 go.Scatter(
                     y=beforeBW_data['segment'],
                     mode='lines',
-                    name='Segment (POS1)',
-                    line=dict(color='Lime', dash="dash", width=line_width),
+                    name='Segment (POS0)',
+                    line=dict(color='Lime', width=line_width),
                     showlegend=showlegend,
                 ),
                 row=row,
                 col=col
             )
 
-            # trace - Point 1
+            # trace - Point 0
             fig.add_trace(
                 go.Scatter(
                     y=beforeBW_data['trace'],
                     mode='lines',
-                    name='Tensor (POS1)',
+                    name='Tensor (POS0)',
                     line=dict(color='Lime'),
                     showlegend=showlegend,
                     fill="tozeroy"
@@ -292,12 +284,24 @@ class ExperimentPlot:
                 row=row,
                 col=col
             )
-            # trace - Point 0
+            # Point 1
+            fig.add_trace(
+                go.Scatter(
+                    y=normal_data['segment'],
+                    mode='lines',
+                    name='Segment (POS1)',
+                    line=dict(color='Red', width=line_width, dash="dash"),
+                    showlegend=showlegend,
+                ),
+                row=row,
+                col=col
+            )
+            # trace - Point 1
             fig.add_trace(
                 go.Scatter(
                     y=normal_data['trace'],
                     mode='lines',
-                    name='Tensor (POS0)',
+                    name='Tensor (POS1)',
                     line=dict(color='Red'),
                     showlegend = showlegend,
                     fill="tozeroy"
@@ -305,6 +309,7 @@ class ExperimentPlot:
                 row=row,
                 col=col
             )
+
 
             fig.update_xaxes(title_text=name, row=row, col=col, titlefont=self.font, tickfont=dict(size=tickfont_size))
             fig.update_yaxes(title_text="Memory (GB)", row=row, col=col, titlefont=self.font, tickfont=dict(size=tickfont_size))
@@ -321,7 +326,7 @@ class ExperimentPlot:
                 y=1.02,
                 xanchor="center",
                 x=0.5,
-                bgcolor="rgba(255,255,255,0.5)",  # Semi-transparent background
+                bgcolor="rgba(255,255,255, 0.5)",  # Semi-transparent background
                 bordercolor="Black",
                 borderwidth=2,
                 font=self.legend_font

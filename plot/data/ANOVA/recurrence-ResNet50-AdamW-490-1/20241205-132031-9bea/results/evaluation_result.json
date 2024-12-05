@@ -1,0 +1,76 @@
+{
+    "solution": {
+        "runtime": 7.841787099838257,
+        "memory": 7981760512,
+        "oom": false,
+        "ground": 7809794048,
+        "error": 0.02201933404940924,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.02174496644295302
+        }
+    },
+    "dnnmem": {
+        "runtime": 36.387991189956665,
+        "memory": 7570718720,
+        "oom": false,
+        "ground": 7809794048,
+        "error": 0.030612244897959183,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.012906846240179574
+        }
+    },
+    "schedtune": {
+        "runtime": 1.9799349308013916,
+        "memory": 8962241986.56,
+        "oom": true,
+        "ground": 7809794048,
+        "error": 0.1475644467596593,
+        "real_oom": false,
+        "correct_estimation": false,
+        "2nd verification": {}
+    },
+    "llmem": {
+        "runtime": 7.487712383270264,
+        "memory": 902823936.0,
+        "oom": false,
+        "ground": 7809794048,
+        "error": 0.8843984962406015,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "train info": {
+        "model": "ResNet50",
+        "batch_size": 490,
+        "target_iteration": 2,
+        "optimiser": "AdamW",
+        "device": 1,
+        "verification": 1.0,
+        "input_size": 86,
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 7.642578125,
+        "used_gpu_memory": 0.017578125
+    },
+    "config": {
+        "name": "DL-Estimator",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "20241205-132031-9bea",
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1
+        }
+    }
+}
