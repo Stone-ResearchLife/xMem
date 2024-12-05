@@ -1,7 +1,6 @@
 import torch
 from typing import Optional, List
 from .plugins import InterfacePlugin
-from ..dataset import audio_dataset
 
 
 def conv_train_loop(
