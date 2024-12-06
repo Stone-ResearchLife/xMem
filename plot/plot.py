@@ -10,7 +10,7 @@ from typing import Union, Dict, Optional
 
 from torch.distributed import group
 
-from perf_estimator.utilis import filter_files
+from perf_estimator.utilis import filter_files, datetime_converter
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
 
 
@@ -555,7 +555,7 @@ class ExperimentPlot:
                 xshift=x_offset_mapping.get(name, 0)
             )
         if overall_median:
-            y_offset = 0.93
+            y_offset = 0.92
             for i, name in enumerate(df['tool'].unique()):
                 # Filter data for each 'name'
                 name_filtered_df = df[df['tool'] == name]
@@ -565,9 +565,9 @@ class ExperimentPlot:
 
                     # Add annotation at the top-left of the plot, vertically stacked
                     fig.add_annotation(
-                        x=0.87,  # Place near the left of the plot (use paper coordinates)
+                        x=0.82,  # Place near the left of the plot (use paper coordinates)
                         y=y_offset - (i * 0.08),  # Decrease y position for each annotation to vertically stack
-                        text=f"{int(overall_median)}%",
+                        text=f"{round(overall_median, 2)}%",
                         showarrow=False,
                         xref='paper',  # Use 'paper' coordinates for relative positioning
                         yref='paper',
@@ -856,14 +856,14 @@ class ExperimentPlot:
 
         # for 1st round of verification
         grouped = df.groupby(['tool', 'model', 'optimiser']).agg(
-            success_rate=('correct_estimation', lambda x: (x == True).sum() / len(x)),
+            failed_rate=('correct_estimation', lambda x: (x == False).sum() / len(x)),
             average_error=('error', 'median'),
         ).reset_index()
 
         fig = go.Figure()
 
         for tool_name, group in grouped.groupby('tool'):
-            group['combined_score'] = probability_weight * (1 - group['success_rate']) + error_weight * group[
+            group['combined_score'] = probability_weight * (group['failed_rate']) + error_weight * group[
                 'average_error']
 
             sorted_combined_score = np.sort(group['combined_score'].dropna())
@@ -1078,6 +1078,7 @@ class ExperimentPlot:
         # Relative Error
         median_error = df.groupby(groupby_list)['error'].median().reset_index()
         median_error.columns = groupby_list + ['Median Error']
+        median_error["Median Error"] = median_error["Median Error"] * 100
 
         # Probability of Estimation Failure
         correctness_counts = df.groupby(groupby_list)["accurate_estimation"].value_counts().unstack(
@@ -1125,7 +1126,7 @@ class ExperimentPlot:
         merged_memory = merged_memory.fillna(0)
 
         # Calculate memory conserved average
-        merged_memory["average"] = (merged_memory["save_memory_sum"] - merged_memory['total_assign_memory']) / (
+        merged_memory["GPU Memory"] = (merged_memory["save_memory_sum"] - merged_memory['total_assign_memory']) / (
                 merged_memory["success_count"] + merged_memory["failed_count"])
 
         # 1st validation performance CDF
@@ -1134,12 +1135,12 @@ class ExperimentPlot:
             "performance_score_1": []
         }
         first_perf_score = df.groupby(['tool', 'model', 'optimiser']).agg(
-            success_rate=('correct_estimation', lambda x: (x == True).sum() / len(x)),
+            failed_rate=('correct_estimation', lambda x: (x == False).sum() / len(x)),
             average_error=('error', 'median'),
         ).reset_index()
 
         for tool_name, group in first_perf_score.groupby('tool'):
-            group['combined_score'] = 0.7 * (1 - group['success_rate']) + 0.3 * group[
+            group['combined_score'] = 0.7 * (group['failed_rate']) + 0.3 * group[
                 'average_error']
 
             sorted_combined_score = np.sort(group['combined_score'].dropna())
@@ -1187,7 +1188,13 @@ class ExperimentPlot:
         summarized_result = {
             "key": ["xMem", "Baselines Average", "Improvement (%)"],
         }
-        field_list = ["probability", "average", "Median Error", "performance_score_1", "performance_score_2", "runtime"]
+        field_list = ["probability", "GPU Memory", "Median Error", "performance_score_1", "performance_score_2", "runtime"]
+        field_map = {
+            "probability": "probability (%)",
+            "GPU Memory": "GPU Memory (GB)",
+            "Median Error": "Median Error (%)",
+            "runtime": "runtime (s)"
+        }
         for field in field_list:
             dnnmem_value = merged_df[merged_df['tool'] == 'DNNMem'][field].values[0]
             schedtune_value = merged_df[merged_df['tool'] == 'SchedTune'][field].values[0]
@@ -1199,12 +1206,18 @@ class ExperimentPlot:
             average_value = sum(sum_list) / len(sum_list)
             improved_value = (xmem_value - average_value)/average_value * 100
             # Except for GPU memory conservation, the lower number is better. So, we need to flip the sign.
-            if field != "average":
+            if field != "GPU Memory":
                 improved_value = -improved_value
 
-            summarized_result[field] = [xmem_value, average_value, improved_value]
+            summarized_result[field] = [round(xmem_value, 2), round(average_value, 2), round(improved_value, 2)]
 
-        tool_summary = merged_df[merged_df[["tool"] + field_list].columns]
+        tool_summary = merged_df[merged_df[["tool"] + field_list].columns].round(2)
         tool_summary = tool_summary.sort_values(by="performance_score_1", ascending=False)
+        summarized_result = pd.DataFrame(summarized_result)
 
-        return tool_summary, pd.DataFrame(summarized_result)
+
+        # standardize the columns name
+        tool_summary.columns = tool_summary.columns.map(lambda col: field_map.get(col, col))
+        summarized_result.columns = summarized_result.columns.map(lambda col: field_map.get(col, col))
+
+        return tool_summary, summarized_result
