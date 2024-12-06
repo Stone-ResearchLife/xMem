@@ -4,7 +4,7 @@ import torch
 import platform
 from typing import Optional, List, Tuple
 from perf_estimator.config import Config, default_setting
-from .train_loop import conv_train_loop, audio_train_loop
+from .train_loop import conv_train_loop
 
 
 class ModelTrainer:
@@ -61,12 +61,8 @@ class ModelTrainer:
 
     def train(self):
         self.show_summary()
-        if self._model.__class__.__name__ in ["Conformer"]:
-            train_func = audio_train_loop
-        else:
-            train_func = conv_train_loop
 
-        train_func(
+        conv_train_loop(
             model=self._model,
             data_loader=self._data_loader,
             epochs=self._epochs,

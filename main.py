@@ -1,8 +1,6 @@
 import fire
 from typing import Union
-from perf_estimator.models import AllModels
 from perf_estimator.xmem import XMem
-from perf_estimator.utilis.enum import EnumManipulator
 from perf_estimator.config import Config
 from perf_estimator.log import init_logging
 

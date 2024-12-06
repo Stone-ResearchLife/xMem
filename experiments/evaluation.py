@@ -110,7 +110,7 @@ class Evaluator:
             "loss": loss,
             "zero_grad_mode": zero_grad_mode
         }
-        print(f"================== Evaluate on GPU: {gpu_id} ==================")
+        logger.info(f"================== Evaluate on GPU: {gpu_id} ==================")
         try:
             self._train(**trainer_conf)
         finally:
@@ -142,7 +142,7 @@ class Evaluator:
             "loss": loss,
             "zero_grad_mode": zero_grad_mode
         }
-        print(f"================== Evaluate on CPU ==================")
+        logger.info(f"================== Evaluate on CPU ==================")
         try:
             self._train(**trainer_conf)
         finally:
@@ -214,7 +214,7 @@ class Evaluator:
                     activation_size += layer.output.nbytes
 
         device = "4070ti" if device_id == 0 else "4060"
-        conf_dir = Path(__file__).parent.joinpath("baselines/schedtune")
+        conf_dir = Path(__file__).parent.joinpath("experiments/baselines/schedtune")
         schedtune = Schedtune(
             jobname="batchsize",
             option="1",
@@ -287,55 +287,77 @@ class Evaluator:
             loss: Optional[torch.nn.Module] = None,
             zero_grad_mode: int = 0
     ):
+        logger.info(f"================== Verification Start ==================")
+        logger.info(f"================== Training on CPU ==================")
         profiler_file = self.train_on_cpu(
             iteration=iteration,
             optimizer=optimizer,
             loss=loss,
             zero_grad_mode=zero_grad_mode
         )
-        print(f"================== Verification All ==================")
         verification_result = {}
-        print(f"================== XMem ==================")
+        logger.info(f"================== xMem Estimation ==================")
         time.sleep(1)
-        before_run = time.time()
-        my_result, _ = self.evaluate_my_solution(profiler_file, iteration=iteration)
-        after_run = time.time()
-        verification_result["solution"] = {
-            "runtime": after_run - before_run,
-            "memory": max(my_result._trace.max_segment_changes),
-            "oom": my_result.oom
-        }
-        print(f"================== DNNmem ==================")
-        time.sleep(1)
-        before_run = time.time()
-        dnnmem_result = self.evaluate_DNNmem()
-        after_run = time.time()
-        verification_result["dnnmem"] = {
-            "runtime": after_run - before_run,
-            "memory": max(dnnmem_result._trace.max_segment_changes),
-            "oom": my_result.oom
-        }
-        print(f"================== Schedtune ==================")
-        time.sleep(1)
-        before_run = time.time()
-        schedtune_result = self.evaluate_schedtune(device_id=device_id)
-        after_run = time.time()
-        verification_result["schedtune"] = {
-            "runtime": after_run - before_run,
-            "memory": schedtune_result,
-            "oom": bool(schedtune_result > self._max_gpu_memory_in_gb * 1024 ** 3)
-        }
-        print(f"================== LLmem ==================")
-        time.sleep(1)
-        before_run = time.time()
-        llmem_result = self.evaluate_llmem(device_id)
-        after_run = time.time()
-        verification_result["llmem"] = {
-            "runtime": after_run - before_run,
-            "memory": llmem_result,
-            "oom": bool(llmem_result > self._max_gpu_memory_in_gb * 1024 ** 3)
-        }
+        try:
+            before_run = time.time()
+            my_result, _ = self.evaluate_my_solution(profiler_file, iteration=iteration)
+        except Exception as e:
+            logger.error(f"xMem estimation failed, error: {e}")
+        else:
+            after_run = time.time()
+            verification_result["solution"] = {
+                "runtime": after_run - before_run,
+                "memory": max(my_result._trace.max_segment_changes),
+                "oom": my_result.oom
+            }
 
+        logger.info(f"================== DNNmem Estimation==================")
+        time.sleep(1)
+        try:
+            before_run = time.time()
+            dnnmem_result = self.evaluate_DNNmem()
+        except Exception as e:
+            logger.error(f"DNNmem estimation failed, error: {e}")
+        else:
+            after_run = time.time()
+            verification_result["dnnmem"] = {
+                "runtime": after_run - before_run,
+                "memory": max(dnnmem_result._trace.max_segment_changes),
+                "oom": my_result.oom
+            }
+            
+        logger.info(f"================== Schedtune ==================")
+        time.sleep(1)
+        try:
+            before_run = time.time()
+            schedtune_result = self.evaluate_schedtune(device_id=device_id)
+        except Exception as e:
+            logger.error(f"Schedtune estimation failed, error: {e}")
+        else:
+            after_run = time.time()
+            verification_result["schedtune"] = {
+                "runtime": after_run - before_run,
+                "memory": schedtune_result,
+                "oom": bool(schedtune_result > self._max_gpu_memory_in_gb * 1024 ** 3)
+            }
+            
+        logger.info(f"================== LLmem ==================")
+        time.sleep(1)
+        try:
+            before_run = time.time()
+            llmem_result = self.evaluate_llmem(device_id)
+        except Exception as e:
+            logger.error(f"LLmem estimation failed, error: {e}")
+        else:
+            after_run = time.time()
+            verification_result["llmem"] = {
+                "runtime": after_run - before_run,
+                "memory": llmem_result,
+                "oom": bool(llmem_result > self._max_gpu_memory_in_gb * 1024 ** 3)
+            }
+
+
+        logger.info(f"================== Initial Validation Round ==================")
         try:
             test_iteration = iteration * 2
             if test_iteration < 10:
@@ -346,9 +368,11 @@ class Evaluator:
                 iteration=test_iteration,
                 optimizer=optimizer,
                 loss=loss,
-                zero_grad_mode=zero_grad_mode
+                zero_grad_mode=zero_grad_mode,
+                limit_in_gp=self._max_gpu_memory_in_gb
             )
         except Exception as e:
+            logger.warning(f"OOM occur, error: {e}")
             real_oom = True
             ground = self._max_gpu_memory_in_gb * 1024 ** 3
         else:
@@ -356,30 +380,34 @@ class Evaluator:
             ground = self.get_ground_value_from_nvml(vf_host_monitor_file)
             ground = max(ground[str(device_id)])
 
+
+        logger.info(f"================== Subsequent Validation Round ==================")
         for name, value in verification_result.items():
-            logger.info(f"================== Verify {name} Result ==================")
             _memory = int(value["memory"])
             value["ground"] = ground
             value["error"] = abs(_memory - ground) / ground
             value["real_oom"] = real_oom
             value["correct_estimation"] = real_oom == value["oom"]
             value["2nd verification"] = {}
+            min_runnable_memory = _memory/1024**3
             if value["real_oom"] is False and value["oom"] is False:
-                logger.info(f"================== 2nd Verification {name} ==================")
                 try:
                     test_iteration = iteration * 2
                     if test_iteration < 10:
                         test_iteration = 10
+                    logger.info(f"================== 2nd Verification {name} ==================")
+                    logger.info(f"Minimum Runnable Memory: {min_runnable_memory} GB")
+                    logger.info(f"Maximum iterations: {test_iteration}")
                     vvf_host_monitor_file, vvf_snapshot_file = self.train_on_gpu(
                         gpu_id=device_id,
                         iteration=test_iteration,
-                        limit_in_gp=_memory/1024**3,
+                        limit_in_gp=min_runnable_memory,
                         optimizer=optimizer,
                         loss=loss,
                         zero_grad_mode=zero_grad_mode
                     )
                 except Exception as e:
-                    print(f"Error: {e}")
+                    logger.error(f"Subsequnt validation failed for {name}, error: {e}")
                     value["2nd verification"] = {
                         "oom": True,
                         "error": None
@@ -401,7 +429,6 @@ def main(
         target_iteration: int = 2,
         optimiser: str = "Adam",
         zero_grad_mode: int = 0,
-        verification: bool = False,
         input_size: int = 86,
 ):
     data_loader = None
@@ -422,24 +449,12 @@ def main(
         config=_conf,
         input_size=input_size
     )
-    if verification:
-        logger.warning(f"================== Verification ==================")
-        time.sleep(1)
-        all_result = eva.verification(
-            device_id=device_id,
-            iteration=target_iteration,
-            optimizer=getattr(torch.optim, optimiser, torch.optim.SGD),
-            zero_grad_mode=zero_grad_mode
-        )
-    else:
-        logger.warning(f"================== Evaluate All ==================")
-        time.sleep(1)
-        all_result = eva.evaluate_all(
-            device_id=device_id,
-            iteration=target_iteration,
-            optimizer=getattr(torch.optim, optimiser, torch.optim.SGD),
-            zero_grad_mode=zero_grad_mode
-        )
+    all_result = eva.verification(
+        device_id=device_id,
+        iteration=target_iteration,
+        optimizer=getattr(torch.optim, optimiser, torch.optim.SGD),
+        zero_grad_mode=zero_grad_mode
+    )
 
     logger.info(all_result)
     all_result["train info"] = {
@@ -448,7 +463,6 @@ def main(
         "target_iteration": target_iteration,
         "optimiser": optimiser,
         "device": device_id,
-        "verification": verification,
         "input_size": input_size,
         "zero_grad_mode": zero_grad_mode,
         "total_gpu_memory": max_gpu_in_gb,

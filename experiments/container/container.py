@@ -163,12 +163,11 @@ class ContainerRunner:
     def create(self):
         _image = self._get_image()
         if _image.name != self._config.image_name:
-            logger.warning(f"Image name is different from the config: {_image.name} != {self._config.image_name}")
-            logger.warning(f"Updating image name to {_image.name}")
+            logger.info(f"Image name is different from the config: {_image.name} != {self._config.image_name}")
+            logger.info(f"Updating image name to {_image.name}")
             self._config.image_name = _image.name
         params = self._config.to_json()
         logger.info(f"Creating container with params {params}")
-        logger.warning(f"Creating container with params {params}")
         _container = self._client.containers.create(**params)
         if self._config.subnet is not None:
             net = self._client.networks.get(self._config.subnet)

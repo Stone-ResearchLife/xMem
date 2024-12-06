@@ -1,7 +1,5 @@
 import torch
 import copy
-from transformers.utils.fx import symbolic_trace as transformer_symbolic_trace
-from transformers import PreTrainedModel
 from typing import List, Optional, Dict, Any, Tuple, Union
 from collections import OrderedDict
 from .model_info import ModelInfo
@@ -401,7 +399,7 @@ class _AnalysisInterpreter(torch.fx.Interpreter):
 
 class FXAnalyser:
     def __init__(
-            self, model: Union[torch.nn.Module, PreTrainedModel],
+            self, model: Union[torch.nn.Module],
             data_x: torch.Tensor,
             data_y: Optional[torch.Tensor] = None,
             is_transformer: bool = False,
@@ -409,7 +407,7 @@ class FXAnalyser:
 
     ):
         self._is_transformer = is_transformer
-        self._model: Union[torch.nn.Module, PreTrainedModel] = model
+        self._model: Union[torch.nn.Module] = model
         self._input_tensor: torch.Tensor = data_x
         self._label_tensor: Optional[torch.Tensor] = data_y
         self._loss = loss
@@ -449,17 +447,11 @@ class FXAnalyser:
         return _model_info.id_to_layerstack_map()
 
     def _dry_run(self):
-        if self._is_transformer:
-            # In order to ensure the original model is not changed, I copy the model here.
-            _model = copy.deepcopy(self._model)
-            _model.config.use_cache = False
-            _traced_model = transformer_symbolic_trace(_model)
-        else:
-            # Copying a model will change the layer name, use input model directly here.
-            _traced_model = torch.fx.symbolic_trace(self._model)
-            if self._loss is not None and self._label_tensor is not None:
-                self._insert_loss_function(_traced_model)
-                _traced_model.recompile()
+        # Copying a model will change the layer name, use input model directly here.
+        _traced_model = torch.fx.symbolic_trace(self._model)
+        if self._loss is not None and self._label_tensor is not None:
+            self._insert_loss_function(_traced_model)
+            _traced_model.recompile()
         _interpreter = _AnalysisInterpreter(_traced_model, id2layer=self._build_layer_call_stack())
         if self._loss is not None and self._label_tensor is not None:
             _interpreter.run(self._input_tensor, self._label_tensor)

@@ -34,7 +34,6 @@ class XMemEvaluation(InterfaceApp):
             iteration: int = 2,
             optimiser: str = "SGD",
             zero_grad_mode: int = 0,
-            verification: bool = False,
             input_size: int = 86,
     ):
         estimator = Evaluation(
@@ -49,7 +48,6 @@ class XMemEvaluation(InterfaceApp):
             "-t", iteration,
             "-o", optimiser,
             "-z", zero_grad_mode,
-            "-v", verification,
             "-i", input_size,
         ]
         name = f"xmen-{uuid.uuid4().hex[:8]}"
@@ -96,7 +94,6 @@ class XMemEvaluation(InterfaceApp):
                             iteration=2,
                             optimiser=opt,
                             zero_grad_mode=0,
-                            verification=True
                         )
 
                         time.sleep(2)
@@ -129,7 +126,6 @@ class XMemEvaluation(InterfaceApp):
                 iteration=2,
                 optimiser=opt,
                 zero_grad_mode=zero_grad_mode,
-                verification=True,
                 input_size=input_size
             )
             time.sleep(2)

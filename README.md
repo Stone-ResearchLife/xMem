@@ -19,11 +19,9 @@ NAME
     main.py
 
 SYNOPSIS
-    main.py MODEL PROFILER_FILE <flags>
+    main.py PROFILER_FILE <flags>
 
 POSITIONAL ARGUMENTS
-    MODEL
-        Type: str
     PROFILER_FILE
         Type: str
 
@@ -44,7 +42,7 @@ FLAGS
 Run command below
 ```shell
 ## Guarantee that your idnputs are same as the inputs which you used to profile the model
-python main.py "ConvNeXtBase" ./examples/convnext-base-batch130.json -b 130 -g 4
+python main.py ./examples/convnext-base-batch130.json -b 130 -g 4
 
 ```
 Result shows below:
@@ -63,7 +61,7 @@ The Image is only for debugging purpose and is shown [here](docs/Last-frame.png)
 
 ### 🚀Quick Example - Non OOM Example
 ```shell
-python main.py "ConvNeXtBase" ./examples/convnext-base-batch130.json -b 130 -g 8
+python main.py ./examples/convnext-base-batch130.json -b 130 -g 8
 ```
 Result shows below:
 ```text

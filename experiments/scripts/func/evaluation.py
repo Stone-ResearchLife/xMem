@@ -33,11 +33,11 @@ class SolutionEvaluation(AbcContainerTemplate):
             python_dependencies=[
                 "transformers==4.39.3",
                 "pynvml==11.5.3",
-                "sortedcontainers~=2.4.0",
+                "sortedcontainers==2.4.0",
                 "matplotlib~=3.9.2",
-                "plotly~=5.24.0",
-                "pydantic~=2.9.2",
-                "docker~=7.1.0",
+                "plotly==5.24.0",
+                "pydantic==2.9.2",
+                "docker==7.1.0",
                 "fire~=0.7.0",
                 "colossalai==0.4.5",
                 "joblib==1.4.2",
@@ -58,9 +58,14 @@ class SolutionEvaluation(AbcContainerTemplate):
                 {
                     "src": "perf_estimator",
                     "dest": "perf_estimator",
+                },
+                {
+                    "src": "experiments/evaluation.py",
+                    "dest": "evaluation.py",
+
                 }
             ],
-            entrypoint=["python", "experiments/evaluation.py"],
+            entrypoint=["python", "evaluation.py"],
         )
         return _config
 
