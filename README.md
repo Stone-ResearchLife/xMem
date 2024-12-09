@@ -1,9 +1,43 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
 xMem, a GPU memory estimator that can utilize CPU-based profiling data to infer the peak 
-memory required for training a model on a GPU
+memory required for training a model on a GPU.
 
-## 🚧 Pre-requisite 
+## ✅Compatibility
+✅: checked
+❌: not work
+⚠️: Not Checked 
+
+Please check [README](experiments/README.md) for Hardware Compatibility
+
+| **Components** | **Linux (Recommended)** | **Windows** | **Mac** |
+|:--------------:|:-----------------------:|:-----------:|:-------:|
+|      xMem      |            ✅            |      ✅      |    ✅    |
+|    xProfile    |            ✅            |      ❌      |    ❌    |
+|  Plot Results  |            ✅            |      ✅      |    ✅    |
+|  Experiments   |            ✅            |      ❌      |    ❌    |
+
+## 🚧 Pre-requisite
+### Miniconda (Optional)
+[Miniconda](https://docs.anaconda.com/miniconda/) is recommended to manage the environment.
+You can follow the below steps to create a new environment and install the required packages.
+```shell
+conda create -n xmem python=3.10
+```
+
+### PyTorch
+Please use the following command to install CPU-Only PyTorch
+```shell
+pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+```
+Or You cloud use the below command to install the GPU version based on your CUDA version.
+The below command is for CUDA 12.1
+```shell
+pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
+```
+You can also see official document of PyTorch 2.3.0 installation [here](https://pytorch.org/get-started/previous-versions/#v230)
+
+### Other Dependencies
 ```shell
 pip install -r requirement.txt
 ```
@@ -39,11 +73,13 @@ FLAGS
 
 ```
 ### 🚀Quick Example - OOM Example
+⚠  Failed to import pytorch `fbgemm.dll` warnning in Windows.
+Please follow the [FAQ](#windows---failed-to-import-pytorch-fbgemmdll-or-one-of-its-dependencies-is-missing) to solve the issue.
+
 Run command below
 ```shell
-## Guarantee that your idnputs are same as the inputs which you used to profile the model
+## Guarantee that your inputs are same as the inputs which you used to profile the model
 python main.py ./examples/convnext-base-batch130.json -b 130 -g 4
-
 ```
 Result shows below:
 ```text
@@ -78,12 +114,13 @@ Estimated Peak Tensor Memory: 4.99GB
 
 ## 📏 CPU-Based Profiler
 Please use 'xmem_profile.py' to generate the profiler file. 
-The profiler file is a json file that contains the memory usage in the model. 
-The profiler file is used as an input to the main.py to estimate the peak memory usage of the model.
+- The profiling file is a json file that contains the memory usage in the model. 
+- The profiling file is used as an input to the main.py to estimate the peak memory usage of the model.
+- Ensure that you run a profiler job on Linux.
 
 ```shell
 # python profile.py --help for more usage detail
-python xProfile.py -m "VGG19" -b 100
+python xProfile.py -m "VGG19" -b 130
 ```
 
 There are only the below models supported for profiling
@@ -120,3 +157,8 @@ Install the required packages and read [here](experiments/README.md) for more de
 ```shell
 pip install -r requirement-r.txt
 ```
+
+# ❓ FAQ
+## Windows - Failed to import pytorch `fbgemm.dll` or one of its dependencies is missing
+Solution is that download `Visual C++ Redistributable for Visual Studio 2019` from Microsoft official website and install it.
+The download linke is [here](https://my.visualstudio.com/Downloads?q=c++%20redistributable)

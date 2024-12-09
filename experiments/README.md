@@ -11,13 +11,14 @@
 |  NVIDIA GPU  |         ✅         |
 |  Intel CPU   |         ✅         |
 |   AMD CPU    |        ⚠️         |
-|   AMD CPU    |        ⚠️         |
+|   AMD GPU    |        ⚠️         |
 |     Mac      |         ❌         | 
 
 
 
 ## 1️⃣ Dependencies
-Ensure all dependencies are installed, as shown in the [README](../README.md).
+1. Ensure all dependencies are installed, as shown in the [README](../README.md).
+2. Ensure Docker Client is installed on your machine. If not follow the instructions [here](https://docs.docker.com/engine/install/).
 
 
 ## 2️⃣ Docker Pull a Base Image
