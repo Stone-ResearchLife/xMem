@@ -84,7 +84,6 @@ python main.py ./examples/convnext-base-batch130.json -b 130 -g 4
 Result shows below:
 ```text
 ======================== Basic Information ========================
-Model: ConvNeXt
 Batch Size: 130
 Input Size: [3, 86, 86]
 Max GPU Memory: 4GB
@@ -102,7 +101,6 @@ python main.py ./examples/convnext-base-batch130.json -b 130 -g 8
 Result shows below:
 ```text
 ======================== Basic Information ========================
-Model: ConvNeXt
 Batch Size: 130
 Input Size: [3, 86, 86]
 Max GPU Memory: 8GB
