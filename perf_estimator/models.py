@@ -37,7 +37,7 @@ inverted_residual_setting_small = [
 ]
 
 
-
+# Totally has 16 models
 class AllModels(Enum):
     VGG11 = torchvision.models.vgg11(weights=None)
     VGG16 = torchvision.models.vgg16(weights=None)
