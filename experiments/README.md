@@ -38,10 +38,8 @@ Execute a pre-configured Python script to build two images:
 
 ```shell
 python evaluate.py xMem build
-
-# Force mode to rebuild
-python evaluate.py xMem build --force
 ```
+Forcely rebuild the image by adding `--force` at the end of the command.
 
 ## 4️⃣ Check Runtime Image
 Check whether both image are built successfully
@@ -97,7 +95,7 @@ The directory is created during the run automatically.
 ### ⚠️ The command will remove all stopped containers and all dangling images
 ### ⚠️ Please do not execute this command if you have concerns about the code, as it involves a `delete` operation.
 ```shell
-python evaluate.py xMem clean
+python evaluate.py cleanup
 ```
 
 # 🧩 Environment we used
