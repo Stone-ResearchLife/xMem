@@ -51,7 +51,7 @@ class XMemProfiler:
             iteration: int = 2,
             optimizer: Optional[torch.optim.Optimizer] = None,
             loss: Optional[torch.nn.Module] = None,
-            zero_grad_mode: int = 1
+            zero_grad_mode: int = 0
     ) -> str:
         trainer_conf = {
             "model": copy.deepcopy(self._model),
@@ -78,6 +78,7 @@ class XMemProfiler:
 
 def main(
         model: str,
+        optimizer: str = "SGD",
         batch_size: int = 200,
         input_size: int = 86,
     ):
@@ -94,7 +95,9 @@ def main(
         input_size=input_size,
         config=_conf
     )
-    profiler_file = profiler.train_on_cpu()
+    profiler_file = profiler.train_on_cpu(
+        optimizer=getattr(torch.optim, optimizer, torch.optim.SGD)
+    )
     print(f"Profiler file is saved in {profiler_file}")
 
 

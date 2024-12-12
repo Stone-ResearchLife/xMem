@@ -4,16 +4,16 @@ xMem, a GPU memory estimator that can utilize CPU-based profiling data to infer 
 memory required for training a model on a GPU.
 
 ## ✅Compatibility
-✅: checked
-❌: not work
-⚠️: Not Checked 
+- ✅: work
+- ❌: not work
+- ⚠️: work, but result may not be accurate
 
 Please check [README](experiments/README.md) for Hardware Compatibility
 
 | **Components** | **Linux (Recommended)** | **Windows** | **Mac** |
 |:--------------:|:-----------------------:|:-----------:|:-------:|
 |      xMem      |            ✅            |      ✅      |    ✅    |
-|    xProfile    |            ✅            |      ❌      |    ❌    |
+|    xProfile    |            ✅            |     ⚠️      |   ⚠️    |
 |  Plot Results  |            ✅            |      ✅      |    ✅    |
 |  Experiments   |            ✅            |      ❌      |    ❌    |
 
@@ -86,10 +86,11 @@ Result shows below:
 ======================== Basic Information ========================
 Batch Size: 130
 Input Size: [3, 86, 86]
-Max GPU Memory: 4GB
+Max GPU Memory: 4 GB
+Runtime: 39.01 s
 ======================== Estimated Result ========================
 OOM: True      <---- This means that 4GB is not enough to run the model
-4294967296GB is not enough to run the model
+4.00 GB is not enough to run the model
 ```
 The Last Frame of Memory Snapshot will be saved in the log folder. The file name will be `Last-frame.png`.
 The Image is only for debugging purpose and is shown [here](docs/Last-frame.png)
@@ -103,7 +104,8 @@ Result shows below:
 ======================== Basic Information ========================
 Batch Size: 130
 Input Size: [3, 86, 86]
-Max GPU Memory: 8GB
+Max GPU Memory: 8 GB
+Runtime: 37.01 s
 ======================== Estimated Result ========================
 OOM: False
 Estimated Peak GPU Memory: 5.26GB    <---- This is the peak memory that the model will use in the GPU
@@ -117,8 +119,8 @@ Please use 'xmem_profile.py' to generate the profiler file.
 - Ensure that you run a profiler job on Linux.
 
 ```shell
-# python profile.py --help for more usage detail
-python xProfile.py -m "VGG19" -b 130
+# python xProfile.py --help for more usage detail
+python xProfile.py -m "VGG19" -b 130 -o "SGD"
 ```
 
 There are only the below models supported for profiling
@@ -140,9 +142,18 @@ MODELS SUPPORTED:
         RegNetX32GF
         RegNetY400MF
         RegNetY32GF
+        
+Optimizer Supported:
+        SGD
+        Adam
+        RMSprop
+        Adagrad
+        AdamW
 ```
 
 # 📊 Plot the Results
+Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
+
 Install the required packages and 
 follow [steps](plot/README.md) to generate all the plots mentioned in the paper.
 
@@ -151,6 +162,8 @@ pip install -r requirement-r.txt
 ```
 
 # ⚖️ Execute Experiments
+Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
+
 Install the required packages and read [here](experiments/README.md) for more details
 ```shell
 pip install -r requirement-r.txt

@@ -1,14 +1,13 @@
 import logging
 import torch
 import copy
-import fire
 import time
 from typing import Optional, Union
 from uuid import uuid4
 from perf_estimator.config import Config
 from perf_estimator.dataset import image_dataset
 from perf_estimator.estimator import Estimator
-from perf_estimator.log import init_logging
+from perf_estimator.utilis.utilis import format_memory
 
 
 logger = logging.getLogger(__name__)
@@ -64,10 +63,10 @@ class XMem:
         is_OOM = estimated_result['OOM']
         if is_OOM:
             print(f"OOM: {is_OOM}")
-            print(f"{estimated_result['Max GPU Memory']}GB is not enough to run the model")
+            print(f"{format_memory(estimated_result['Max GPU Memory'])} is not enough to run the model")
         else:
             print(f"OOM: {is_OOM}")
-            print(f"Estimated Peak GPU Memory: {round(estimated_result['memory']['segment']/1024**3, 2)}GB")
-            print(f"Estimated Peak Tensor Memory: {round(estimated_result['memory']['tensor']/1024**3, 2)}GB")
+            print(f"Estimated Peak GPU Memory: {format_memory(estimated_result['memory']['segment'])}")
+            print(f"Estimated Peak Tensor Memory: {format_memory(estimated_result['memory']['tensor'])}GB")
 
         return _estimated_result
