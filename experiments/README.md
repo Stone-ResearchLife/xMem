@@ -30,7 +30,8 @@ docker pull pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
 
 ## 3️⃣ Build Runtime Image for Experiments
 
-⚠️ Ensure you set the right PYTHONPATH before running the experiments. The PYTHONPATH should be the root directory of the project.
+> [!WARNING]
+> Ensure you set the right PYTHONPATH before running the experiments. The PYTHONPATH should be the root directory of the project.
 
 Execute a pre-configured Python script to build two images: 
 - one is the base image called `base-xmem-evaluation`
@@ -54,12 +55,13 @@ base-xmem-evaluation                    latest                        78fd57f2ba
 ```
 
 ## 5️⃣ Run Experiments
+> [!WARNING]
+> Do not run any GPU-related tasks on the GPUs used during the experiment, as they will be occupied for specific purposes.
 
-⚠️ Do not run any GPU-related tasks on the GPUs used during the experiment, as they will be occupied for specific purposes.
-
-⚠️ Two directories are created by any experiment:
-- `~/.cache/xMemExperiments` to store results
-- `~/pytorch_datasets` to store datasets used in the experiments.
+> [!WARNING]
+> Two directories are created by experiments:
+> - `~/.cache/xMemExperiments` to store results
+> - `~/pytorch_datasets` to store datasets used in the experiments.
 
 ### Run ANOVA Experiment
 Run the below command to execute the ANOVA experiment, which may take 1-3 days depending on the performance of the machine.
@@ -72,6 +74,11 @@ python evaluate.py xMem anova -g 0
 ```
 
 ### Run Monte Carlo Experiment
+> [!NOTE]
+> The container may be likely crashed by SchedTune when running the Monte Carlo experiment 
+> with a combination of large batch sizes (>900) and large models (RegNetX32GF, RegNetY32GF or ResNet152).
+> it leads to a non-zero exit code of container and no results generated.
+
 Execute the Monte Carlo experiment using the command below. 
 This process may take days, depending on the total number of repetitions you want to run, 
 which can be passed as an argument to the script with `-t`.
@@ -92,8 +99,9 @@ The directory is created during the run automatically.
 
 
 ## 7️⃣ Clean Up (Optional)
-### ⚠️ The command will remove all stopped containers and all dangling images
-### ⚠️ Please do not execute this command if you have concerns about the code, as it involves a `delete` operation.
+> [!WARNING]
+> - The command will remove all stopped containers and all dangling images 
+> - Please do not execute this command if you have concerns about the code, as it involves a `delete` operation.
 ```shell
 python evaluate.py cleanup
 ```

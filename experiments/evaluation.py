@@ -456,7 +456,6 @@ def main(
         zero_grad_mode=zero_grad_mode
     )
 
-    logger.info(all_result)
     all_result["train info"] = {
         "model": model_name,
         "batch_size": batch,
@@ -468,6 +467,7 @@ def main(
         "total_gpu_memory": max_gpu_in_gb,
         "used_gpu_memory": gpu_info.memoryUsed/1024,
     }
+    logger.info(all_result)
     all_result["config"] = _conf.model_dump()
     with open(eva.conf.result_dir.joinpath('evaluation_result.json'), 'w') as f:
         json.dump(all_result, f, indent=4)

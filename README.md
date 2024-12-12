@@ -22,7 +22,10 @@ Please check [README](experiments/README.md) for Hardware Compatibility
 [Miniconda](https://docs.anaconda.com/miniconda/) is recommended to manage the environment.
 You can follow the below steps to create a new environment and install the required packages.
 ```shell
-conda create -n xmem python=3.10
+conda create -n xmem python=3.10 -y
+```
+```shell
+conda activate xmem
 ```
 
 ### PyTorch
@@ -73,8 +76,10 @@ FLAGS
 
 ```
 ### 🚀Quick Example - OOM Example
-⚠  Failed to import pytorch `fbgemm.dll` warnning in Windows.
-Please follow the [FAQ](#windows---failed-to-import-pytorch-fbgemmdll-or-one-of-its-dependencies-is-missing) to solve the issue.
+
+> [!WARNING]
+> Failed to import pytorch `fbgemm.dll` warnning in Windows. 
+> Please follow the [FAQ](#windows---failed-to-import-pytorch-fbgemmdll-or-one-of-its-dependencies-is-missing) to solve the issue.
 
 Run command below
 ```shell
