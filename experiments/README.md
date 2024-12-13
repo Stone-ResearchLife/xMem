@@ -2,17 +2,17 @@
 
 
 ## ✅ Compatibility
-- ✅: checked
-- ❌: not work
-- ⚠️: Not Checked
+- ✅: Runnable
+- ❌: Unrunnable
+- ⚠️: Unknown
 
-| **Hardware** | **Compatibility** |
-|:------------:|:-----------------:|
-|  NVIDIA GPU  |         ✅         |
-|  Intel CPU   |         ✅         |
-|   AMD CPU    |        ⚠️         |
-|   AMD GPU    |        ⚠️         |
-|     Mac      |         ❌         | 
+| **Hardware**  | **Compatibility** |
+|:-------------:|:-----------------:|
+|  NVIDIA GPU   |         ✅         |
+|   Intel CPU   |         ✅         |
+|    AMD CPU    |        ⚠️         |
+|    AMD GPU    |        ⚠️         |
+| Apple Silicon |         ❌         | 
 
 
 

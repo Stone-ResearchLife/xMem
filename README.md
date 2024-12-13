@@ -4,9 +4,9 @@ xMem, a GPU memory estimator that can utilize CPU-based profiling data to infer 
 memory required for training a model on a GPU.
 
 ## ✅Compatibility
-- ✅: work
-- ❌: not work
-- ⚠️: work, but result may not be accurate
+- ✅: Runnable 
+- ❌: Unrunnable
+- ⚠️: Runnable with unverified results 
 
 Please check [README](experiments/README.md) for Hardware Compatibility
 
