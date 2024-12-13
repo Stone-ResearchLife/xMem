@@ -1,7 +1,12 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
-xMem, a GPU memory estimator that can utilize CPU-based profiling data to infer the peak 
-memory required for training a model on a GPU.
+xMem, a novel tool that uses CPU-based analysis to accurately predict 
+the memory required for model training on a GPU. By eliminating the
+reliance on GPUs for memory estimation, xMem promotes efficient
+GPU utilization while mitigating OOM errors. 
+
+
+
 
 ## ✅Compatibility
 - ✅: Runnable 
@@ -157,7 +162,8 @@ Optimizer Supported:
 ```
 
 # 📊 Plot the Results
-Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
+> [!WARNING]
+> Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
 
 Install the required packages and 
 follow [steps](plot/README.md) to generate all the plots mentioned in the paper.
@@ -167,7 +173,8 @@ pip install -r requirement-r.txt
 ```
 
 # ⚖️ Execute Experiments
-Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
+> [!WARNING]
+> Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
 
 Install the required packages and read [here](experiments/README.md) for more details
 ```shell

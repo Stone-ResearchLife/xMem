@@ -1,4 +1,3 @@
-import copy
 from typing import Any, Dict, List, Tuple, Union
 from bisect import bisect_left, bisect_right
 from .node import OperatorNode
