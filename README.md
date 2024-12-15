@@ -6,8 +6,6 @@ reliance on GPUs for memory estimation, xMem promotes efficient
 GPU utilization while mitigating OOM errors. 
 
 
-
-
 ## ✅Compatibility
 - ✅: Runnable 
 - ❌: Unrunnable

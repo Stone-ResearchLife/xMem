@@ -878,12 +878,12 @@ class ExperimentPlot:
 
         # for 2nd round of verification
         grouped = df.groupby(['tool', 'model', "optimiser"]).agg(
-            second_oom_success_rate=('accurate_estimation', lambda x: (x == True).sum() / len(x)),
+            second_oom_failed_rate=('accurate_estimation', lambda x: (x == False).sum() / len(x)),
             average_second_error=('2nd_error', 'median'),
         ).reset_index()
 
         for tool_name, group in grouped.groupby('tool'):
-            group['combined_score'] = probability_weight * (1 - group['second_oom_success_rate']) + error_weight * \
+            group['combined_score'] = probability_weight * (group['second_oom_failed_rate']) + error_weight * \
                                       group['average_second_error']
 
             sorted_combined_score = np.sort(group['combined_score'].dropna())
@@ -1185,7 +1185,7 @@ class ExperimentPlot:
         summarized_result = {
             "key": ["xMem", "Baselines Average", "Improvement (%)"],
         }
-        field_list = ["probability", "GPU Memory", "Median Error", "performance_score_1", "performance_score_2", "runtime"]
+        field_list = ["Median Error", "probability", "runtime", "GPU Memory", "performance_score_1", "performance_score_2"]
         field_map = {
             "probability": "probability (%)",
             "GPU Memory": "GPU Memory (GB)",
