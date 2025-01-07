@@ -287,7 +287,7 @@ class IterationData:
         if self._ops is None:
             data = dict(self._cat.get(ProfilerDataCategory.CPU_OP.value, [])).values()
             data = sorted(data, key=lambda x: x.start_time)
-            ops = self._stackup_nodes(data)  # 获取所有操作符对象
+            ops = self._stackup_nodes(data)
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 results = pool.map(self._op_get_memory, ops)
 
