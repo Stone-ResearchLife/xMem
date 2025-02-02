@@ -33,18 +33,27 @@ from .bookkeeping import BucketStore, GradientStore, ParameterStore, TensorBucke
 
 class LowLevelZeroFP16MixedPrecisionMixin(FP16MixedPrecisionMixin):
 
-    def __init__(self,
-                 num_working_param_groups: int,
-                 grad_store: GradientStore,
-                 initial_scale: float = 2**16,
-                 min_scale: float = 1,
-                 growth_factor: float = 2,
-                 backoff_factor: float = 0.5,
-                 growth_interval: int = 1000,
-                 hysteresis: int = 2,
-                 max_scale: float = 2**32) -> None:
-        super().__init__(initial_scale, min_scale, growth_factor, backoff_factor, growth_interval, hysteresis,
-                         max_scale)
+    def __init__(
+        self,
+        num_working_param_groups: int,
+        grad_store: GradientStore,
+        initial_scale: float = 2**16,
+        min_scale: float = 1,
+        growth_factor: float = 2,
+        backoff_factor: float = 0.5,
+        growth_interval: int = 1000,
+        hysteresis: int = 2,
+        max_scale: float = 2**32,
+    ) -> None:
+        super().__init__(
+            initial_scale,
+            min_scale,
+            growth_factor,
+            backoff_factor,
+            growth_interval,
+            hysteresis,
+            max_scale,
+        )
         self.num_working_param_groups = num_working_param_groups
         self.grad_store = grad_store
 
@@ -57,27 +66,27 @@ class LowLevelZeroFP16MixedPrecisionMixin(FP16MixedPrecisionMixin):
 
 
 class LowLevelZeroOptimizer(ColossalaiOptimizer):
-    """Optimizer used for ZeRO-1 and ZeRO-2.
-    """
+    """Optimizer used for ZeRO-1 and ZeRO-2."""
 
     def __init__(
-            self,
-            optimizer: Optimizer,
-            initial_scale: int = 2**16,    # grad scaler config
-            min_scale: int = 1,
-            growth_factor: float = 2.,
-            backoff_factor: float = .5,
-            growth_interval: int = 2000,
-            hysteresis: int = 2,
-            max_scale: int = 2**24,
-            clip_grad_norm: float = 0.0,    # grad clipping
-            verbose: bool = False,
-            reduce_bucket_size: int = 1024 * 1024,    # communication
-            communication_dtype: Optional[torch.dtype] = None,
-            overlap_communication: bool = False,
-            partition_grad: bool = False,    # stage 2 flag
-            cpu_offload: bool = False,    # cpu offload
-            forced_dtype: Optional[torch.dtype] = None):
+        self,
+        optimizer: Optimizer,
+        initial_scale: int = 2**16,  # grad scaler config
+        min_scale: int = 1,
+        growth_factor: float = 2.0,
+        backoff_factor: float = 0.5,
+        growth_interval: int = 2000,
+        hysteresis: int = 2,
+        max_scale: int = 2**24,
+        clip_grad_norm: float = 0.0,  # grad clipping
+        verbose: bool = False,
+        reduce_bucket_size: int = 1024 * 1024,  # communication
+        communication_dtype: Optional[torch.dtype] = None,
+        overlap_communication: bool = False,
+        partition_grad: bool = False,  # stage 2 flag
+        cpu_offload: bool = False,  # cpu offload
+        forced_dtype: Optional[torch.dtype] = None,
+    ):
 
         # TODO: add support for
         # 1. fp16 master weights
@@ -86,7 +95,7 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         # 4. support when some parameters requires_grad = False
         # 5. support layer drop
         super(LowLevelZeroOptimizer, self).__init__(optim=optimizer)
-        self._dtype = self.optim.param_groups[0]['params'][0].dtype
+        self._dtype = self.optim.param_groups[0]["params"][0].dtype
         self._logger = get_dist_logger()
         self._verbose = verbose
 
@@ -115,7 +124,10 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
             self._dp_global_ranks = gpc.get_ranks_in_group(dp_parallel_mode)
             self._dp_torch_group = gpc.get_group(dp_parallel_mode)
             self._mp_torch_group = None
-            if gpc.is_initialized(mp_parallel_mode) and gpc.get_world_size(mp_parallel_mode) > 1:
+            if (
+                gpc.is_initialized(mp_parallel_mode)
+                and gpc.get_world_size(mp_parallel_mode) > 1
+            ):
                 self._mp_torch_group = gpc.get_group(mp_parallel_mode)
         else:
             raise NotImplementedError
@@ -134,7 +146,7 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
 
         if forced_dtype:
             for group in self.optim.param_groups:
-                group_params = group['params']
+                group_params = group["params"]
                 for param in group_params:
                     param.data = param.data.to(forced_dtype)
             self._dtype = forced_dtype
@@ -153,7 +165,7 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         # and add buffers to parameter store for future access
         for group_id, param_group in enumerate(self.optim.param_groups):
             group_params = list()
-            for param in param_group['params']:
+            for param in param_group["params"]:
                 if param.requires_grad:
                     group_params.append(param)
 
@@ -182,26 +194,34 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
                 with torch.no_grad():
                     flat_tensor = flatten(tensor_list)
                 flat_tensor = flat_tensor.data.cuda()
-                self._param_store.add_flat_param_by_rank_group(rank, group_id, flat_tensor)
+                self._param_store.add_flat_param_by_rank_group(
+                    rank, group_id, flat_tensor
+                )
 
             # sync parameters
             for rank in range(self._world_size):
-                flat_tensor = self._param_store.get_flat_param_by_rank_group(rank, group_id)
+                flat_tensor = self._param_store.get_flat_param_by_rank_group(
+                    rank, group_id
+                )
                 tensor_list = self._param_store.get_params_by_rank_group(rank, group_id)
                 sync_param(flat_tensor=flat_tensor, tensor_list=tensor_list)
 
             # create a copy of fp32 master weights of the parameters for which this rank is responsible
-            working_flat_current_rank = self._param_store.get_flat_param_by_rank_group(self._local_rank, group_id)
+            working_flat_current_rank = self._param_store.get_flat_param_by_rank_group(
+                self._local_rank, group_id
+            )
             master_flat_current_rank = working_flat_current_rank.float()
-            device = 'cpu' if self._cpu_offload else get_current_device()
+            device = "cpu" if self._cpu_offload else get_current_device()
             master_flat_current_rank = master_flat_current_rank.to(device)
             master_flat_current_rank.requires_grad = True
-            self._master_flat_param_groups_of_current_rank[group_id] = master_flat_current_rank
+            self._master_flat_param_groups_of_current_rank[group_id] = (
+                master_flat_current_rank
+            )
 
             # need to replace the params in the `params` field in the optimizer
             # so that when the optimizer calls step(), it only updates the tensors
             # managed by this data parallel rank
-            param_group['params'] = [master_flat_current_rank]
+            param_group["params"] = [master_flat_current_rank]
 
             # set reduction state
             for param in self._working_param_groups[group_id]:
@@ -221,15 +241,17 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         # initialize mixed precision mixin
         self.mixed_precision_mixin: Optional[MixedPrecisionMixin] = None
         if self._dtype is torch.float16:
-            self.mixed_precision_mixin = LowLevelZeroFP16MixedPrecisionMixin(self.num_param_groups,
-                                                                             self._grad_store,
-                                                                             initial_scale=initial_scale,
-                                                                             min_scale=min_scale,
-                                                                             growth_factor=growth_factor,
-                                                                             backoff_factor=backoff_factor,
-                                                                             growth_interval=growth_interval,
-                                                                             hysteresis=hysteresis,
-                                                                             max_scale=max_scale)
+            self.mixed_precision_mixin = LowLevelZeroFP16MixedPrecisionMixin(
+                self.num_param_groups,
+                self._grad_store,
+                initial_scale=initial_scale,
+                min_scale=min_scale,
+                growth_factor=growth_factor,
+                backoff_factor=backoff_factor,
+                growth_interval=growth_interval,
+                hysteresis=hysteresis,
+                max_scale=max_scale,
+            )
         elif self._dtype is torch.bfloat16:
             self.mixed_precision_mixin = BF16MixedPrecisionMixin()
 
@@ -242,27 +264,32 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         return len(self._working_param_groups)
 
     def _sanity_checks(self):
-        assert torch.cuda.is_available(), 'CUDA is required'
+        assert torch.cuda.is_available(), "CUDA is required"
         for param_group in self.optim.param_groups:
-            group_params = param_group['params']
+            group_params = param_group["params"]
             for param in group_params:
-                assert param.dtype == self._dtype, \
-                    f"Parameters are expected to have the same dtype `{self._dtype}`, but got `{param.dtype}`"
+                assert (
+                    param.dtype == self._dtype
+                ), f"Parameters are expected to have the same dtype `{self._dtype}`, but got `{param.dtype}`"
 
     def _search_colo_process_group(self):
         colo_flag = False
         colo_pg = None
         for param_group in self.optim.param_groups:
-            group_params = param_group['params']
+            group_params = param_group["params"]
             for param in group_params:
                 if isinstance(param, ColoParameter):
                     colo_flag = True
                     if colo_pg is None:
                         colo_pg = param.get_process_group()
                     else:
-                        assert colo_pg == param.get_process_group(), "All parameters should be in a same process group"
+                        assert (
+                            colo_pg == param.get_process_group()
+                        ), "All parameters should be in a same process group"
                 elif colo_flag:
-                    raise RuntimeError("All parameters should be ColoParameter if you use ColoParameter.")
+                    raise RuntimeError(
+                        "All parameters should be ColoParameter if you use ColoParameter."
+                    )
         return colo_pg
 
     def _partition_param_list(self, param_list):
@@ -279,7 +306,9 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
             numel_per_rank[rank_to_go] += param.numel()
 
         if self._verbose:
-            self._logger.info(f'Number of elements on ranks: {numel_per_rank}', ranks=[0])
+            self._logger.info(
+                f"Number of elements on ranks: {numel_per_rank}", ranks=[0]
+            )
         return params_per_rank
 
     ###########################
@@ -306,7 +335,9 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
                     else:
                         reduce_rank = None
 
-                    param.register_hook(partial(self._grad_handler, param, reduce_rank=reduce_rank))
+                    param.register_hook(
+                        partial(self._grad_handler, param, reduce_rank=reduce_rank)
+                    )
 
     def _reduce_tensor_bucket(self, bucket: TensorBucket, reduce_rank):
         if self._overlap_communication:
@@ -321,11 +352,13 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
             reduce_global_rank = None
             if reduce_rank is not None:
                 reduce_global_rank = self._dp_global_ranks[reduce_rank]
-            reduced_flat = reduce_tensor_dp_group(tensor=flat,
-                                                  dtype=self._communication_dtype,
-                                                  dst_local_rank=reduce_rank,
-                                                  dst_global_rank=reduce_global_rank,
-                                                  group=self._dp_torch_group)
+            reduced_flat = reduce_tensor_dp_group(
+                tensor=flat,
+                dtype=self._communication_dtype,
+                dst_local_rank=reduce_rank,
+                dst_global_rank=reduce_global_rank,
+                group=self._dp_torch_group,
+            )
 
             # update the reduced tensor
             if reduce_rank is None or reduce_rank == self._local_rank:
@@ -348,9 +381,11 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         grad_buckets_by_dtype = split_by_dtype(grads)
 
         for tensor_list in grad_buckets_by_dtype:
-            self._reduce_tensor_list_with_one_dtype(tensor_list=tensor_list,
-                                                    bucket_size=bucket_size,
-                                                    reduce_rank=reduce_rank)
+            self._reduce_tensor_list_with_one_dtype(
+                tensor_list=tensor_list,
+                bucket_size=bucket_size,
+                reduce_rank=reduce_rank,
+            )
 
     #######################
     # Reduction Functions #
@@ -358,9 +393,11 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
 
     def _run_reduction(self, reduce_rank=None):
         # reduce grads
-        self._reduce_grads(reduce_rank=reduce_rank,
-                           grads=self._bucket_store.get_grad(reduce_rank=reduce_rank),
-                           bucket_size=self._bucket_store.num_elements_in_bucket(reduce_rank))
+        self._reduce_grads(
+            reduce_rank=reduce_rank,
+            grads=self._bucket_store.get_grad(reduce_rank=reduce_rank),
+            bucket_size=self._bucket_store.num_elements_in_bucket(reduce_rank),
+        )
 
         # use communication stream if overlapping
         # communication with computation
@@ -378,8 +415,10 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
                 is_param_reduced = self._param_store.is_param_reduced(param)
 
                 if is_param_reduced:
-                    msg = f'Parameter of size ({param.size()}) has been reduced, ' + \
-                          'duplicate reduction will lead to arithmetic incorrectness'
+                    msg = (
+                        f"Parameter of size ({param.size()}) has been reduced, "
+                        + "duplicate reduction will lead to arithmetic incorrectness"
+                    )
                     raise RuntimeError(msg)
 
                 # update the flag
@@ -387,7 +426,10 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
 
                 # if partition grads = True
                 # we do not keep the gradient after reduction
-                if self._partition_grads and not self._param_store.belongs_to_current_rank(param):
+                if (
+                    self._partition_grads
+                    and not self._param_store.belongs_to_current_rank(param)
+                ):
                     if self._overlap_communication:
                         # we need to keep this gradient for now as reduction may
                         # be completed yet since it is using a different cuda stream
@@ -403,14 +445,19 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         # check if the bucket is full
         # if full, will reduce the grads already in the bucket
         # after reduction, the bucket will be empty
-        if self._bucket_store.num_elements_in_bucket(reduce_rank) + param_size > self._reduce_bucket_size:
+        if (
+            self._bucket_store.num_elements_in_bucket(reduce_rank) + param_size
+            > self._reduce_bucket_size
+        ):
             self._run_reduction(reduce_rank)
 
         # the param must not be reduced to ensure correctness
         is_param_reduced = self._param_store.is_param_reduced(param)
         if is_param_reduced:
-            msg = f'Parameter of size ({param.size()}) has already been reduced, ' \
-                  + 'duplicate reduction will lead to arithmetic incorrectness'
+            msg = (
+                f"Parameter of size ({param.size()}) has already been reduced, "
+                + "duplicate reduction will lead to arithmetic incorrectness"
+            )
             raise RuntimeError(msg)
 
         self._bucket_store.add_num_elements_in_bucket(param_size, reduce_rank)
@@ -465,12 +512,15 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
     ####################
 
     def step(self, closure=None):
-        assert closure is None, 'closure is not supported by step()'
+        assert closure is None, "closure is not supported by step()"
 
-        if self.mixed_precision_mixin is not None and self.mixed_precision_mixin.should_skip_step():
+        if (
+            self.mixed_precision_mixin is not None
+            and self.mixed_precision_mixin.should_skip_step()
+        ):
             self._grad_store.reset_all_average_gradients()
             if self._verbose:
-                self._logger.info(f'Found overflow. Skip step')
+                self._logger.info(f"Found overflow. Skip step")
             self.zero_grad()
             return
 
@@ -480,27 +530,35 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
 
         for group_id in range(self.num_param_groups):
             # compute norm
-            norm_group = compute_norm(gradients=self._grad_store.get_averaged_gradients_by_group(group_id),
-                                      params=self._param_store.get_params_by_rank_group(group_id=group_id,
-                                                                                        rank=self._local_rank),
-                                      dp_group=self._dp_torch_group,
-                                      mp_group=self._mp_torch_group)
+            norm_group = compute_norm(
+                gradients=self._grad_store.get_averaged_gradients_by_group(group_id),
+                params=self._param_store.get_params_by_rank_group(
+                    group_id=group_id, rank=self._local_rank
+                ),
+                dp_group=self._dp_torch_group,
+                mp_group=self._mp_torch_group,
+            )
             norm_groups.append(norm_group)
 
             # create flat gradient for the flat fp32 master params
-            working_avg_grads = self._grad_store.get_averaged_gradients_by_group(group_id)
+            working_avg_grads = self._grad_store.get_averaged_gradients_by_group(
+                group_id
+            )
             flat_working_avg_grads = flatten(working_avg_grads)
 
             dtype = self._master_flat_param_groups_of_current_rank[group_id].dtype
             flat_master_avg_grads = flat_working_avg_grads.to(dtype)
 
             param_shape = self._master_flat_param_groups_of_current_rank[group_id].shape
-            assert param_shape == flat_master_avg_grads.shape, \
-                f'fp32 param and grad have different shape {param_shape} vs {flat_master_avg_grads.shape}'
+            assert (
+                param_shape == flat_master_avg_grads.shape
+            ), f"fp32 param and grad have different shape {param_shape} vs {flat_master_avg_grads.shape}"
 
             single_grad_partition_groups.append(flat_master_avg_grads)
             device = self._master_flat_param_groups_of_current_rank[group_id].device
-            self._master_flat_param_groups_of_current_rank[group_id].grad = flat_master_avg_grads.to(device)
+            self._master_flat_param_groups_of_current_rank[group_id].grad = (
+                flat_master_avg_grads.to(device)
+            )
             self._grad_store.reset_average_gradients_by_group(group_id)
 
         # unscale and clip grads
@@ -514,7 +572,9 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
 
         # update working partition updated by the current rank
         for group_id in range(len(self._working_param_groups)):
-            working_param = self._param_store.get_flat_param_by_rank_group(rank=self._local_rank, group_id=group_id)
+            working_param = self._param_store.get_flat_param_by_rank_group(
+                rank=self._local_rank, group_id=group_id
+            )
             master_param = self._master_flat_param_groups_of_current_rank[group_id]
             working_param.data.copy_(master_param)
 
@@ -523,8 +583,12 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         for group_id in range(self.num_param_groups):
             for index in range(self._world_size):
                 rank = self._dp_global_ranks[index]
-                working_param = self._param_store.get_flat_param_by_rank_group(rank=index, group_id=group_id)
-                handle = dist.broadcast(working_param, src=rank, group=self._dp_torch_group, async_op=True)
+                working_param = self._param_store.get_flat_param_by_rank_group(
+                    rank=index, group_id=group_id
+                )
+                handle = dist.broadcast(
+                    working_param, src=rank, group=self._dp_torch_group, async_op=True
+                )
                 handles.append(handle)
 
         for handle in handles:
@@ -540,14 +604,14 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
         if self.mixed_precision_mixin is not None:
             div_scale = self.mixed_precision_mixin.get_grad_div_scale()
 
-        if self._clip_grad_norm > 0.:
+        if self._clip_grad_norm > 0.0:
             # norm is in fact norm*scale
             clip = ((total_norm / div_scale) + 1e-6) / self._clip_grad_norm
             if clip > 1:
                 div_scale = clip * div_scale
 
         for grad in grad_groups_flat:
-            grad.data.mul_(1. / div_scale)
+            grad.data.mul_(1.0 / div_scale)
 
     ############################
     # Gradient Synchronization #
@@ -561,17 +625,25 @@ class LowLevelZeroOptimizer(ColossalaiOptimizer):
 
         # accumulate gradient
         for group_id in range(self.num_param_groups):
-            param_group = self._param_store.get_params_by_rank_group(self._local_rank, group_id)
+            param_group = self._param_store.get_params_by_rank_group(
+                self._local_rank, group_id
+            )
 
-            avg_gradients_group = self._grad_store.get_averaged_gradients_by_group(group_id)
+            avg_gradients_group = self._grad_store.get_averaged_gradients_by_group(
+                group_id
+            )
 
             param_idx = 0
             for param in param_group:
                 if param.grad is not None:
                     if len(avg_gradients_group) == param_idx:
-                        self._grad_store.append_average_gradient_by_group(group_id, param.grad)
+                        self._grad_store.append_average_gradient_by_group(
+                            group_id, param.grad
+                        )
                     else:
-                        self._grad_store.add_average_gradient_by_group(group_id, param_idx, param.grad)
+                        self._grad_store.add_average_gradient_by_group(
+                            group_id, param_idx, param.grad
+                        )
                     param_idx += 1
 
         # the gradients needed are stored in the avg_gradients buffer

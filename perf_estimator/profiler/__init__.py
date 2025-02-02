@@ -14,5 +14,5 @@ __all__ = [
     "StackNode",
     "CpuInstantNode",
     "ProfilerNode",
-    "ProfilerDataProcessing"
+    "ProfilerDataProcessing",
 ]

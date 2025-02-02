@@ -46,7 +46,9 @@ class CrossEntropyLoss2p5D(_Loss):
             targets (:class:`torch.tensor`): Ground truth class indices or class probabilities.
         """
         targets = split_batch_2p5d(targets)
-        loss = cross_entropy(logits, targets, reduction='none', *self.loss_args, **self.loss_kwargs)
+        loss = cross_entropy(
+            logits, targets, reduction="none", *self.loss_args, **self.loss_kwargs
+        )
         if self.reduction_mean:
             loss = loss.mean()
             loss = reduce_by_batch_2p5d(loss, True)
@@ -63,9 +65,11 @@ class _VocabParallelCrossEntropy2p5D(torch.autograd.Function):
         # loss: [b/dq]
         # targets: [b/dq, h/q]
         logits_max = torch.max(logits, dim=-1)[0]
-        torch.distributed.all_reduce(logits_max,
-                                     op=torch.distributed.ReduceOp.MAX,
-                                     group=gpc.get_group(ParallelMode.PARALLEL_2P5D_ROW))
+        torch.distributed.all_reduce(
+            logits_max,
+            op=torch.distributed.ReduceOp.MAX,
+            group=gpc.get_group(ParallelMode.PARALLEL_2P5D_ROW),
+        )
         # Subtract the maximum value.
         logits = logits - logits_max.unsqueeze(dim=-1)
 
@@ -83,12 +87,16 @@ class _VocabParallelCrossEntropy2p5D(torch.autograd.Function):
             end=logits.size()[0],
         )
         predicted_logits = logits[arange_1d, masked_target]
-        predicted_logits[target_mask] = 0.
-        dist.all_reduce(predicted_logits, group=gpc.get_group(ParallelMode.PARALLEL_2P5D_ROW))
+        predicted_logits[target_mask] = 0.0
+        dist.all_reduce(
+            predicted_logits, group=gpc.get_group(ParallelMode.PARALLEL_2P5D_ROW)
+        )
 
         exp_logits = torch.exp(logits)
         sum_exp_logits = exp_logits.sum(dim=1)
-        dist.all_reduce(sum_exp_logits, group=gpc.get_group(ParallelMode.PARALLEL_2P5D_ROW))
+        dist.all_reduce(
+            sum_exp_logits, group=gpc.get_group(ParallelMode.PARALLEL_2P5D_ROW)
+        )
 
         loss = torch.log(sum_exp_logits) - predicted_logits
 
@@ -111,8 +119,10 @@ class _VocabParallelCrossEntropy2p5D(torch.autograd.Function):
         grad_2d = grad_input.view(-1, partition_vocab_size)
 
         # Add the gradient from matching classes.
-        arange_1d = torch.arange(start=0, end=grad_2d.size()[0], device=get_current_device())
-        grad_2d[arange_1d, masked_target] -= (1.0 - target_mask.view(-1).float())
+        arange_1d = torch.arange(
+            start=0, end=grad_2d.size()[0], device=get_current_device()
+        )
+        grad_2d[arange_1d, masked_target] -= 1.0 - target_mask.view(-1).float()
 
         # Finally elementwise multiplication with the output gradients.
         grad_input.mul_(output_grad.unsqueeze(dim=-1))

@@ -9,12 +9,28 @@ from colossalai.fx.codegen.activation_checkpoint_codegen import CODEGEN_AVAILABL
 AUTOCHUNK_AVAILABLE = CODEGEN_AVAILABLE and is_compatible_with_meta()
 
 if AUTOCHUNK_AVAILABLE:
-    from torch.fx.graph import CodeGen, PythonCode, _custom_builtins, _CustomBuiltin, _format_target, _is_from_torch, _Namespace, _origin_type_map, inplace_methods, magic_methods
+    from torch.fx.graph import (
+        CodeGen,
+        PythonCode,
+        _custom_builtins,
+        _CustomBuiltin,
+        _format_target,
+        _is_from_torch,
+        _Namespace,
+        _origin_type_map,
+        inplace_methods,
+        magic_methods,
+    )
 
 from torch.fx.node import Argument, Node, _get_qualified_name, _type_repr, map_arg
 
 from .search_chunk import SearchChunk
-from .utils import delete_free_var_from_last_use, get_logger, get_node_name, get_node_shape
+from .utils import (
+    delete_free_var_from_last_use,
+    get_logger,
+    get_node_name,
+    get_node_shape,
+)
 
 
 def _gen_chunk_slice_dim(chunk_dim: int, chunk_indice_name: str, shape: List) -> str:
@@ -40,7 +56,12 @@ def _gen_chunk_slice_dim(chunk_dim: int, chunk_indice_name: str, shape: List) ->
     return new_shape
 
 
-def _gen_loop_start(chunk_input: List[Node], chunk_output: List[Node], chunk_output_dim: int, chunk_size=2) -> str:
+def _gen_loop_start(
+    chunk_input: List[Node],
+    chunk_output: List[Node],
+    chunk_output_dim: int,
+    chunk_size=2,
+) -> str:
     """
     Generate chunk loop start
 
@@ -64,23 +85,39 @@ def _gen_loop_start(chunk_input: List[Node], chunk_output: List[Node], chunk_out
     for i in range(len(chunk_output)):
         shape_str = str(list(get_node_shape(chunk_output[i])))
         if get_node_name(chunk_output[i]) in ["split", "unbind"]:
-            tensor_str = "torch.empty(%s, dtype=%s.dtype, device=%s.device), " % (shape_str, input_node.name,
-                                                                                  input_node.name)
-            tensor_str = tensor_str * len(chunk_output[i].meta['tensor_meta'])
+            tensor_str = "torch.empty(%s, dtype=%s.dtype, device=%s.device), " % (
+                shape_str,
+                input_node.name,
+                input_node.name,
+            )
+            tensor_str = tensor_str * len(chunk_output[i].meta["tensor_meta"])
             tensor_str = "[" + tensor_str[:-2] + "]"
             context += "%s = %s;  " % (chunk_output[i].name, tensor_str)
         else:
-            context += "%s = torch.empty(%s, dtype=%s.dtype, device=%s.device);  " % (chunk_output[i].name, shape_str,
-                                                                                      input_node.name, input_node.name)
+            context += "%s = torch.empty(%s, dtype=%s.dtype, device=%s.device);  " % (
+                chunk_output[i].name,
+                shape_str,
+                input_node.name,
+                input_node.name,
+            )
 
     out_shape = get_node_shape(chunk_output[0])
     chunk_shape = out_shape[chunk_output_dim[0]]
-    context += "chunk_size = %d\nfor chunk_idx in range(0, %d, chunk_size):\n" % (chunk_size, chunk_shape)
+    context += "chunk_size = %d\nfor chunk_idx in range(0, %d, chunk_size):\n" % (
+        chunk_size,
+        chunk_shape,
+    )
     return context
 
 
-def _gen_loop_end(chunk_inputs: List[Node], chunk_non_compute_inputs: List[Node], node_list: List[Node],
-                  chunk_outputs_idx: int, chunk_outputs_non_tensor: List[Node], search_chunk: SearchChunk) -> str:
+def _gen_loop_end(
+    chunk_inputs: List[Node],
+    chunk_non_compute_inputs: List[Node],
+    node_list: List[Node],
+    chunk_outputs_idx: int,
+    chunk_outputs_non_tensor: List[Node],
+    search_chunk: SearchChunk,
+) -> str:
     """
     Generate chunk loop end
 
@@ -100,10 +137,21 @@ def _gen_loop_end(chunk_inputs: List[Node], chunk_non_compute_inputs: List[Node]
     context = "chunk_size = None"
     # determine if its the last use for chunk input
     for chunk_input in chunk_inputs + chunk_non_compute_inputs:
-        if all([search_chunk.node_mgr.find_node_idx(user) <= chunk_outputs_idx for user in chunk_input.users.keys()]):
+        if all(
+            [
+                search_chunk.node_mgr.find_node_idx(user) <= chunk_outputs_idx
+                for user in chunk_input.users.keys()
+            ]
+        ):
             context += ";  %s = None" % chunk_input.name
-    for chunk_output_non_tensor, chunk_output_non_tensor_val in chunk_outputs_non_tensor.items():
-        context += ";  %s = %s" % (chunk_output_non_tensor.name, chunk_output_non_tensor_val)
+    for (
+        chunk_output_non_tensor,
+        chunk_output_non_tensor_val,
+    ) in chunk_outputs_non_tensor.items():
+        context += ";  %s = %s" % (
+            chunk_output_non_tensor.name,
+            chunk_output_non_tensor_val,
+        )
     context += "\n"
     return context
 
@@ -112,7 +160,16 @@ def _replace_name(context: str, name_from: str, name_to: str) -> str:
     """
     replace node name
     """
-    patterns = [(" ", " "), (" ", "."), (" ", ","), ("(", ")"), ("(", ","), (" ", ")"), (" ", ""), ("", " ")]
+    patterns = [
+        (" ", " "),
+        (" ", "."),
+        (" ", ","),
+        ("(", ")"),
+        ("(", ","),
+        (" ", ")"),
+        (" ", ""),
+        ("", " "),
+    ]
     for p in patterns:
         source = p[0] + name_from + p[1]
         target = p[0] + name_to + p[1]
@@ -128,7 +185,9 @@ def _replace_reshape_size(context: str, node_name: str, reshape_size_dict: Dict)
     """
     if node_name not in reshape_size_dict:
         return context
-    context = context.replace(reshape_size_dict[node_name][0], reshape_size_dict[node_name][1])
+    context = context.replace(
+        reshape_size_dict[node_name][0], reshape_size_dict[node_name][1]
+    )
     return context
 
 
@@ -148,10 +207,17 @@ def _replace_new_tensor_like_shape(
         chunk_dim = chunk_infos[region_idx]["node_chunk_dim"][meta_node]["chunk_dim"]
         if get_node_shape(meta_node)[chunk_dim] != 1:
             source_node = meta_node.args[0].args[0]
-            if (source_node not in chunk_infos[region_idx]["node_chunk_dim"]
-                    or chunk_infos[region_idx]["node_chunk_dim"][source_node]["chunk_dim"] is None):
-                chunk_slice = _gen_chunk_slice_dim(chunk_dim, "chunk_idx", get_node_shape(node))
-                body[-1] = _replace_name(body[-1], node.args[0].name, node.args[0].name + chunk_slice)
+            if (
+                source_node not in chunk_infos[region_idx]["node_chunk_dim"]
+                or chunk_infos[region_idx]["node_chunk_dim"][source_node]["chunk_dim"]
+                is None
+            ):
+                chunk_slice = _gen_chunk_slice_dim(
+                    chunk_dim, "chunk_idx", get_node_shape(node)
+                )
+                body[-1] = _replace_name(
+                    body[-1], node.args[0].name, node.args[0].name + chunk_slice
+                )
     return body
 
 
@@ -175,7 +241,9 @@ def _replace_new_tensor_shape(
             return
         origin_shape = str(node.args)
         new_shape = list(node.args)
-        new_shape[chunk_dim] = "min(chunk_size, %d - chunk_idx)" % get_node_shape(meta_node)[chunk_dim]
+        new_shape[chunk_dim] = (
+            "min(chunk_size, %d - chunk_idx)" % get_node_shape(meta_node)[chunk_dim]
+        )
         new_shape = str(new_shape)
         new_shape = new_shape.replace("'", "")
         body[-1] = _replace_name(body[-1], origin_shape[1:-1], new_shape[1:-1])
@@ -198,31 +266,50 @@ def _add_node_slice(
         if isinstance(chunk_nodes_dim[region_idx][chunk_node_idx], dict):
             for idx, dim in chunk_nodes_dim[region_idx][chunk_node_idx].items():
                 if idx == node_idx:
-                    chunk_slice = _gen_chunk_slice_dim(dim[0], "chunk_idx", get_node_shape(chunk_node))
-                    body[-1] = _replace_name(body[-1], chunk_node.name, chunk_node.name + chunk_slice)
+                    chunk_slice = _gen_chunk_slice_dim(
+                        dim[0], "chunk_idx", get_node_shape(chunk_node)
+                    )
+                    body[-1] = _replace_name(
+                        body[-1], chunk_node.name, chunk_node.name + chunk_slice
+                    )
         # outputs node
         else:
-            if chunk_node.name == node.name or (chunk_node.name in [i.name for i in node.all_input_nodes]):
-                chunk_slice = _gen_chunk_slice_dim(chunk_nodes_dim[region_idx][chunk_node_idx], "chunk_idx",
-                                                   get_node_shape(chunk_node))
+            if chunk_node.name == node.name or (
+                chunk_node.name in [i.name for i in node.all_input_nodes]
+            ):
+                chunk_slice = _gen_chunk_slice_dim(
+                    chunk_nodes_dim[region_idx][chunk_node_idx],
+                    "chunk_idx",
+                    get_node_shape(chunk_node),
+                )
                 if get_node_name(chunk_node) in ["split", "unbind"]:
                     split_chunk_slice = ""
-                    for i in range(len(chunk_node.meta['tensor_meta'])):
-                        split_chunk_slice += "%s[%d]%s, " % (chunk_node.name, i, chunk_slice)
+                    for i in range(len(chunk_node.meta["tensor_meta"])):
+                        split_chunk_slice += "%s[%d]%s, " % (
+                            chunk_node.name,
+                            i,
+                            chunk_slice,
+                        )
                     split_chunk_slice = split_chunk_slice[:-2]
-                    body[-1] = _replace_name(body[-1], chunk_node.name, split_chunk_slice)
+                    body[-1] = _replace_name(
+                        body[-1], chunk_node.name, split_chunk_slice
+                    )
                 else:
-                    body[-1] = _replace_name(body[-1], chunk_node.name, chunk_node.name + chunk_slice)
+                    body[-1] = _replace_name(
+                        body[-1], chunk_node.name, chunk_node.name + chunk_slice
+                    )
     return body
 
 
-def emit_code_with_chunk(body: List[str],
-                         nodes: Iterable[Node],
-                         emit_node_func: Callable,
-                         delete_unused_value_func: Callable,
-                         search_chunk: SearchChunk,
-                         chunk_infos: List,
-                         eval_mem: bool = False):
+def emit_code_with_chunk(
+    body: List[str],
+    nodes: Iterable[Node],
+    emit_node_func: Callable,
+    delete_unused_value_func: Callable,
+    search_chunk: SearchChunk,
+    chunk_infos: List,
+    eval_mem: bool = False,
+):
     """
     Emit code with chunk according to chunk_infos.
 
@@ -244,10 +331,14 @@ def emit_code_with_chunk(body: List[str],
     chunk_ends = [i["region"][1] for i in chunk_infos]
 
     # chunk inputs
-    chunk_inputs = [i["inputs"] for i in chunk_infos]    # input with chunk
-    chunk_inputs_non_chunk = [i["inputs_non_chunk"] for i in chunk_infos]    # input without chunk
-    chunk_inputs_dim = [i["inputs_dim"] for i in chunk_infos]    # input chunk dim
-    chunk_inputs_names = [j.name for i in chunk_inputs for j in i] + [j.name for i in chunk_inputs_non_chunk for j in i]
+    chunk_inputs = [i["inputs"] for i in chunk_infos]  # input with chunk
+    chunk_inputs_non_chunk = [
+        i["inputs_non_chunk"] for i in chunk_infos
+    ]  # input without chunk
+    chunk_inputs_dim = [i["inputs_dim"] for i in chunk_infos]  # input chunk dim
+    chunk_inputs_names = [j.name for i in chunk_inputs for j in i] + [
+        j.name for i in chunk_inputs_non_chunk for j in i
+    ]
 
     # chunk outputs
     chunk_outputs = [i["outputs"] for i in chunk_infos]
@@ -275,26 +366,38 @@ def emit_code_with_chunk(body: List[str],
                     chunk_outputs[region_idx],
                     chunk_outputs_dim[region_idx],
                     chunk_infos[region_idx]["chunk_size"],
-                ))
+                )
+            )
 
         if within_chunk_region:
             emit_node_func(node, body)
             # replace input var with chunk var
-            body = _add_node_slice(chunk_inputs, region_idx, chunk_inputs_dim, node_idx, body, node)
+            body = _add_node_slice(
+                chunk_inputs, region_idx, chunk_inputs_dim, node_idx, body, node
+            )
             # replace output var with chunk var
-            body = _add_node_slice(chunk_outputs, region_idx, chunk_outputs_dim, node_idx, body, node)
+            body = _add_node_slice(
+                chunk_outputs, region_idx, chunk_outputs_dim, node_idx, body, node
+            )
             # new tensor like
-            body = _replace_new_tensor_like_shape(search_chunk, chunk_infos, region_idx, node_idx, node, body)
+            body = _replace_new_tensor_like_shape(
+                search_chunk, chunk_infos, region_idx, node_idx, node, body
+            )
             # new tensor
-            body = _replace_new_tensor_shape(search_chunk, chunk_infos, region_idx, node_idx, node, body)
+            body = _replace_new_tensor_shape(
+                search_chunk, chunk_infos, region_idx, node_idx, node, body
+            )
             # reassign reshape size
-            body[-1] = _replace_reshape_size(body[-1], node.name, chunk_infos[region_idx]["reshape_size"])
+            body[-1] = _replace_reshape_size(
+                body[-1], node.name, chunk_infos[region_idx]["reshape_size"]
+            )
             body[-1] = "    " + body[-1]
             delete_unused_value_func(node, body, chunk_inputs_names)
             if eval_mem:
                 body.append(
                     "    if chunk_idx == 0:\n        print('%s', torch.cuda.max_memory_allocated() / 1024**2 - init_memory);  torch.cuda.reset_peak_memory_stats()\n"
-                    % (node.name))
+                    % (node.name)
+                )
         else:
             emit_node_func(node, body)
             if node_idx not in chunk_inputs:
@@ -302,13 +405,21 @@ def emit_code_with_chunk(body: List[str],
             if eval_mem:
                 body.append(
                     "print('%s', torch.cuda.max_memory_allocated() / 1024**2 - init_memory);  torch.cuda.reset_peak_memory_stats()\n"
-                    % (node.name))
+                    % (node.name)
+                )
 
         # generate chunk region end
         if node_idx in chunk_ends:
             body.append(
-                _gen_loop_end(chunk_inputs[region_idx], chunk_inputs_non_chunk[region_idx], node_list,
-                              chunk_ends[region_idx], chunk_outputs_non_tensor[region_idx], search_chunk))
+                _gen_loop_end(
+                    chunk_inputs[region_idx],
+                    chunk_inputs_non_chunk[region_idx],
+                    node_list,
+                    chunk_ends[region_idx],
+                    chunk_outputs_non_tensor[region_idx],
+                    search_chunk,
+                )
+            )
             within_chunk_region = False
 
         node_idx += 1
@@ -318,21 +429,27 @@ if AUTOCHUNK_AVAILABLE:
 
     class AutoChunkCodeGen(CodeGen):
 
-        def __init__(self,
-                     meta_graph,
-                     max_memory: int = None,
-                     print_mem: bool = False,
-                     print_progress: bool = False,
-                     eval_mem: bool = False) -> None:
+        def __init__(
+            self,
+            meta_graph,
+            max_memory: int = None,
+            print_mem: bool = False,
+            print_progress: bool = False,
+            eval_mem: bool = False,
+        ) -> None:
             super().__init__()
             self.eval_mem = eval_mem
             # find the chunk regions
-            self.search_chunk = SearchChunk(meta_graph, max_memory, print_mem, print_progress)
+            self.search_chunk = SearchChunk(
+                meta_graph, max_memory, print_mem, print_progress
+            )
             self.chunk_infos = self.search_chunk.search_region()
             if print_progress:
                 get_logger().info("AutoChunk start codegen")
 
-        def _gen_python_code(self, nodes, root_module: str, namespace: _Namespace) -> PythonCode:
+        def _gen_python_code(
+            self, nodes, root_module: str, namespace: _Namespace
+        ) -> PythonCode:
             free_vars: List[str] = []
             body: List[str] = []
             globals_: Dict[str, Any] = {}
@@ -349,7 +466,9 @@ if AUTOCHUNK_AVAILABLE:
 
                 Returns: the global name that should be used to reference 'obj' in generated source.
                 """
-                if (_is_from_torch(obj) and obj != torch.device):    # to support registering torch.device
+                if (
+                    _is_from_torch(obj) and obj != torch.device
+                ):  # to support registering torch.device
                     # HACK: workaround for how torch custom ops are registered. We
                     # can't import them like normal modules so they must retain their
                     # fully qualified name.
@@ -365,7 +484,9 @@ if AUTOCHUNK_AVAILABLE:
                 return global_name
 
             # set _custom_builtins here so that we needn't import colossalai in forward
-            _custom_builtins["colossalai"] = _CustomBuiltin("import colossalai", colossalai)
+            _custom_builtins["colossalai"] = _CustomBuiltin(
+                "import colossalai", colossalai
+            )
 
             # Pre-fill the globals table with registered builtins.
             for name, (_, obj) in _custom_builtins.items():
@@ -401,7 +522,9 @@ if AUTOCHUNK_AVAILABLE:
                 # Common case: this is a regular module name like 'foo.bar.baz'
                 return add_global(typename, o)
 
-            def _format_args(args: Tuple[Argument, ...], kwargs: Dict[str, Argument]) -> str:
+            def _format_args(
+                args: Tuple[Argument, ...], kwargs: Dict[str, Argument]
+            ) -> str:
 
                 def _get_repr(arg):
                     # Handle NamedTuples (if it has `_fields`) via add_global.
@@ -450,18 +573,26 @@ if AUTOCHUNK_AVAILABLE:
                 nodes_to_delete = user_to_last_uses.get(user, [])
                 nodes_to_delete = [i for i in nodes_to_delete if i.name not in to_keep]
                 if len(nodes_to_delete):
-                    to_delete_str = " = ".join([repr(n) for n in nodes_to_delete] + ["None"])
+                    to_delete_str = " = ".join(
+                        [repr(n) for n in nodes_to_delete] + ["None"]
+                    )
                     body.append(f";  {to_delete_str}\n")
                 else:
                     body.append("\n")
 
             # NOTE: we add a variable to distinguish body and ckpt_func
             def emit_node(node: Node, body):
-                maybe_type_annotation = ("" if node.type is None else f" : {type_repr(node.type)}")
+                maybe_type_annotation = (
+                    "" if node.type is None else f" : {type_repr(node.type)}"
+                )
                 if node.op == "placeholder":
                     assert isinstance(node.target, str)
-                    maybe_default_arg = ("" if not node.args else f" = {repr(node.args[0])}")
-                    free_vars.append(f"{node.target}{maybe_type_annotation}{maybe_default_arg}")
+                    maybe_default_arg = (
+                        "" if not node.args else f" = {repr(node.args[0])}"
+                    )
+                    free_vars.append(
+                        f"{node.target}{maybe_type_annotation}{maybe_default_arg}"
+                    )
                     raw_name = node.target.replace("*", "")
                     if raw_name != repr(node):
                         body.append(f"{repr(node)} = {raw_name}\n")
@@ -470,46 +601,68 @@ if AUTOCHUNK_AVAILABLE:
                     assert isinstance(node.target, str)
                     body.append(
                         f"{repr(node)}{maybe_type_annotation} = {_format_target(repr(node.args[0]), node.target)}"
-                        f"({_format_args(node.args[1:], node.kwargs)})")
+                        f"({_format_args(node.args[1:], node.kwargs)})"
+                    )
                     return
                 elif node.op == "call_function":
                     assert callable(node.target)
                     # pretty print operators
-                    if (node.target.__module__ == "_operator" and node.target.__name__ in magic_methods):
+                    if (
+                        node.target.__module__ == "_operator"
+                        and node.target.__name__ in magic_methods
+                    ):
                         assert isinstance(node.args, tuple)
-                        body.append(f"{repr(node)}{maybe_type_annotation} = "
-                                    f"{magic_methods[node.target.__name__].format(*(repr(a) for a in node.args))}")
+                        body.append(
+                            f"{repr(node)}{maybe_type_annotation} = "
+                            f"{magic_methods[node.target.__name__].format(*(repr(a) for a in node.args))}"
+                        )
                         return
 
                     # pretty print inplace operators; required for jit.script to work properly
                     # not currently supported in normal FX graphs, but generated by torchdynamo
-                    if (node.target.__module__ == "_operator" and node.target.__name__ in inplace_methods):
-                        body.append(f"{inplace_methods[node.target.__name__].format(*(repr(a) for a in node.args))};  "
-                                    f"{repr(node)}{maybe_type_annotation} = {repr(node.args[0])}")
+                    if (
+                        node.target.__module__ == "_operator"
+                        and node.target.__name__ in inplace_methods
+                    ):
+                        body.append(
+                            f"{inplace_methods[node.target.__name__].format(*(repr(a) for a in node.args))};  "
+                            f"{repr(node)}{maybe_type_annotation} = {repr(node.args[0])}"
+                        )
                         return
 
                     qualified_name = _get_qualified_name(node.target)
                     global_name = add_global(qualified_name, node.target)
                     # special case for getattr: node.args could be 2-argument or 3-argument
                     # 2-argument: attribute access; 3-argument: fall through to attrib function call with default value
-                    if (global_name == "getattr" and isinstance(node.args, tuple) and isinstance(node.args[1], str)
-                            and node.args[1].isidentifier() and len(node.args) == 2):
+                    if (
+                        global_name == "getattr"
+                        and isinstance(node.args, tuple)
+                        and isinstance(node.args[1], str)
+                        and node.args[1].isidentifier()
+                        and len(node.args) == 2
+                    ):
                         body.append(
-                            f"{repr(node)}{maybe_type_annotation} = {_format_target(repr(node.args[0]), node.args[1])}")
+                            f"{repr(node)}{maybe_type_annotation} = {_format_target(repr(node.args[0]), node.args[1])}"
+                        )
                         return
                     body.append(
-                        f"{repr(node)}{maybe_type_annotation} = {global_name}({_format_args(node.args, node.kwargs)})")
+                        f"{repr(node)}{maybe_type_annotation} = {global_name}({_format_args(node.args, node.kwargs)})"
+                    )
                     if node.meta.get("is_wrapped", False):
                         wrapped_fns.setdefault(global_name)
                     return
                 elif node.op == "call_module":
                     assert isinstance(node.target, str)
-                    body.append(f"{repr(node)}{maybe_type_annotation} = "
-                                f"{_format_target(root_module, node.target)}({_format_args(node.args, node.kwargs)})")
+                    body.append(
+                        f"{repr(node)}{maybe_type_annotation} = "
+                        f"{_format_target(root_module, node.target)}({_format_args(node.args, node.kwargs)})"
+                    )
                     return
                 elif node.op == "get_attr":
                     assert isinstance(node.target, str)
-                    body.append(f"{repr(node)}{maybe_type_annotation} = {_format_target(root_module, node.target)}")
+                    body.append(
+                        f"{repr(node)}{maybe_type_annotation} = {_format_target(root_module, node.target)}"
+                    )
                     return
                 elif node.op == "output":
                     if node.type is not None:
@@ -523,8 +676,15 @@ if AUTOCHUNK_AVAILABLE:
 
             # if any node has a list of labels for activation_checkpoint, we
             # will use nested type of activation checkpoint codegen
-            emit_code_with_chunk(body, nodes, emit_node, delete_unused_values, self.search_chunk, self.chunk_infos,
-                                 self.eval_mem)
+            emit_code_with_chunk(
+                body,
+                nodes,
+                emit_node,
+                delete_unused_values,
+                self.search_chunk,
+                self.chunk_infos,
+                self.eval_mem,
+            )
 
             if len(body) == 0:
                 # If the Graph has no non-placeholder nodes, no lines for the body
@@ -534,7 +694,9 @@ if AUTOCHUNK_AVAILABLE:
 
             if len(wrapped_fns) > 0:
                 wrap_name = add_global("wrap", torch.fx.wrap)
-                wrap_stmts = "\n".join([f'{wrap_name}("{name}")' for name in wrapped_fns])
+                wrap_stmts = "\n".join(
+                    [f'{wrap_name}("{name}")' for name in wrapped_fns]
+                )
             else:
                 wrap_stmts = ""
 

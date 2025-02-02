@@ -34,7 +34,9 @@ class Layer:
         return self._node.end_time
 
     def memory_plot(self):
-        memories = copy.deepcopy(self.forward_memory) + copy.deepcopy(self.backward_memory)
+        memories = copy.deepcopy(self.forward_memory) + copy.deepcopy(
+            self.backward_memory
+        )
         memories = sorted(memories, key=lambda x: x.alloc_time)
         fig = go.Figure()
         y = 0
@@ -50,29 +52,35 @@ class Layer:
             blocks.append(block)
             y += 0.5
 
-        max_x = max([block['x1'] for block in blocks if block['x1'] is not None])
-        min_x = min([block['x0'] for block in blocks])
+        max_x = max([block["x1"] for block in blocks if block["x1"] is not None])
+        min_x = min([block["x0"] for block in blocks])
         max_y = len(memories) * 0.5
         min_y = 0
         for block in blocks:
             fig.add_shape(
                 type="rect",
-                x0=block['x0'], x1=block.get('x1') or max_x,
-                y0=block['y0'], y1=block['y1'],
+                x0=block["x0"],
+                x1=block.get("x1") or max_x,
+                y0=block["y0"],
+                y1=block["y1"],
                 line=dict(color="black"),
-                fillcolor="blue"
+                fillcolor="blue",
             )
             fig.add_annotation(
-                x=(block['x0'] + (block.get('x1') or max_x)) / 2,
-                y=(block['y0'] + block['y1']) / 2,
-                text=format_memory(block['bytes']),
+                x=(block["x0"] + (block.get("x1") or max_x)) / 2,
+                y=(block["y0"] + block["y1"]) / 2,
+                text=format_memory(block["bytes"]),
                 showarrow=False,
-                font=dict(size=12)
+                font=dict(size=12),
             )
 
         fig.update_layout(
-            xaxis=dict(range=[min_x, max_x], title="Time"),  # Setting the range for x-axis
-            yaxis=dict(range=[min_y, max_y], showticklabels=False),  # Setting the range for y-axis and hiding labels
+            xaxis=dict(
+                range=[min_x, max_x], title="Time"
+            ),  # Setting the range for x-axis
+            yaxis=dict(
+                range=[min_y, max_y], showticklabels=False
+            ),  # Setting the range for y-axis and hiding labels
             showlegend=False,
             height=max_y * 50,
             width=800,
@@ -83,14 +91,23 @@ class Layer:
     def non_temp_forward_memory(self) -> List[MemoryBlock]:
         if len(self.ops) == 0:
             return []
-        return list(filter(lambda x: x.free_time is None or x.free_time > self.end, self.forward_memory))
+        return list(
+            filter(
+                lambda x: x.free_time is None or x.free_time > self.end,
+                self.forward_memory,
+            )
+        )
 
     def non_temp_backward_memory(self) -> List[MemoryBlock]:
         if len(self.ops) == 0:
             return []
         back_end_time = max([mem.end_time for mem in self.ops])
-        return list(filter(lambda x: x.free_time is None or x.free_time > back_end_time, self.backward_memory))
-
+        return list(
+            filter(
+                lambda x: x.free_time is None or x.free_time > back_end_time,
+                self.backward_memory,
+            )
+        )
 
 
 class ProfilerDataCategory(Enum):
@@ -115,11 +132,11 @@ class IterationData:
 
     @property
     def start(self):
-        return self._data['ts']
+        return self._data["ts"]
 
     @property
     def end(self):
-        return self._data['ts'] + self._data['dur']
+        return self._data["ts"] + self._data["dur"]
 
     @property
     def optimiser_step(self) -> Optional[Tuple[int, int]]:
@@ -161,14 +178,16 @@ class IterationData:
             name = node.function_name
             if name in self._cat["layer"].keys():
                 _name = f"{name}_{uuid4().hex[:2]}"
-                logger.warning(f"Duplicate layer name found: {name}. Renaming to {_name}")
+                logger.warning(
+                    f"Duplicate layer name found: {name}. Renaming to {_name}"
+                )
                 name = _name
             self._cat["layer"][name] = Layer(node)
 
     def add_event(self, event: dict):
-        timestamp = event['ts']
+        timestamp = event["ts"]
         if timestamp <= self.end:
-            cat = event.get('cat', 'non-category')
+            cat = event.get("cat", "non-category")
 
             # Only CPU_INSTANT_EVENT events are considered before the start of the iteration
             # The memory block needs to maintain its continuity and sequence without disruption.
@@ -194,20 +213,20 @@ class IterationData:
                 node = CpuInstantNode(value=event)
                 start_time = node.start_time
             elif cat == ProfilerDataCategory.USER_ANNOTATION.value:
-                pattern_zero_grad = '^Optimizer.zero_grad#[a-zA-Z0-9]+.zero_grad$'
-                pattern_optimizer_step = '^Optimizer.step#[a-zA-Z0-9]+.step$'
-                if re.match(pattern_zero_grad, event['name']):
-                    self._zero_grad = event['ts']
-                elif re.match(pattern_optimizer_step, event['name']):
-                    self._optimiser_step = (event['ts'], event['ts'] + event['dur'])
-                    optimiser_name_pattern = r'#(\w+)\.'
-                    match = re.search(optimiser_name_pattern, event['name'])
+                pattern_zero_grad = "^Optimizer.zero_grad#[a-zA-Z0-9]+.zero_grad$"
+                pattern_optimizer_step = "^Optimizer.step#[a-zA-Z0-9]+.step$"
+                if re.match(pattern_zero_grad, event["name"]):
+                    self._zero_grad = event["ts"]
+                elif re.match(pattern_optimizer_step, event["name"]):
+                    self._optimiser_step = (event["ts"], event["ts"] + event["dur"])
+                    optimiser_name_pattern = r"#(\w+)\."
+                    match = re.search(optimiser_name_pattern, event["name"])
                     if match:
                         self._optimiser = match.group(1)
                 return
             else:
                 node = event
-                start_time = node['ts']
+                start_time = node["ts"]
             self._cat[cat].append((start_time, node))
 
     def layer_summary(self) -> List[Dict[str, Any]]:
@@ -220,13 +239,15 @@ class IterationData:
                 forward_mem = layer.non_temp_forward_memory()
                 backward_mem = layer.non_temp_backward_memory()
 
-            layer_dict.append({
-                "name": name,
-                "start": layer.start,
-                "end": layer.end,
-                "forward_memory": [memory for memory in forward_mem],
-                "backward_memory": [memory for memory in backward_mem],
-            })
+            layer_dict.append(
+                {
+                    "name": name,
+                    "start": layer.start,
+                    "end": layer.end,
+                    "forward_memory": [memory for memory in forward_mem],
+                    "backward_memory": [memory for memory in backward_mem],
+                }
+            )
         return layer_dict
 
     def optimiser_memory(self) -> List[MemoryBlock]:
@@ -240,10 +261,15 @@ class IterationData:
     def get_layers(self) -> Dict[str, Layer]:
         if self._layer is None:
             import copy
+
             layers = copy.deepcopy(self._cat.get("layer", {}))
             parent_layers = []
             for name, layer in layers.items():
-                back_trace = [trace.function_name for trace in layer._node.backward_stack() if trace.is_module_layer]
+                back_trace = [
+                    trace.function_name
+                    for trace in layer._node.backward_stack()
+                    if trace.is_module_layer
+                ]
                 parent_layers.extend(back_trace[1:])
 
                 forward_memory: List[MemoryBlock] = []
@@ -263,7 +289,9 @@ class IterationData:
                     # ensuring no duplicate memory blocks or temporary memory blocks
                     for trace in op.forward_stack():
                         leaf_op = trace[-1]
-                        op_memory = self.memory_search(leaf_op.start_time, leaf_op.end_time)
+                        op_memory = self.memory_search(
+                            leaf_op.start_time, leaf_op.end_time
+                        )
                         if len(op_memory) > 0:
                             op.memory.extend(op_memory)
                             op_used_memory.extend(op_memory)
@@ -307,8 +335,8 @@ class IterationData:
             matched_result = list(
                 filter(
                     lambda x: x.start_time <= node.start_time
-                              and x.end_time >= node.end_time,
-                   nodes 
+                    and x.end_time >= node.end_time,
+                    nodes,
                 )
             )
             matched_result.remove(node)
@@ -318,7 +346,7 @@ class IterationData:
                 matched_result.sort(key=lambda x: (x.start_time, -x.end_time))
                 matched_result[-1].add_child(node)
         return root_stacks
-    
+
     def get_memory_activities(self) -> Dict[int, List[MemoryBlock]]:
         if self._memory is None:
             _address: Dict[str, MemoryBlock] = {}
@@ -346,10 +374,10 @@ class IterationData:
         return self._memory
 
     def _search_trace(
-            self,
-            list_data: Dict[int, List[Any]],
-            start: Optional[Union[float, int]],
-            end: Optional[Union[float, int]],
+        self,
+        list_data: Dict[int, List[Any]],
+        start: Optional[Union[float, int]],
+        end: Optional[Union[float, int]],
     ) -> list:
         start = start or 0
         end = end or max(list_data.keys())
@@ -366,13 +394,21 @@ class IterationData:
                 result.append(events)
         return result
 
-    def memory_search(self, start: Optional[float] = None, end: Optional[float] = None) -> List[MemoryBlock]:
+    def memory_search(
+        self, start: Optional[float] = None, end: Optional[float] = None
+    ) -> List[MemoryBlock]:
         result = self._search_trace(self.get_memory_activities(), start, end)
         return sorted(result, key=lambda x: x.alloc_time)
 
-    def ops_search(self, start: Optional[float] = None, end: Optional[float] = None) -> List[OperatorNode]:
-        result = self._search_trace(dict(self._cat[ProfilerDataCategory.CPU_OP.value]), start, end)
-        sequence_ids = set([op.seq_number for op in result if op.seq_number is not None])
+    def ops_search(
+        self, start: Optional[float] = None, end: Optional[float] = None
+    ) -> List[OperatorNode]:
+        result = self._search_trace(
+            dict(self._cat[ProfilerDataCategory.CPU_OP.value]), start, end
+        )
+        sequence_ids = set(
+            [op.seq_number for op in result if op.seq_number is not None]
+        )
         for _id in sequence_ids:
             result.extend(self._sequence_ops.get(_id, []))
         result = self._stackup_nodes(list(set(result)))
@@ -398,19 +434,19 @@ class ProfilerDataProcessing:
         return self._iteration.get(iteration - 1, None)
 
     def load_data(self) -> dict:
-        with open(self._file_path, 'r') as file:
+        with open(self._file_path, "r") as file:
             _data = json.load(file)
         return _data
 
     def _load(self):
         events = self.load_data()
         iteration_count = 0
-        for element in events['traceEvents']:
-            name = element.get('name', '')
-            cat = element.get('cat', '')
+        for element in events["traceEvents"]:
+            name = element.get("name", "")
+            cat = element.get("cat", "")
 
             if cat == "user_annotation":
-                pattern = '^ProfilerStep#[0-9]+$'
+                pattern = "^ProfilerStep#[0-9]+$"
                 if re.match(pattern, name):
                     self._iteration[iteration_count] = IterationData(data=element)
                     iteration_count += 1
@@ -430,4 +466,3 @@ class ProfilerDataProcessing:
                     iteration.add_event(element)
 
         sorted(self._time_based_data.keys())
-

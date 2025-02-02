@@ -14,7 +14,7 @@ from .accelerator import Accelerator
 from .mixed_precision import MixedPrecision, mixed_precision_factory
 from .plugin import Plugin
 
-__all__ = ['Booster']
+__all__ = ["Booster"]
 
 
 class Booster:
@@ -54,13 +54,16 @@ class Booster:
         plugin (Plugin): The plugin to run the training. Default: None.
     """
 
-    def __init__(self,
-                 device: str = 'cuda',
-                 mixed_precision: Union[MixedPrecision, str] = None,
-                 plugin: Optional[Plugin] = None) -> None:
+    def __init__(
+        self,
+        device: str = "cuda",
+        mixed_precision: Union[MixedPrecision, str] = None,
+        plugin: Optional[Plugin] = None,
+    ) -> None:
         if plugin is not None:
             assert isinstance(
-                plugin, Plugin), f'Expected the argument plugin to be an instance of Plugin, but got {type(plugin)}.'
+                plugin, Plugin
+            ), f"Expected the argument plugin to be an instance of Plugin, but got {type(plugin)}."
         self.plugin = plugin
 
         # set accelerator
@@ -86,7 +89,7 @@ class Booster:
                 self.mixed_precision = mixed_precision
             else:
                 raise ValueError(
-                    f'Expected the argument mixed_precision to be a string or an instance of Precision, but got {type(mixed_precision)}.'
+                    f"Expected the argument mixed_precision to be a string or an instance of Precision, but got {type(mixed_precision)}."
                 )
 
         if self.plugin is not None and self.plugin.control_checkpoint_io():
@@ -116,17 +119,24 @@ class Booster:
         # TODO(FrankLeeeee): consider multi-dataloader case
         # transform model for mixed precision
         if self.plugin:
-            model, optimizer, criterion, dataloader, lr_scheduler = self.plugin.configure(
-                model, optimizer, criterion, dataloader, lr_scheduler)
+            model, optimizer, criterion, dataloader, lr_scheduler = (
+                self.plugin.configure(
+                    model, optimizer, criterion, dataloader, lr_scheduler
+                )
+            )
 
         if self.plugin and not self.plugin.control_device():
             # transform model for accelerator
             model = self.accelerator.configure(model)
 
-        if self.mixed_precision and (self.plugin is None or self.plugin and not self.plugin.control_precision()):
+        if self.mixed_precision and (
+            self.plugin is None or self.plugin and not self.plugin.control_precision()
+        ):
             # transform model for mixed precision
             # when mixed_precision is specified and the plugin is not given or does not control the precision
-            model, optimizer, criterion = self.mixed_precision.configure(model, optimizer, criterion)
+            model, optimizer, criterion = self.mixed_precision.configure(
+                model, optimizer, criterion
+            )
 
         return model, optimizer, criterion, dataloader, lr_scheduler
 
@@ -140,13 +150,15 @@ class Booster:
         # TODO: implement this method with plugin
         optimizer.backward(loss)
 
-    def execute_pipeline(self,
-                         data_iter: Iterator,
-                         model: nn.Module,
-                         criterion: Callable[[torch.Tensor], torch.Tensor],
-                         optimizer: Optimizer,
-                         return_loss: bool = True,
-                         return_outputs: bool = False) -> Tuple[Optional[torch.Tensor], ...]:
+    def execute_pipeline(
+        self,
+        data_iter: Iterator,
+        model: nn.Module,
+        criterion: Callable[[torch.Tensor], torch.Tensor],
+        optimizer: Optimizer,
+        return_loss: bool = True,
+        return_outputs: bool = False,
+    ) -> Tuple[Optional[torch.Tensor], ...]:
         # TODO: implement this method
         # run pipeline forward backward pass
         # return loss or outputs if needed
@@ -161,8 +173,12 @@ class Booster:
         Returns:
             contextmanager: Context to disable gradient synchronization.
         """
-        assert self.plugin is not None, f'no_sync is only enabled when a plugin is provided and the plugin supports no_sync.'
-        assert self.plugin.support_no_sync, f'The plugin {self.plugin.__class__.__name__} does not support no_sync.'
+        assert (
+            self.plugin is not None
+        ), f"no_sync is only enabled when a plugin is provided and the plugin supports no_sync."
+        assert (
+            self.plugin.support_no_sync
+        ), f"The plugin {self.plugin.__class__.__name__} does not support no_sync."
         return self.plugin.no_sync(model)
 
     def load_model(self, model: nn.Module, checkpoint: str, strict: bool = True):
@@ -178,13 +194,15 @@ class Booster:
         """
         self.checkpoint_io.load_model(model, checkpoint, strict)
 
-    def save_model(self,
-                   model: nn.Module,
-                   checkpoint: str,
-                   prefix: str = None,
-                   shard: bool = False,
-                   size_per_shard: int = 1024,
-                   tp_degree: int = 1):
+    def save_model(
+        self,
+        model: nn.Module,
+        checkpoint: str,
+        prefix: str = None,
+        shard: bool = False,
+        size_per_shard: int = 1024,
+        tp_degree: int = 1,
+    ):
         """Save model to checkpoint.
 
         Args:
@@ -197,7 +215,13 @@ class Booster:
                 If true, the checkpoint will be a folder. Otherwise, it will be a single file. Defaults to False.
             size_per_shard (int, optional): Maximum size of checkpoint shard file in MB. This is useful only when ``shard=True``. Defaults to 1024.
         """
-        self.checkpoint_io.save_model(model, checkpoint=checkpoint, shard=shard, size_per_shard=size_per_shard, tp_degree=tp_degree)
+        self.checkpoint_io.save_model(
+            model,
+            checkpoint=checkpoint,
+            shard=shard,
+            size_per_shard=size_per_shard,
+            tp_degree=tp_degree,
+        )
 
     def load_optimizer(self, optimizer: Optimizer, checkpoint: str):
         """Load optimizer from checkpoint.
@@ -209,7 +233,13 @@ class Booster:
         """
         self.checkpoint_io.load_optimizer(optimizer, checkpoint)
 
-    def save_optimizer(self, optimizer: Optimizer, checkpoint: str, shard: bool = False, size_per_shard: int = 1024):
+    def save_optimizer(
+        self,
+        optimizer: Optimizer,
+        checkpoint: str,
+        shard: bool = False,
+        size_per_shard: int = 1024,
+    ):
         """Save optimizer to checkpoint.
         Warning: Saving sharded optimizer checkpoint is not supported yet.
 

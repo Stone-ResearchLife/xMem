@@ -10,21 +10,28 @@ from colossalai.auto_parallel.passes.runtime_apply_pass import (
     runtime_apply_for_iterable_object,
     runtime_comm_spec_apply,
 )
-from colossalai.fx.codegen.activation_checkpoint_codegen import ActivationCheckpointCodeGen
+from colossalai.fx.codegen.activation_checkpoint_codegen import (
+    ActivationCheckpointCodeGen,
+)
 
-__all___ = ['CheckpointSolverBase']
+__all___ = ["CheckpointSolverBase"]
 
 
 def _copy_output(src: Graph, dst: Graph):
     """Copy the output node from src to dst"""
     for n_src, n_dst in zip(src.nodes, dst.nodes):
-        if n_src.op == 'output':
+        if n_src.op == "output":
             n_dst.meta = n_src.meta
 
 
 def _get_param_size(module: torch.nn.Module):
     """Get the size of the parameters in the module"""
-    return sum([p.numel() * torch.tensor([], dtype=p.dtype).element_size() for p in module.parameters()])
+    return sum(
+        [
+            p.numel() * torch.tensor([], dtype=p.dtype).element_size()
+            for p in module.parameters()
+        ]
+    )
 
 
 class CheckpointSolverBase(ABC):
@@ -71,7 +78,9 @@ class CheckpointSolverBase(ABC):
             )
 
         # parameter memory = parameter size + optimizer extra weight storage
-        self.free_memory = free_memory - _get_param_size(self.graph.owning_module) * (optim_multiplier + 1)
+        self.free_memory = free_memory - _get_param_size(self.graph.owning_module) * (
+            optim_multiplier + 1
+        )
         self.cnode = cnode
         self.requires_linearize = requires_linearize
         if self.requires_linearize:
@@ -81,13 +90,11 @@ class CheckpointSolverBase(ABC):
 
     @abstractmethod
     def solve(self):
-        """Solve the checkpointing problem and return the solution.
-        """
+        """Solve the checkpointing problem and return the solution."""
         pass
 
     def get_node_list(self):
-        """Get the node list.
-        """
+        """Get the node list."""
         return [[node] for node in self.graph.nodes]
 
     def _linearize_graph(self) -> List[List[Node]]:
@@ -140,29 +147,38 @@ class CheckpointSolverBase(ABC):
             """
 
             def _is_inplace(n: Node):
-                """Get the inplace argument from ``torch.fx.Node``
-                """
+                """Get the inplace argument from ``torch.fx.Node``"""
                 inplace = False
                 if n.op == "call_function":
                     inplace = n.kwargs.get("inplace", False)
                 elif n.op == "call_module":
-                    inplace = getattr(n.graph.owning_module.get_submodule(n.target), "inplace", False)
+                    inplace = getattr(
+                        n.graph.owning_module.get_submodule(n.target), "inplace", False
+                    )
                 return inplace
 
             def _is_shape_consistency(n: Node):
-                """Check if this node is shape-consistency node (i.e. ``runtime_apply`` or ``runtime_apply_for_iterable_object``)
-                """
-                return n.target in [runtime_apply, runtime_apply_for_iterable_object, runtime_comm_spec_apply]
+                """Check if this node is shape-consistency node (i.e. ``runtime_apply`` or ``runtime_apply_for_iterable_object``)"""
+                return n.target in [
+                    runtime_apply,
+                    runtime_apply_for_iterable_object,
+                    runtime_comm_spec_apply,
+                ]
 
-            return not sum([v for _, v in deps.items()]) and not any(map(_is_inplace, n.users)) and not any(
-                map(_is_shape_consistency, n.users))
+            return (
+                not sum([v for _, v in deps.items()])
+                and not any(map(_is_inplace, n.users))
+                and not any(map(_is_shape_consistency, n.users))
+            )
 
         # make sure that item in cnode is valid
         if self.cnode:
             for name in self.cnode:
                 try:
-                    assert next(node for node in self.graph.nodes if node.name == name).op == "placeholder", \
-                    f"Common node {name} is not an input of the model."
+                    assert (
+                        next(node for node in self.graph.nodes if node.name == name).op
+                        == "placeholder"
+                    ), f"Common node {name} is not an input of the model."
                 except StopIteration:
                     raise ValueError(f"Common node name {name} not in graph.")
 
@@ -187,8 +203,9 @@ class CheckpointSolverBase(ABC):
                     region = []
 
                 # propagate common node attr if possible
-                if len(n.all_input_nodes) == len([node for node in n.all_input_nodes if node.name in self.cnode
-                                                 ]) or _is_cop(n.target):
+                if len(n.all_input_nodes) == len(
+                    [node for node in n.all_input_nodes if node.name in self.cnode]
+                ) or _is_cop(n.target):
                     self.cnode.append(n.name)
                 else:
                     deps[n] = len([user for user in n.users if user.op != "output"])

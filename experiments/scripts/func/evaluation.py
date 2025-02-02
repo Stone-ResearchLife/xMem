@@ -7,10 +7,10 @@ from experiments.container import AbcContainerTemplate, BuildConfig, RuntimeConf
 
 class SolutionEvaluation(AbcContainerTemplate):
     def __init__(
-            self,
-            output_dir: Optional[Union[str, os.PathLike]] = None,
-            dataset_dir: Optional[Union[str, os.PathLike]] = None,
-            container_name: Optional[str] = None,
+        self,
+        output_dir: Optional[Union[str, os.PathLike]] = None,
+        dataset_dir: Optional[Union[str, os.PathLike]] = None,
+        container_name: Optional[str] = None,
     ):
         container_name = container_name or f"evaluations-{uuid.uuid4().hex[:4]}"
         super().__init__(output_dir, dataset_dir, container_name)
@@ -44,7 +44,7 @@ class SolutionEvaluation(AbcContainerTemplate):
                 "scikit-learn==1.1.1",
                 "numpy==1.26.4",
                 "gputil==1.4.0",
-                "timm==1.0.11"
+                "timm==1.0.11",
             ],
             sys_dependencies=["vim"],
             labels=[
@@ -62,8 +62,7 @@ class SolutionEvaluation(AbcContainerTemplate):
                 {
                     "src": "experiments/evaluation.py",
                     "dest": "evaluation.py",
-
-                }
+                },
             ],
             entrypoint=["python", "evaluation.py"],
         )
@@ -84,4 +83,3 @@ class SolutionEvaluation(AbcContainerTemplate):
             gpus=["0", "1"],
         )
         return _config
-

@@ -92,7 +92,7 @@ class EthernetMetrics:
                 "fifo": self.r_fifo,
                 "frame": self.r_frame,
                 "compressed": self.r_compressed,
-                "multicast": self.r_multicast
+                "multicast": self.r_multicast,
             },
             "transmit": {
                 "bytes": self.t_bytes,
@@ -102,8 +102,8 @@ class EthernetMetrics:
                 "fifo": self.t_fifo,
                 "colls": self.t_colls,
                 "carrier": self.t_carrier,
-                "compressed": self.t_compressed
-            }
+                "compressed": self.t_compressed,
+            },
         }
 
 
@@ -191,7 +191,9 @@ class EthernetMonitor(InterfaceHostMetric):
         if interface in self.interfaces:
             return _data[interface]
         else:
-            raise KeyError(f"Interface {interface} not found, only {self.interfaces} are available")
+            raise KeyError(
+                f"Interface {interface} not found, only {self.interfaces} are available"
+            )
 
     def to_json(self) -> Dict[str, Dict]:
         """Convert the data to json
@@ -213,8 +215,12 @@ class EthernetMonitor(InterfaceHostMetric):
             _net_p = p_record[interface]
             _net_c = c_record[interface]
             _utils = {
-                "rx": round(((_net_c.r_bytes - _net_p.r_bytes) / 1024 / 1024) / _interval, 2),
-                "tx": round(((_net_c.t_bytes - _net_p.t_bytes) / 1024 / 1024) / _interval, 2)
+                "rx": round(
+                    ((_net_c.r_bytes - _net_p.r_bytes) / 1024 / 1024) / _interval, 2
+                ),
+                "tx": round(
+                    ((_net_c.t_bytes - _net_p.t_bytes) / 1024 / 1024) / _interval, 2
+                ),
             }
             _summary[interface] = _utils
         return _summary
@@ -226,5 +232,3 @@ class EthernetMonitor(InterfaceHostMetric):
         except Exception as e:
             logger.error(f"EthernetMonitor self check failed: {e}")
             return False
-
-

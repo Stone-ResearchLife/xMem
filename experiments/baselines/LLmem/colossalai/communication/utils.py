@@ -34,7 +34,7 @@ def send_obj_meta(obj, need_meta=True, next_rank=None) -> bool:
         if next_rank is None:
             next_rank = gpc.get_next_global_rank(ParallelMode.PIPELINE)
 
-        tensor_kwargs = {'dtype': torch.long, 'device': get_current_device()}
+        tensor_kwargs = {"dtype": torch.long, "device": get_current_device()}
         if isinstance(obj, torch.Tensor):
             send_obj_nums = torch.tensor(1, **tensor_kwargs)
             dist.send(send_obj_nums, next_rank)
@@ -73,7 +73,7 @@ def recv_obj_meta(obj_shape, prev_rank=None) -> torch.Size:
         if prev_rank is None:
             prev_rank = gpc.get_prev_global_rank(ParallelMode.PIPELINE)
 
-        tensor_kwargs = {'dtype': torch.long, 'device': get_current_device()}
+        tensor_kwargs = {"dtype": torch.long, "device": get_current_device()}
         recv_obj_nums = torch.empty((), **tensor_kwargs)
         dist.recv(recv_obj_nums, prev_rank)
         if recv_obj_nums.item() == 1:
@@ -88,7 +88,9 @@ def recv_obj_meta(obj_shape, prev_rank=None) -> torch.Size:
     return obj_shape
 
 
-def split_tensor_into_1d_equal_chunks(tensor: torch.Tensor, new_buffer=False) -> torch.Tensor:
+def split_tensor_into_1d_equal_chunks(
+    tensor: torch.Tensor, new_buffer=False
+) -> torch.Tensor:
     """Break a tensor into equal 1D chunks.
 
     Args:
@@ -102,7 +104,12 @@ def split_tensor_into_1d_equal_chunks(tensor: torch.Tensor, new_buffer=False) ->
     start_index = partition_size * gpc.get_local_rank(ParallelMode.PARALLEL_1D)
     end_index = start_index + partition_size
     if new_buffer:
-        data = torch.empty(partition_size, dtype=tensor.dtype, device=torch.cuda.current_device(), requires_grad=False)
+        data = torch.empty(
+            partition_size,
+            dtype=tensor.dtype,
+            device=torch.cuda.current_device(),
+            requires_grad=False,
+        )
         data.copy_(tensor.view(-1)[start_index:end_index])
     else:
         data = tensor.view(-1)[start_index:end_index]
@@ -120,7 +127,12 @@ def gather_split_1d_tensor(tensor: torch.Tensor) -> torch.Tensor:
     world_size = gpc.get_world_size(ParallelMode.PARALLEL_1D)
     numel = torch.numel(tensor)
     numel_gathered = world_size * numel
-    gathered = torch.empty(numel_gathered, dtype=tensor.dtype, device=torch.cuda.current_device(), requires_grad=False)
-    chunks = [gathered[i * numel:(i + 1) * numel] for i in range(world_size)]
+    gathered = torch.empty(
+        numel_gathered,
+        dtype=tensor.dtype,
+        device=torch.cuda.current_device(),
+        requires_grad=False,
+    )
+    chunks = [gathered[i * numel : (i + 1) * numel] for i in range(world_size)]
     dist.all_gather(chunks, tensor, group=gpc.get_group(ParallelMode.PARALLEL_1D))
     return gathered

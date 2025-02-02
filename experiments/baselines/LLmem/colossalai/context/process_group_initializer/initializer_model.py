@@ -23,7 +23,9 @@ class Initializer_Model(ProcessGroupInitializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model_parallel_size = self.tensor_parallel_size * self.pipeline_parallel_size
+        self.model_parallel_size = (
+            self.tensor_parallel_size * self.pipeline_parallel_size
+        )
         self.num_group = self.world_size // self.model_parallel_size
 
     def init_dist_group(self):
@@ -41,9 +43,16 @@ class Initializer_Model(ProcessGroupInitializer):
         mode = ParallelMode.MODEL
 
         for i in range(self.num_group):
-            ranks = [i * self.model_parallel_size + j for j in range(self.model_parallel_size)]
+            ranks = [
+                i * self.model_parallel_size + j
+                for j in range(self.model_parallel_size)
+            ]
             group = dist.new_group(ranks)
-            group_cpu = dist.new_group(ranks, backend='gloo') if dist.get_backend() != 'gloo' else group
+            group_cpu = (
+                dist.new_group(ranks, backend="gloo")
+                if dist.get_backend() != "gloo"
+                else group
+            )
 
             if self.rank in ranks:
                 local_rank = ranks.index(self.rank)
@@ -52,4 +61,11 @@ class Initializer_Model(ProcessGroupInitializer):
                 cpu_group = group_cpu
                 ranks_in_group = ranks
 
-        return local_rank, group_world_size, process_group, cpu_group, ranks_in_group, mode
+        return (
+            local_rank,
+            group_world_size,
+            process_group,
+            cpu_group,
+            ranks_in_group,
+            mode,
+        )

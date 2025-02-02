@@ -11,10 +11,11 @@ import torch
 
 try:
     from xformers.ops.fmha import memory_efficient_attention
+
     HAS_MEM_EFF_ATTN = True
 except ImportError:
     HAS_MEM_EFF_ATTN = False
-    print('please install xformers from https://github.com/facebookresearch/xformers')
+    print("please install xformers from https://github.com/facebookresearch/xformers")
 
 if HAS_MEM_EFF_ATTN:
 
@@ -22,13 +23,19 @@ if HAS_MEM_EFF_ATTN:
 
     from einops import rearrange
     from xformers.ops.fmha import MemoryEfficientAttentionCutlassOp
-    from xformers.ops.fmha.attn_bias import BlockDiagonalMask, LowerTriangularMask, LowerTriangularMaskWithTensorBias
+    from xformers.ops.fmha.attn_bias import (
+        BlockDiagonalMask,
+        LowerTriangularMask,
+        LowerTriangularMaskWithTensorBias,
+    )
 
     from .scaled_softmax import AttnMaskType
 
     allow_alibi = True
     for op in MemoryEfficientAttentionCutlassOp:
-        allow_alibi = allow_alibi & (LowerTriangularMaskWithTensorBias in op.SUPPORTED_ATTN_BIAS_TYPES)
+        allow_alibi = allow_alibi & (
+            LowerTriangularMaskWithTensorBias in op.SUPPORTED_ATTN_BIAS_TYPES
+        )
 
     class Unpad(torch.autograd.Function):
         """
@@ -42,18 +49,20 @@ if HAS_MEM_EFF_ATTN:
             # [b, s, ...]
             assert tensor.ndim >= 3
             ctx.bsz = tensor.shape[0]
-            out = rearrange(tensor, 'b s ... -> (b s) ...')
+            out = rearrange(tensor, "b s ... -> (b s) ...")
             ctx.shape = out.shape
             # [1, ntokens, ...]
             return out[indices].unsqueeze(0)
 
         @staticmethod
         def backward(ctx, grad_output):
-            indices, = ctx.saved_tensors
+            (indices,) = ctx.saved_tensors
             # [b*s, ...]
-            grad = torch.zeros(ctx.shape, dtype=grad_output.dtype, device=grad_output.device)
+            grad = torch.zeros(
+                ctx.shape, dtype=grad_output.dtype, device=grad_output.device
+            )
             grad[indices] = grad_output.squeeze(0)
-            grad = rearrange(grad, '(b s) ... -> b s ...', b=ctx.bsz)
+            grad = rearrange(grad, "(b s) ... -> b s ...", b=ctx.bsz)
             # [b, s, ...]
             return grad, None
 
@@ -64,22 +73,32 @@ if HAS_MEM_EFF_ATTN:
         """
 
         @staticmethod
-        def forward(ctx, tensor: torch.Tensor, indices: torch.Tensor, batch_size: int, seq_len: int):
+        def forward(
+            ctx,
+            tensor: torch.Tensor,
+            indices: torch.Tensor,
+            batch_size: int,
+            seq_len: int,
+        ):
             ctx.save_for_backward(indices)
             # [ntokens, ...]
             tensor = tensor.squeeze(0)
-            out = torch.zeros((batch_size * seq_len, *tensor.shape[1:]), dtype=tensor.dtype, device=tensor.device)
+            out = torch.zeros(
+                (batch_size * seq_len, *tensor.shape[1:]),
+                dtype=tensor.dtype,
+                device=tensor.device,
+            )
             # [b*s, ...]
             out[indices] = tensor
             # [b, s, ...]
-            out = rearrange(out, '(b s) ... -> b s ...', b=batch_size)
+            out = rearrange(out, "(b s) ... -> b s ...", b=batch_size)
             return out
 
         @staticmethod
         def backward(ctx, grad_output):
-            indices, = ctx.saved_tensors
+            (indices,) = ctx.saved_tensors
             # [b*s, ...]
-            grad_output = rearrange(grad_output, 'b s ... -> (b s) ...')
+            grad_output = rearrange(grad_output, "b s ... -> (b s) ...")
             grad = grad_output[indices]
             # [1, ntokens, ...]
             return grad.unsqueeze(0), None, None, None
@@ -88,8 +107,9 @@ if HAS_MEM_EFF_ATTN:
 
         def __init__(self, embed_dim: int, num_heads: int, dropout: float = 0.0):
             super().__init__()
-            assert embed_dim % num_heads == 0, \
-                f"the embed dim ({embed_dim}) is not divisible by the number of attention heads ({num_heads})."
+            assert (
+                embed_dim % num_heads == 0
+            ), f"the embed dim ({embed_dim}) is not divisible by the number of attention heads ({num_heads})."
             self.scale = 1 / math.sqrt(embed_dim // num_heads)
             self.dropout = dropout
 
@@ -104,52 +124,71 @@ if HAS_MEM_EFF_ATTN:
             return Unpad.apply(tensor, indices)
 
         @staticmethod
-        def repad(tensor: torch.Tensor, indices: torch.Tensor, batch_size: int, seq_len: int) -> torch.Tensor:
+        def repad(
+            tensor: torch.Tensor, indices: torch.Tensor, batch_size: int, seq_len: int
+        ) -> torch.Tensor:
             return Repad.apply(tensor, indices, batch_size, seq_len)
 
-        def forward(self,
-                    query: torch.Tensor,
-                    key: torch.Tensor,
-                    value: torch.Tensor,
-                    attn_mask: Optional[torch.Tensor] = None,
-                    attn_mask_type: Optional[AttnMaskType] = None,
-                    bias: Optional[torch.Tensor] = None):
+        def forward(
+            self,
+            query: torch.Tensor,
+            key: torch.Tensor,
+            value: torch.Tensor,
+            attn_mask: Optional[torch.Tensor] = None,
+            attn_mask_type: Optional[AttnMaskType] = None,
+            bias: Optional[torch.Tensor] = None,
+        ):
             batch_size, tgt_len, src_len = query.shape[0], query.shape[1], key.shape[1]
             attn_bias = None
-            if attn_mask_type == AttnMaskType.padding:    # bert style
-                assert attn_mask is not None, \
-                    f"attention mask {attn_mask} is not valid for attention mask type {attn_mask_type}."
-                assert attn_mask.dim() == 2, \
-                    "attention mask is supposed to have shape (batch_size, seq_len), " + \
-                    f"but got {attn_mask.dim()} dimensions."
+            if attn_mask_type == AttnMaskType.padding:  # bert style
+                assert (
+                    attn_mask is not None
+                ), f"attention mask {attn_mask} is not valid for attention mask type {attn_mask_type}."
+                assert attn_mask.dim() == 2, (
+                    "attention mask is supposed to have shape (batch_size, seq_len), "
+                    + f"but got {attn_mask.dim()} dimensions."
+                )
                 if tgt_len == src_len:
                     q_indices, q_seqlen = self.get_seq_info_from_mask(attn_mask)
                     kv_seqlen = None
                     if batch_size > 1:
-                        query, key, value = self.unpad(torch.stack([query, key, value], dim=2), q_indices).unbind(dim=2)
+                        query, key, value = self.unpad(
+                            torch.stack([query, key, value], dim=2), q_indices
+                        ).unbind(dim=2)
                 else:
-                    q_indices = torch.arange(batch_size * tgt_len, dtype=torch.int32, device=query.device)
-                    q_seqlen = torch.LongTensor([tgt_len] * batch_size, device=query.device)
+                    q_indices = torch.arange(
+                        batch_size * tgt_len, dtype=torch.int32, device=query.device
+                    )
+                    q_seqlen = torch.LongTensor(
+                        [tgt_len] * batch_size, device=query.device
+                    )
                     kv_indices, kv_seqlen = self.get_seq_info_from_mask(attn_mask)
                     if batch_size > 1:
                         query = rearrange(query, "b s ... -> c (b s) ...", c=1)
-                        key, value = self.unpad(torch.stack([query, key, value], dim=2), kv_indices).unbind(dim=2)
+                        key, value = self.unpad(
+                            torch.stack([query, key, value], dim=2), kv_indices
+                        ).unbind(dim=2)
                 attn_bias = BlockDiagonalMask.from_seqlens(q_seqlen, kv_seqlen)
-            elif attn_mask_type == AttnMaskType.causal:    # gpt style
+            elif attn_mask_type == AttnMaskType.causal:  # gpt style
                 attn_bias = LowerTriangularMask()
 
-            if bias is not None:    # alibi / relative position embedding
-                assert allow_alibi, "flash attention with bias is not supported in this system."
-                assert attn_mask_type == AttnMaskType.causal, \
-                    "attention with bias is only supported for causal attention so far."
+            if bias is not None:  # alibi / relative position embedding
+                assert (
+                    allow_alibi
+                ), "flash attention with bias is not supported in this system."
+                assert (
+                    attn_mask_type == AttnMaskType.causal
+                ), "attention with bias is only supported for causal attention so far."
                 attn_bias = attn_bias.add_bias(bias)
 
-            out = memory_efficient_attention(query, key, value, attn_bias=attn_bias, p=self.dropout, scale=self.scale)
+            out = memory_efficient_attention(
+                query, key, value, attn_bias=attn_bias, p=self.dropout, scale=self.scale
+            )
 
             if attn_mask_type == AttnMaskType.padding and batch_size > 1:
                 out = self.repad(out, q_indices, batch_size, tgt_len)
 
-            out = rearrange(out, 'b s h d -> b s (h d)')
+            out = rearrange(out, "b s h d -> b s (h d)")
             return out
 
 
@@ -165,13 +204,19 @@ if HAS_MEM_EFF_ATTN:
 
 def triton_cuda_check():
     cuda_home = os.getenv("CUDA_HOME", default="/usr/local/cuda")
-    cuda_version = subprocess.check_output([os.path.join(cuda_home, "bin/nvcc"), "--version"]).decode().strip()
-    cuda_version = cuda_version.split('release ')[1]
-    cuda_version = cuda_version.split(',')[0]
-    cuda_version = cuda_version.split('.')
-    if len(cuda_version) == 2 and \
-        (int(cuda_version[0]) == 11 and int(cuda_version[1]) >= 4) or \
-        int(cuda_version[0]) > 11:
+    cuda_version = (
+        subprocess.check_output([os.path.join(cuda_home, "bin/nvcc"), "--version"])
+        .decode()
+        .strip()
+    )
+    cuda_version = cuda_version.split("release ")[1]
+    cuda_version = cuda_version.split(",")[0]
+    cuda_version = cuda_version.split(".")
+    if (
+        len(cuda_version) == 2
+        and (int(cuda_version[0]) == 11 and int(cuda_version[1]) >= 4)
+        or int(cuda_version[0]) > 11
+    ):
         return True
     return False
 
@@ -179,13 +224,14 @@ def triton_cuda_check():
 try:
     import triton
     import triton.language as tl
+
     if triton_cuda_check():
         HAS_TRITON = True
     else:
         print("triton requires cuda >= 11.4")
         HAS_TRITON = False
 except ImportError:
-    print('please install triton from https://github.com/openai/triton')
+    print("please install triton from https://github.com/openai/triton")
     HAS_TRITON = False
 try:
     from flash_attn.flash_attention import FlashAttention
@@ -194,10 +240,13 @@ try:
         flash_attn_unpadded_kvpacked_func,
         flash_attn_unpadded_qkvpacked_func,
     )
+
     HAS_FLASH_ATTN = True
 except ImportError:
     HAS_FLASH_ATTN = False
-    print('please install flash_attn from https://github.com/HazyResearch/flash-attention')
+    print(
+        "please install flash_attn from https://github.com/HazyResearch/flash-attention"
+    )
 
 if HAS_TRITON:
     # the following functions are adapted from the OpenAI Triton tutorial
@@ -210,7 +259,7 @@ if HAS_TRITON:
         sm_scale,
         TMP,
         L,
-        M,    # NOTE: TMP is a scratchpad buffer to workaround a compiler bug
+        M,  # NOTE: TMP is a scratchpad buffer to workaround a compiler bug
         Out,
         stride_qz,
         stride_qh,
@@ -241,9 +290,21 @@ if HAS_TRITON:
         offs_m = start_m * BLOCK_M + tl.arange(0, BLOCK_M)
         offs_n = tl.arange(0, BLOCK_N)
         offs_d = tl.arange(0, BLOCK_DMODEL)
-        off_q = off_hz * stride_qh + offs_m[:, None] * stride_qm + offs_d[None, :] * stride_qk
-        off_k = off_hz * stride_qh + offs_n[:, None] * stride_kn + offs_d[None, :] * stride_kk
-        off_v = off_hz * stride_qh + offs_n[:, None] * stride_qm + offs_d[None, :] * stride_qk
+        off_q = (
+            off_hz * stride_qh
+            + offs_m[:, None] * stride_qm
+            + offs_d[None, :] * stride_qk
+        )
+        off_k = (
+            off_hz * stride_qh
+            + offs_n[:, None] * stride_kn
+            + offs_d[None, :] * stride_kk
+        )
+        off_v = (
+            off_hz * stride_qh
+            + offs_n[:, None] * stride_qm
+            + offs_d[None, :] * stride_qk
+        )
         # Initialize pointers to Q, K, V
         q_ptrs = Q + off_q
         k_ptrs = K + off_k
@@ -263,7 +324,9 @@ if HAS_TRITON:
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
             qk += tl.dot(q, k, trans_b=True)
             qk *= sm_scale
-            qk += tl.where(offs_m[:, None] >= (start_n + offs_n[None, :]), 0, float("-inf"))
+            qk += tl.where(
+                offs_m[:, None] >= (start_n + offs_n[None, :]), 0, float("-inf")
+            )
             # -- compute m_ij, p, l_ij
             m_ij = tl.max(qk, 1)
             p = tl.exp(qk - m_ij[:, None])
@@ -280,7 +343,7 @@ if HAS_TRITON:
             # scale acc
             acc_scale = l_i / l_i_new * alpha
             tl.store(t_ptrs, acc_scale)
-            acc_scale = tl.load(t_ptrs)    # BUG: have to store and immediately load
+            acc_scale = tl.load(t_ptrs)  # BUG: have to store and immediately load
             acc = acc * acc_scale[:, None]
             # update acc
             v = tl.load(v_ptrs + start_n * stride_vk)
@@ -299,7 +362,11 @@ if HAS_TRITON:
         tl.store(m_ptrs, m_i)
         # initialize pointers to output
         offs_n = tl.arange(0, BLOCK_DMODEL)
-        off_o = off_hz * stride_oh + offs_m[:, None] * stride_om + offs_n[None, :] * stride_on
+        off_o = (
+            off_hz * stride_oh
+            + offs_m[:, None] * stride_om
+            + offs_n[None, :] * stride_on
+        )
         out_ptrs = Out + off_o
         tl.store(out_ptrs, acc)
 
@@ -401,7 +468,9 @@ if HAS_TRITON:
                 # recompute p = softmax(qk, dim=-1).T
                 # NOTE: `do` is pre-divided by `l`; no normalization here
                 qk = tl.dot(q, k, trans_b=True)
-                qk = tl.where(offs_m_curr[:, None] >= (offs_n[None, :]), qk, float("-inf"))
+                qk = tl.where(
+                    offs_m_curr[:, None] >= (offs_n[None, :]), qk, float("-inf")
+                )
                 m = tl.load(m_ptrs + offs_m_curr)
                 p = tl.exp(qk * sm_scale - m[:, None])
                 # compute dv
@@ -440,9 +509,21 @@ if HAS_TRITON:
             assert Lk in {16, 32, 64, 128}
             o = torch.empty_like(q)
             grid = (triton.cdiv(q.shape[2], BLOCK), q.shape[0] * q.shape[1])
-            tmp = torch.empty((q.shape[0] * q.shape[1], q.shape[2]), device=q.device, dtype=torch.float32)
-            L = torch.empty((q.shape[0] * q.shape[1], q.shape[2]), device=q.device, dtype=torch.float32)
-            m = torch.empty((q.shape[0] * q.shape[1], q.shape[2]), device=q.device, dtype=torch.float32)
+            tmp = torch.empty(
+                (q.shape[0] * q.shape[1], q.shape[2]),
+                device=q.device,
+                dtype=torch.float32,
+            )
+            L = torch.empty(
+                (q.shape[0] * q.shape[1], q.shape[2]),
+                device=q.device,
+                dtype=torch.float32,
+            )
+            m = torch.empty(
+                (q.shape[0] * q.shape[1], q.shape[2]),
+                device=q.device,
+                dtype=torch.float32,
+            )
             num_warps = 4 if Lk <= 64 else 8
 
             _fwd_kernel[grid](
@@ -562,7 +643,9 @@ if HAS_TRITON:
 
 if HAS_FLASH_ATTN:
 
-    def flash_attention_qkv(qkv, sm_scale, batch_size, seq_len, dropout_p=0., causal=False):
+    def flash_attention_qkv(
+        qkv, sm_scale, batch_size, seq_len, dropout_p=0.0, causal=False
+    ):
         """
         Arguments:
             qkv: (batch * seqlen, 3, nheads, headdim)
@@ -576,16 +659,21 @@ if HAS_FLASH_ATTN:
             out: (total, nheads, headdim).
         """
         max_s = seq_len
-        cu_seqlens = torch.arange(0, (batch_size + 1) * seq_len, step=seq_len, dtype=torch.int32, device=qkv.device)
-        out = flash_attn_unpadded_qkvpacked_func(qkv,
-                                                 cu_seqlens,
-                                                 max_s,
-                                                 dropout_p,
-                                                 softmax_scale=sm_scale,
-                                                 causal=causal)
+        cu_seqlens = torch.arange(
+            0,
+            (batch_size + 1) * seq_len,
+            step=seq_len,
+            dtype=torch.int32,
+            device=qkv.device,
+        )
+        out = flash_attn_unpadded_qkvpacked_func(
+            qkv, cu_seqlens, max_s, dropout_p, softmax_scale=sm_scale, causal=causal
+        )
         return out
 
-    def flash_attention_q_kv(q, kv, sm_scale, batch_size, q_seqlen, kv_seqlen, dropout_p=0., causal=False):
+    def flash_attention_q_kv(
+        q, kv, sm_scale, batch_size, q_seqlen, kv_seqlen, dropout_p=0.0, causal=False
+    ):
         """
         Arguments:
             q: (batch * q_seqlen, nheads, headdim)
@@ -599,16 +687,36 @@ if HAS_FLASH_ATTN:
         Return:
             out: (total, nheads, headdim).
         """
-        cu_seqlens_q = torch.arange(0, (batch_size + 1) * q_seqlen, step=q_seqlen, dtype=torch.int32, device=q.device)
-        cu_seqlens_k = torch.arange(0, (batch_size + 1) * kv_seqlen,
-                                    step=kv_seqlen,
-                                    dtype=torch.int32,
-                                    device=kv.device)
-        out = flash_attn_unpadded_kvpacked_func(q, kv, cu_seqlens_q, cu_seqlens_k, q_seqlen, kv_seqlen, dropout_p,
-                                                sm_scale, causal)
+        cu_seqlens_q = torch.arange(
+            0,
+            (batch_size + 1) * q_seqlen,
+            step=q_seqlen,
+            dtype=torch.int32,
+            device=q.device,
+        )
+        cu_seqlens_k = torch.arange(
+            0,
+            (batch_size + 1) * kv_seqlen,
+            step=kv_seqlen,
+            dtype=torch.int32,
+            device=kv.device,
+        )
+        out = flash_attn_unpadded_kvpacked_func(
+            q,
+            kv,
+            cu_seqlens_q,
+            cu_seqlens_k,
+            q_seqlen,
+            kv_seqlen,
+            dropout_p,
+            sm_scale,
+            causal,
+        )
         return out
 
-    def flash_attention_q_k_v(q, k, v, sm_scale, batch_size, q_seqlen, kv_seqlen, dropout_p=0., causal=False):
+    def flash_attention_q_k_v(
+        q, k, v, sm_scale, batch_size, q_seqlen, kv_seqlen, dropout_p=0.0, causal=False
+    ):
         """
         Arguments:
             q: (batch * q_seqlen, nheads, headdim)
@@ -623,13 +731,32 @@ if HAS_FLASH_ATTN:
         Return:
             out: (total, nheads, headdim).
         """
-        cu_seqlens_q = torch.arange(0, (batch_size + 1) * q_seqlen, step=q_seqlen, dtype=torch.int32, device=q.device)
-        cu_seqlens_kv = torch.arange(0, (batch_size + 1) * kv_seqlen,
-                                     step=kv_seqlen,
-                                     dtype=torch.int32,
-                                     device=k.device)
-        return flash_attn_unpadded_func(q, k, v, cu_seqlens_q, cu_seqlens_kv, q_seqlen, kv_seqlen, dropout_p, sm_scale,
-                                        causal)
+        cu_seqlens_q = torch.arange(
+            0,
+            (batch_size + 1) * q_seqlen,
+            step=q_seqlen,
+            dtype=torch.int32,
+            device=q.device,
+        )
+        cu_seqlens_kv = torch.arange(
+            0,
+            (batch_size + 1) * kv_seqlen,
+            step=kv_seqlen,
+            dtype=torch.int32,
+            device=k.device,
+        )
+        return flash_attn_unpadded_func(
+            q,
+            k,
+            v,
+            cu_seqlens_q,
+            cu_seqlens_kv,
+            q_seqlen,
+            kv_seqlen,
+            dropout_p,
+            sm_scale,
+            causal,
+        )
 
 
 ##########################################################################

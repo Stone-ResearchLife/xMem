@@ -22,7 +22,7 @@ from .utils import (
     shard_checkpoint,
 )
 
-__all__ = ['GeneralCheckpointIO']
+__all__ = ["GeneralCheckpointIO"]
 
 
 class GeneralCheckpointIO(CheckpointIO):
@@ -34,7 +34,13 @@ class GeneralCheckpointIO(CheckpointIO):
         checkpoint = load_state_dict(checkpoint)
         model.load_state_dict(checkpoint, strict=strict)
 
-    def save_unsharded_model(self, model: nn.Module, checkpoint: str, gather_dtensor: bool, use_safetensors: bool):
+    def save_unsharded_model(
+        self,
+        model: nn.Module,
+        checkpoint: str,
+        gather_dtensor: bool,
+        use_safetensors: bool,
+    ):
         state_dict = model.state_dict()
 
         # TODO(FrankLeeeee): add support for gather_dtensor
@@ -44,7 +50,9 @@ class GeneralCheckpointIO(CheckpointIO):
         # save the checkpoint
         save_state_dict(state_dict, checkpoint, use_safetensors)
 
-    def load_sharded_optimizer(self, optimizer: Optimizer, checkpoint: Path, prefix: str, size_per_shard: int):
+    def load_sharded_optimizer(
+        self, optimizer: Optimizer, checkpoint: Path, prefix: str, size_per_shard: int
+    ):
         raise NotImplementedError("Sharded optimizer checkpoint is not supported yet.")
 
     def load_unsharded_optimizer(self, optimizer: Optimizer, checkpoint: Path):
@@ -70,19 +78,23 @@ class GeneralCheckpointIO(CheckpointIO):
         # TODO(FrankLeeeee): handle distributed tensors
         save_state_dict(optimizer.state_dict(), checkpoint, use_safetensors=False)
 
-    def save_sharded_model(self,
-                           model: nn.Module,
-                           checkpoint_path: str,
-                           gather_dtensor: bool = False,
-                           variant: Optional[str] = None,
-                           max_shard_size: int = 1024,
-                           use_safetensors: bool = False):
+    def save_sharded_model(
+        self,
+        model: nn.Module,
+        checkpoint_path: str,
+        gather_dtensor: bool = False,
+        variant: Optional[str] = None,
+        max_shard_size: int = 1024,
+        use_safetensors: bool = False,
+    ):
         """
         implement this method as it can be supported by Huggingface model,
         save shard model, save model to multiple files
         """
         if os.path.isfile(checkpoint_path):
-            logging.error(f"Provided path ({checkpoint_path}) should be a directory, not a file")
+            logging.error(
+                f"Provided path ({checkpoint_path}) should be a directory, not a file"
+            )
             return
 
         Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
@@ -106,16 +118,20 @@ class GeneralCheckpointIO(CheckpointIO):
 
         index_file.append_meta_data("total_size", total_size)
         index_file.write_index_file(save_index_file)
-        logging.info(f"The model is going to be split to checkpoint shards. "
-                     f"You can find where each parameters has been saved in the "
-                     f"index located at {save_index_file}.")
+        logging.info(
+            f"The model is going to be split to checkpoint shards. "
+            f"You can find where each parameters has been saved in the "
+            f"index located at {save_index_file}."
+        )
 
-    def load_sharded_model(self,
-                           model: nn.Module,
-                           checkpoint_index_file: Path,
-                           strict: bool = False,
-                           use_safetensors: bool = False,
-                           load_sub_module: bool = True):
+    def load_sharded_model(
+        self,
+        model: nn.Module,
+        checkpoint_index_file: Path,
+        strict: bool = False,
+        use_safetensors: bool = False,
+        load_sub_module: bool = True,
+    ):
         """
         load shard model, load model from multiple files
         """
@@ -124,7 +140,9 @@ class GeneralCheckpointIO(CheckpointIO):
             use_safetensors = True
 
         if use_safetensors and not is_safetensors_available():
-            raise ImportError("`safe_serialization` requires the `safetensors` library: `pip install safetensors`.")
+            raise ImportError(
+                "`safe_serialization` requires the `safetensors` library: `pip install safetensors`."
+            )
 
         # read checkpoint index file
         ckpt_index_file = CheckpointIndexFile.from_file(checkpoint_index_file)
@@ -133,14 +151,20 @@ class GeneralCheckpointIO(CheckpointIO):
 
         for shard_file in checkpoint_files:
             state_dict = load_shard_state_dict(Path(shard_file), use_safetensors)
-            load_state_dict_into_model(model, state_dict, missing_keys, strict, load_sub_module)
+            load_state_dict_into_model(
+                model, state_dict, missing_keys, strict, load_sub_module
+            )
             del state_dict
             gc.collect()
 
         if strict:
             remain_keys = reduce(lambda a, b: a & b, map(set, missing_keys))
             if len(remain_keys) > 0:
-                error_msgs = 'Missing key(s) in state_dict: {}. '.format(', '.join(
-                    '"{}"'.format(k) for k in missing_keys))
-                raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
-                    self.__class__.__name__, "\n\t".join(error_msgs)))
+                error_msgs = "Missing key(s) in state_dict: {}. ".format(
+                    ", ".join('"{}"'.format(k) for k in missing_keys)
+                )
+                raise RuntimeError(
+                    "Error(s) in loading state_dict for {}:\n\t{}".format(
+                        self.__class__.__name__, "\n\t".join(error_msgs)
+                    )
+                )

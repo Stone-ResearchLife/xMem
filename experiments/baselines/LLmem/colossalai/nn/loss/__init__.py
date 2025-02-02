@@ -11,16 +11,16 @@ from .loss_3d import CrossEntropyLoss3D, VocabParallelCrossEntropyLoss3D
 from .loss_moe import MoeCrossEntropyLoss, MoeLoss
 
 _parallel_cross_entropy = {
-    '2d': CrossEntropyLoss2D,
-    '2.5d': CrossEntropyLoss2p5D,
-    '3d': CrossEntropyLoss3D,
+    "2d": CrossEntropyLoss2D,
+    "2.5d": CrossEntropyLoss2p5D,
+    "3d": CrossEntropyLoss3D,
 }
 
 _vocab_parallel_cross_entropy = {
-    '1d': VocabParallelCrossEntropyLoss1D,
-    '2d': VocabParallelCrossEntropyLoss2D,
-    '2.5d': VocabParallelCrossEntropyLoss2p5D,
-    '3d': VocabParallelCrossEntropyLoss3D,
+    "1d": VocabParallelCrossEntropyLoss1D,
+    "2d": VocabParallelCrossEntropyLoss2D,
+    "2.5d": VocabParallelCrossEntropyLoss2p5D,
+    "3d": VocabParallelCrossEntropyLoss3D,
 }
 
 
@@ -30,12 +30,16 @@ class CrossEntropyLoss(_Loss):
         super().__init__()
         tensor_parallel = get_tensor_parallel_mode()
         if tensor_parallel is not None and env.vocab_parallel:
-            self.loss = _vocab_parallel_cross_entropy[tensor_parallel](reduction=reduction, *args, **kwargs)
-        elif tensor_parallel is None or tensor_parallel == '1d':
-            reduction = 'mean' if reduction else 'none'
+            self.loss = _vocab_parallel_cross_entropy[tensor_parallel](
+                reduction=reduction, *args, **kwargs
+            )
+        elif tensor_parallel is None or tensor_parallel == "1d":
+            reduction = "mean" if reduction else "none"
             self.loss = nn.CrossEntropyLoss(reduction=reduction, *args, **kwargs)
         else:
-            self.loss = _parallel_cross_entropy[tensor_parallel](reduction=reduction, *args, **kwargs)
+            self.loss = _parallel_cross_entropy[tensor_parallel](
+                reduction=reduction, *args, **kwargs
+            )
 
     def forward(self, *args):
         return self.loss(*args)

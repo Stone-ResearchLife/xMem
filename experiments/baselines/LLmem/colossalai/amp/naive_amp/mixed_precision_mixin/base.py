@@ -39,6 +39,7 @@ class MixedPrecisionMixin(ABC):
                 return self.optim.zero_grad()
         ```
     """
+
     dtype: torch.dtype
 
     @abstractmethod
@@ -77,8 +78,7 @@ class MixedPrecisionMixin(ABC):
 
     @abstractmethod
     def pre_zero_grad(self) -> None:
-        """Called before zero_grad.
-        """
+        """Called before zero_grad."""
         pass
 
     @abstractmethod

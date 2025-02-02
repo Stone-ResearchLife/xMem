@@ -8,7 +8,10 @@ import torch.distributed as dist
 from torch.nn import Parameter
 from torch.optim import Optimizer
 
-from colossalai.amp.naive_amp.mixed_precision_mixin import BF16MixedPrecisionMixin, FP16MixedPrecisionMixin
+from colossalai.amp.naive_amp.mixed_precision_mixin import (
+    BF16MixedPrecisionMixin,
+    FP16MixedPrecisionMixin,
+)
 from colossalai.logging import get_dist_logger
 from colossalai.nn.optimizer import ColossalaiOptimizer, CPUAdam, FusedAdam, HybridAdam
 from colossalai.utils import disposable, get_current_device, is_ddp_ignored
@@ -16,24 +19,33 @@ from colossalai.utils import disposable, get_current_device, is_ddp_ignored
 from .chunk import Chunk, ChunkManager
 from .gemini_ddp import ZeroDDP
 
-__all__ = ['ZeroOptimizer', 'GeminiAdamOptimizer']
+__all__ = ["ZeroOptimizer", "GeminiAdamOptimizer"]
 
 _AVAIL_OPTIM_LIST = {FusedAdam, CPUAdam, HybridAdam}
 
 
 class GeminiFP16MixedPrecisionMixin(FP16MixedPrecisionMixin):
 
-    def __init__(self,
-                 module: ZeroDDP,
-                 initial_scale: float = 2**16,
-                 min_scale: float = 1,
-                 growth_factor: float = 2,
-                 backoff_factor: float = 0.5,
-                 growth_interval: int = 1000,
-                 hysteresis: int = 2,
-                 max_scale: float = 2**32) -> None:
-        super().__init__(initial_scale, min_scale, growth_factor, backoff_factor, growth_interval, hysteresis,
-                         max_scale)
+    def __init__(
+        self,
+        module: ZeroDDP,
+        initial_scale: float = 2**16,
+        min_scale: float = 1,
+        growth_factor: float = 2,
+        backoff_factor: float = 0.5,
+        growth_interval: int = 1000,
+        hysteresis: int = 2,
+        max_scale: float = 2**32,
+    ) -> None:
+        super().__init__(
+            initial_scale,
+            min_scale,
+            growth_factor,
+            backoff_factor,
+            growth_interval,
+            hysteresis,
+            max_scale,
+        )
         self.module = module
 
     def check_local_overflow(self) -> bool:
@@ -73,25 +85,29 @@ class ZeroOptimizer(ColossalaiOptimizer):
         verbose (bool, optional): Whether to print verbose information, including grad overflow info. Defaults to False.
     """
 
-    def __init__(self,
-                 optim: Optimizer,
-                 module: ZeroDDP,
-                 gpu_margin_mem_ratio: float = 0.0,
-                 initial_scale: float = 2**32,
-                 min_scale: float = 1,
-                 growth_factor: float = 2,
-                 backoff_factor: float = 0.5,
-                 growth_interval: int = 1000,
-                 hysteresis: int = 2,
-                 max_scale: float = 2**32,
-                 clipping_norm: float = 0.0,
-                 norm_type: float = 2.0,
-                 verbose: bool = False,
-                 **defaults: Any):
+    def __init__(
+        self,
+        optim: Optimizer,
+        module: ZeroDDP,
+        gpu_margin_mem_ratio: float = 0.0,
+        initial_scale: float = 2**32,
+        min_scale: float = 1,
+        growth_factor: float = 2,
+        backoff_factor: float = 0.5,
+        growth_interval: int = 1000,
+        hysteresis: int = 2,
+        max_scale: float = 2**32,
+        clipping_norm: float = 0.0,
+        norm_type: float = 2.0,
+        verbose: bool = False,
+        **defaults: Any,
+    ):
         super().__init__(optim)
         assert isinstance(module, ZeroDDP)
-        assert type(optim) in _AVAIL_OPTIM_LIST, "You should use an optimizer in the available list:\n" \
+        assert type(optim) in _AVAIL_OPTIM_LIST, (
+            "You should use an optimizer in the available list:\n"
             f"{_AVAIL_OPTIM_LIST}"
+        )
         self.module = module
         self.gemini_manager = module.gemini_manager
         self.chunk_manager: ChunkManager = self.gemini_manager.chunk_manager
@@ -109,8 +125,10 @@ class ZeroOptimizer(ColossalaiOptimizer):
         for name, param in module.named_parameters():
             if is_ddp_ignored(param):
                 if param.requires_grad:
-                    warnings.warn(f"Parameter `{name}` is ignored by DDP but requires gradient! "
-                                  "You should handle its optimizer update by yourself!")
+                    warnings.warn(
+                        f"Parameter `{name}` is ignored by DDP but requires gradient! "
+                        "You should handle its optimizer update by yourself!"
+                    )
             else:
                 ddp_param_list.append(param)
 
@@ -123,36 +141,51 @@ class ZeroOptimizer(ColossalaiOptimizer):
         self.__init__optimizer()
 
         if module.mixed_precision is torch.float16:
-            self.mix_precision_mixin = GeminiFP16MixedPrecisionMixin(module,
-                                                                     initial_scale=initial_scale,
-                                                                     min_scale=min_scale,
-                                                                     growth_factor=growth_factor,
-                                                                     backoff_factor=backoff_factor,
-                                                                     growth_interval=growth_interval,
-                                                                     hysteresis=hysteresis,
-                                                                     max_scale=max_scale)
+            self.mix_precision_mixin = GeminiFP16MixedPrecisionMixin(
+                module,
+                initial_scale=initial_scale,
+                min_scale=min_scale,
+                growth_factor=growth_factor,
+                backoff_factor=backoff_factor,
+                growth_interval=growth_interval,
+                hysteresis=hysteresis,
+                max_scale=max_scale,
+            )
         elif module.mixed_precision is torch.bfloat16:
             self.mix_precision_mixin = BF16MixedPrecisionMixin()
         else:
-            raise RuntimeError(f"Unsupported mixed precision type: {module.mixed_precision}")
+            raise RuntimeError(
+                f"Unsupported mixed precision type: {module.mixed_precision}"
+            )
 
         self._logger = get_dist_logger()
 
         self.gpu_margin_mem_ratio: float = float(gpu_margin_mem_ratio)
-        assert 0.0 <= self.gpu_margin_mem_ratio <= 1.0, f'gpu_margin_mem_ratio must >=0.0 and <=1.0'
+        assert (
+            0.0 <= self.gpu_margin_mem_ratio <= 1.0
+        ), f"gpu_margin_mem_ratio must >=0.0 and <=1.0"
         # Only move fp32 shards from CPU to GPU when user allows and inner optimizer is valid
         # Inner optimizer must support optimizing hybrid (CPU and CUDA) tensors,
         # and it must set `num_fp32_shards_per_param` correctly
-        self._should_move_fp32_params_h2d: bool = self.gemini_manager.is_cuda_margin_mem_avail and self.gpu_margin_mem_ratio > 0.0 and getattr(
-            optim, 'num_fp32_shards_per_param', 0) >= 2
-        if self.gpu_margin_mem_ratio > 0.0 and not self.gemini_manager.is_cuda_margin_mem_avail:
-            self._logger.warning(f'gpu_margin_mem_ratio is meaningless when placement_policy is not "auto"', ranks=[0])
+        self._should_move_fp32_params_h2d: bool = (
+            self.gemini_manager.is_cuda_margin_mem_avail
+            and self.gpu_margin_mem_ratio > 0.0
+            and getattr(optim, "num_fp32_shards_per_param", 0) >= 2
+        )
+        if (
+            self.gpu_margin_mem_ratio > 0.0
+            and not self.gemini_manager.is_cuda_margin_mem_avail
+        ):
+            self._logger.warning(
+                f'gpu_margin_mem_ratio is meaningless when placement_policy is not "auto"',
+                ranks=[0],
+            )
 
         self._register_states = disposable(self._register_states_)
 
     def _set_grad_ptr(self):
         for group in self.param_groups:
-            for fake_param in group['params']:
+            for fake_param in group["params"]:
                 chunk32 = self.param_to_chunk32[fake_param]
                 begin, end = self.param_to_range[fake_param]
                 chunk16 = chunk32.paired_chunk
@@ -164,7 +197,7 @@ class ZeroOptimizer(ColossalaiOptimizer):
     def _update_fp16_params(self):
         none_tensor = torch.empty([0])
         for group in self.param_groups:
-            for fake_param in group['params']:
+            for fake_param in group["params"]:
                 assert fake_param.grad is None
                 fake_param.data = none_tensor.to(fake_param.device)
 
@@ -189,7 +222,7 @@ class ZeroOptimizer(ColossalaiOptimizer):
                     group_to_norm[c16.torch_pg] = 0.0
                 group_to_norm[c16.torch_pg] += c16.l2_norm
 
-            c16.l2_norm = None    # clear l2 norm
+            c16.l2_norm = None  # clear l2 norm
 
         comm_buffer = torch.zeros(1, dtype=torch.float, device=get_current_device())
         for group, part_norm in group_to_norm.items():
@@ -221,9 +254,9 @@ class ZeroOptimizer(ColossalaiOptimizer):
 
         if self.mix_precision_mixin.should_skip_step():
             if self.verbose:
-                self._logger.info(f'Found overflow. Skip step')
-            self._clear_global_norm()    # clear recorded norm
-            self.zero_grad()    # reset all gradients
+                self._logger.info(f"Found overflow. Skip step")
+            self._clear_global_norm()  # clear recorded norm
+            self.zero_grad()  # reset all gradients
             self._update_fp16_params()
             return
 
@@ -237,7 +270,9 @@ class ZeroOptimizer(ColossalaiOptimizer):
         self._update_fp16_params()
         return ret
 
-    def clip_grad_norm(self, model: torch.nn.Module, max_norm: float, norm_type: float = 2.0):
+    def clip_grad_norm(
+        self, model: torch.nn.Module, max_norm: float, norm_type: float = 2.0
+    ):
         raise NotImplementedError
 
     def backward(self, loss: torch.Tensor):
@@ -255,19 +290,26 @@ class ZeroOptimizer(ColossalaiOptimizer):
     def _maybe_move_fp32_params(self):
         if self._should_move_fp32_params_h2d:
             self._should_move_fp32_params_h2d = False
-            available_cuda_margin_mem = self.gemini_manager.cuda_margin_mem * self.gpu_margin_mem_ratio
-            fp32_params_available_cuda_margin_mem = available_cuda_margin_mem / self.optim.num_fp32_shards_per_param
+            available_cuda_margin_mem = (
+                self.gemini_manager.cuda_margin_mem * self.gpu_margin_mem_ratio
+            )
+            fp32_params_available_cuda_margin_mem = (
+                available_cuda_margin_mem / self.optim.num_fp32_shards_per_param
+            )
             fp32_params_used_cuda_margin_mem = 0
 
             for group in self.param_groups:
-                for fake_param in group['params']:
+                for fake_param in group["params"]:
                     chunk32 = self.param_to_chunk32[fake_param]
                     chunk16 = chunk32.paired_chunk
 
-                    if chunk32.device_type == 'cuda':
+                    if chunk32.device_type == "cuda":
                         continue
 
-                    if fp32_params_used_cuda_margin_mem + chunk32.payload_mem < fp32_params_available_cuda_margin_mem:
+                    if (
+                        fp32_params_used_cuda_margin_mem + chunk32.payload_mem
+                        < fp32_params_available_cuda_margin_mem
+                    ):
                         self.chunk_manager.move_chunk(chunk32, get_current_device())
                         # stores grad now
                         self.chunk_manager.move_chunk(chunk16, get_current_device())
@@ -275,9 +317,9 @@ class ZeroOptimizer(ColossalaiOptimizer):
                         fp32_params_used_cuda_margin_mem += chunk32.payload_mem
 
             for group in self.param_groups:
-                for fake_param in group['params']:
+                for fake_param in group["params"]:
                     chunk32 = self.param_to_chunk32[fake_param]
-                    if chunk32.device_type == 'cuda':
+                    if chunk32.device_type == "cuda":
                         state = self.optim.state[fake_param]
                         for k, v in state.items():
                             if isinstance(v, torch.Tensor):
@@ -285,7 +327,7 @@ class ZeroOptimizer(ColossalaiOptimizer):
 
     def _register_states_(self):
         for group in self.optim.param_groups:
-            for p in group['params']:
+            for p in group["params"]:
                 state = self.optim.state[p]
                 for val in state.values():
                     if isinstance(val, torch.Tensor):
@@ -304,7 +346,7 @@ class ZeroOptimizer(ColossalaiOptimizer):
         for group in self.optim.param_groups:
             fake_params_list = list()
 
-            for param in group['params']:
+            for param in group["params"]:
                 if is_ddp_ignored(param):
                     continue
                 chunk16 = self.chunk_manager.get_chunk(param)
@@ -319,7 +361,7 @@ class ZeroOptimizer(ColossalaiOptimizer):
 
                 fake_params_list.append(fake_param)
 
-            group['params'] = fake_params_list
+            group["params"] = fake_params_list
 
 
 class GeminiAdamOptimizer(ZeroOptimizer):

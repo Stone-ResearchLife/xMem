@@ -35,7 +35,13 @@ class LayerNorm(ColossalaiModule):
     def __init__(self, normalized_shape: int, eps=1e-05, bias=True, dtype=None) -> None:
         tensor_parallel = get_tensor_parallel_mode()
         if tensor_parallel is None:
-            norm = nn.LayerNorm(normalized_shape, eps=eps).to(dtype).to(get_current_device())
+            norm = (
+                nn.LayerNorm(normalized_shape, eps=eps)
+                .to(dtype)
+                .to(get_current_device())
+            )
         else:
-            norm = _parallel_layernorm[tensor_parallel](normalized_shape, eps=eps, dtype=dtype)
+            norm = _parallel_layernorm[tensor_parallel](
+                normalized_shape, eps=eps, dtype=dtype
+            )
         super().__init__(norm)

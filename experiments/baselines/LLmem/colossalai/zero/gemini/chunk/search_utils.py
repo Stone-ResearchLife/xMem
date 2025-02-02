@@ -78,8 +78,9 @@ def _tensor_numel(local_param: ColoParameter, strict_ddp_flag: bool) -> int:
         return local_param.numel()
 
 
-def classify_params_by_dp_degree(param_order: OrderedParamGenerator,
-                                 strict_ddp_flag: bool = False) -> Dict[int, List[ColoParameter]]:
+def classify_params_by_dp_degree(
+    param_order: OrderedParamGenerator, strict_ddp_flag: bool = False
+) -> Dict[int, List[ColoParameter]]:
     """classify_params_by_dp_degree
 
     Classify the parameters by their dp degree
@@ -113,13 +114,14 @@ def classify_params_by_dp_degree(param_order: OrderedParamGenerator,
 
 
 def search_chunk_configuration(
-        model: nn.Module,
-        search_range_mb: float,
-        search_interval_byte: int,    # hidden size is the best value for the interval
-        min_chunk_size_mb: float = 32,
-        filter_exlarge_params: bool = True,
-        strict_ddp_flag: bool = False,
-        memstas: Optional[MemStats] = None) -> Tuple[Dict, int, int]:
+    model: nn.Module,
+    search_range_mb: float,
+    search_interval_byte: int,  # hidden size is the best value for the interval
+    min_chunk_size_mb: float = 32,
+    filter_exlarge_params: bool = True,
+    strict_ddp_flag: bool = False,
+    memstas: Optional[MemStats] = None,
+) -> Tuple[Dict, int, int]:
     """search_chunk_configuration
 
     Search the chunk configuration for a model.
@@ -179,10 +181,12 @@ def search_chunk_configuration(
     # #start_size  # Shard: 33554432, No shard: 45088768
     # #search_range_byte: 33554432
 
-    min_chunk_waste = float('+inf')
+    min_chunk_waste = float("+inf")
     best_chunk_size = start_size
 
-    for chunk_size in range(start_size, start_size + search_range_byte + 1, search_interval_byte):
+    for chunk_size in range(
+        start_size, start_size + search_range_byte + 1, search_interval_byte
+    ):
         temp_waste = 0
         for key in size_dict:
             temp_waste += _get_unused_byte(size_dict[key], chunk_size)
@@ -198,9 +202,13 @@ def search_chunk_configuration(
             continue
         if dp_degree > 1:
             # Original
-            config_dict[dp_degree] = dict(chunk_size=best_chunk_size, keep_gathered=False)
+            config_dict[dp_degree] = dict(
+                chunk_size=best_chunk_size, keep_gathered=False
+            )
         else:
             # Avoid all_gather and reduce_scatter for 1D TP
-            config_dict[dp_degree] = dict(chunk_size=best_chunk_size, keep_gathered=True)
+            config_dict[dp_degree] = dict(
+                chunk_size=best_chunk_size, keep_gathered=True
+            )
 
     return config_dict, total_param_size, min_chunk_waste

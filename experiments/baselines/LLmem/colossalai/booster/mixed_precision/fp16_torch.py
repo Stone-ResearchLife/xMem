@@ -9,7 +9,7 @@ from colossalai.interface import ModelWrapper, OptimizerWrapper
 
 from .mixed_precision_base import MixedPrecision
 
-__all__ = ['FP16_Torch_MixedPrecision', 'TorchAMPOptimizer', 'TorchAMPModule']
+__all__ = ["FP16_Torch_MixedPrecision", "TorchAMPOptimizer", "TorchAMPModule"]
 
 
 class TorchAMPOptimizer(OptimizerWrapper):
@@ -29,17 +29,21 @@ class TorchAMPOptimizer(OptimizerWrapper):
             calls that may cause the scale to increase. Default: 2000.
     """
 
-    def __init__(self,
-                 optim: Optimizer,
-                 init_scale: float = 2.**16,
-                 growth_factor: float = 2.0,
-                 backoff_factor: float = 0.5,
-                 growth_interval: int = 2000) -> None:
+    def __init__(
+        self,
+        optim: Optimizer,
+        init_scale: float = 2.0**16,
+        growth_factor: float = 2.0,
+        backoff_factor: float = 0.5,
+        growth_interval: int = 2000,
+    ) -> None:
         super().__init__(optim)
-        self.scaler = torch.cuda.amp.GradScaler(init_scale=init_scale,
-                                                growth_factor=growth_factor,
-                                                backoff_factor=backoff_factor,
-                                                growth_interval=growth_interval)
+        self.scaler = torch.cuda.amp.GradScaler(
+            init_scale=init_scale,
+            growth_factor=growth_factor,
+            backoff_factor=backoff_factor,
+            growth_interval=growth_interval,
+        )
 
     def backward(self, loss: Tensor, *args, **kwargs) -> None:
         scaled_loss = self.scale_loss(loss)
@@ -60,14 +64,18 @@ class TorchAMPOptimizer(OptimizerWrapper):
         self.unscale_grad()
         super().clip_grad_by_value(clip_value, *args, **kwargs)
 
-    def clip_grad_by_norm(self,
-                          max_norm: Union[float, int],
-                          norm_type: Union[float, int] = 2.0,
-                          error_if_nonfinite: bool = False,
-                          *args,
-                          **kwargs) -> None:
+    def clip_grad_by_norm(
+        self,
+        max_norm: Union[float, int],
+        norm_type: Union[float, int] = 2.0,
+        error_if_nonfinite: bool = False,
+        *args,
+        **kwargs
+    ) -> None:
         self.unscale_grad()
-        super().clip_grad_by_norm(max_norm, norm_type, error_if_nonfinite, *args, **kwargs)
+        super().clip_grad_by_norm(
+            max_norm, norm_type, error_if_nonfinite, *args, **kwargs
+        )
 
 
 class TorchAMPModule(ModelWrapper):
@@ -102,21 +110,24 @@ class FP16TorchMixedPrecision(MixedPrecision):
             calls that may cause the scale to increase. Default: 2000.
     """
 
-    def __init__(self,
-                 init_scale: float = 2.**16,
-                 growth_factor: float = 2.0,
-                 backoff_factor: float = 0.5,
-                 growth_interval: int = 2000) -> None:
+    def __init__(
+        self,
+        init_scale: float = 2.0**16,
+        growth_factor: float = 2.0,
+        backoff_factor: float = 0.5,
+        growth_interval: int = 2000,
+    ) -> None:
         super().__init__()
-        self.torch_amp_kwargs = dict(init_scale=init_scale,
-                                     growth_factor=growth_factor,
-                                     backoff_factor=backoff_factor,
-                                     growth_interval=growth_interval)
+        self.torch_amp_kwargs = dict(
+            init_scale=init_scale,
+            growth_factor=growth_factor,
+            backoff_factor=backoff_factor,
+            growth_interval=growth_interval,
+        )
 
-    def configure(self,
-                  model: nn.Module,
-                  optimizer: Optimizer,
-                  criterion: Callable = None) -> Tuple[nn.Module, OptimizerWrapper, Callable]:
+    def configure(
+        self, model: nn.Module, optimizer: Optimizer, criterion: Callable = None
+    ) -> Tuple[nn.Module, OptimizerWrapper, Callable]:
         model = TorchAMPModule(model)
         optimizer = TorchAMPOptimizer(optimizer, **self.torch_amp_kwargs)
         if criterion is not None:

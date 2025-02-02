@@ -7,7 +7,7 @@ from .node_handler import MetaInfoNodeHandler, NodeHandler
 from .registry import operator_registry
 from .strategy import DefaultReshapeGenerator, StrategyGenerator
 
-__all__ = ['DefaultReshapeHandler']
+__all__ = ["DefaultReshapeHandler"]
 
 
 @operator_registry.register(torch.flatten)
@@ -21,7 +21,11 @@ class DefaultReshapeHandler(MetaInfoNodeHandler):
     def get_strategy_generator(self) -> List[StrategyGenerator]:
         op_data_mapping = self.get_operation_data_mapping()
         generators = []
-        generators.append(DefaultReshapeGenerator(op_data_mapping, self.device_mesh, self.node.args[0]))
+        generators.append(
+            DefaultReshapeGenerator(
+                op_data_mapping, self.device_mesh, self.node.args[0]
+            )
+        )
         return generators
 
     def infer_logical_shape(self, data):
@@ -34,10 +38,14 @@ class DefaultReshapeHandler(MetaInfoNodeHandler):
         if isinstance(data, torch.Tensor):
             return data.shape
         else:
-            assert isinstance(data, tuple), "input_data should be a tuple of tensor or a tensor."
+            assert isinstance(
+                data, tuple
+            ), "input_data should be a tuple of tensor or a tensor."
             logical_shape = []
             for tensor in data:
-                assert isinstance(tensor, torch.Tensor), "input_data should be a tuple of tensor or a tensor."
+                assert isinstance(
+                    tensor, torch.Tensor
+                ), "input_data should be a tuple of tensor or a tensor."
                 logical_shape.append(tensor.shape)
             logical_shape = tuple(logical_shape)
             return logical_shape
@@ -54,17 +62,21 @@ class DefaultReshapeHandler(MetaInfoNodeHandler):
 
         input_data = self.node.args[0]._meta_data
         input_logical_shape = self.infer_logical_shape(input_data)
-        physical_input_operand = OperationData(name=str(self.node.args[0]),
-                                               type=data_type,
-                                               data=input_data,
-                                               logical_shape=input_logical_shape)
+        physical_input_operand = OperationData(
+            name=str(self.node.args[0]),
+            type=data_type,
+            data=input_data,
+            logical_shape=input_logical_shape,
+        )
 
         output_data = self.node._meta_data
         output_logical_shape = self.infer_logical_shape(output_data)
-        physical_output = OperationData(name=str(self.node),
-                                        type=OperationDataType.OUTPUT,
-                                        data=output_data,
-                                        logical_shape=output_logical_shape)
+        physical_output = OperationData(
+            name=str(self.node),
+            type=OperationDataType.OUTPUT,
+            data=output_data,
+            logical_shape=output_logical_shape,
+        )
 
         mapping = {"input": physical_input_operand, "output": physical_output}
 

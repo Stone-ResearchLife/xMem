@@ -50,6 +50,10 @@ def symbolic_trace(
         This API is still under development and can incur some bugs. Feel free to report any bugs to the Colossal-AI team.
 
     """
-    graph = ColoTracer(trace_act_ckpt=trace_act_ckpt).trace(root, concrete_args=concrete_args, meta_args=meta_args)
-    name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
+    graph = ColoTracer(trace_act_ckpt=trace_act_ckpt).trace(
+        root, concrete_args=concrete_args, meta_args=meta_args
+    )
+    name = (
+        root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
+    )
     return ColoGraphModule(root, graph, name)

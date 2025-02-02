@@ -8,12 +8,17 @@ import torch
 from colossalai.tensor.sharding_spec import ShardingSpec
 
 __all__ = [
-    'transpose_partition_dim', 'update_partition_dim', 'enumerate_all_possible_1d_sharding',
-    'enumerate_all_possible_2d_sharding', 'generate_sharding_size'
+    "transpose_partition_dim",
+    "update_partition_dim",
+    "enumerate_all_possible_1d_sharding",
+    "enumerate_all_possible_2d_sharding",
+    "generate_sharding_size",
 ]
 
 
-def transpose_partition_dim(sharding_spec: ShardingSpec, dim1: int, dim2: int) -> ShardingSpec:
+def transpose_partition_dim(
+    sharding_spec: ShardingSpec, dim1: int, dim2: int
+) -> ShardingSpec:
     """
     Switch the sharding mesh dimensions for two tensor dimensions. This operation is in-place.
 
@@ -22,8 +27,9 @@ def transpose_partition_dim(sharding_spec: ShardingSpec, dim1: int, dim2: int) -
         dim1 (int): the tensor dimension to switch
         dim2 (int): the tensor dimension to switch
     """
-    assert len(sharding_spec.entire_shape) >= 2, \
-        'The entire_shape of the sharding spec must have at least 2 dimensions'
+    assert (
+        len(sharding_spec.entire_shape) >= 2
+    ), "The entire_shape of the sharding spec must have at least 2 dimensions"
     dim_partition_dict = sharding_spec.dim_partition_dict
 
     # transpose the dim partition
@@ -45,10 +51,12 @@ def transpose_partition_dim(sharding_spec: ShardingSpec, dim1: int, dim2: int) -
     return sharding_spec
 
 
-def update_partition_dim(sharding_spec: ShardingSpec,
-                         dim_mapping: Dict[int, int],
-                         physical_shape: torch.Size,
-                         inplace: bool = False):
+def update_partition_dim(
+    sharding_spec: ShardingSpec,
+    dim_mapping: Dict[int, int],
+    physical_shape: torch.Size,
+    inplace: bool = False,
+):
     """
     This method is used to update the partition dim dict from the logical one to the physical one.
 
@@ -73,14 +81,18 @@ def update_partition_dim(sharding_spec: ShardingSpec,
 
     for tensor_dim, mesh_dims in old_dim_partition_dict.items():
         if tensor_dim in new_dim_partition_dict:
-            raise KeyError(f"There are duplicated entries for the tensor sharding dimension {tensor_dim}")
+            raise KeyError(
+                f"There are duplicated entries for the tensor sharding dimension {tensor_dim}"
+            )
         else:
             new_dim_partition_dict[tensor_dim] = mesh_dims
 
     # update sharding spec
-    current_sharding_spec.__init__(device_mesh=sharding_spec.device_mesh,
-                                   entire_shape=physical_shape,
-                                   dim_partition_dict=new_dim_partition_dict)
+    current_sharding_spec.__init__(
+        device_mesh=sharding_spec.device_mesh,
+        entire_shape=physical_shape,
+        dim_partition_dict=new_dim_partition_dict,
+    )
     return current_sharding_spec
 
 
@@ -113,7 +125,9 @@ def enumerate_all_possible_1d_sharding(mesh_dim_0, dim_size):
 def generate_sharding_size(dim_partition_dict, device_mesh):
     total_sharding_size = 1
     for mesh_dim_list in dim_partition_dict.values():
-        mesh_dim_sharding_size = [device_mesh.shape[mesh_dim] for mesh_dim in mesh_dim_list]
+        mesh_dim_sharding_size = [
+            device_mesh.shape[mesh_dim] for mesh_dim in mesh_dim_list
+        ]
         sharding_size = reduce(operator.mul, mesh_dim_sharding_size)
         total_sharding_size *= sharding_size
 

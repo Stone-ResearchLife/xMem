@@ -66,7 +66,9 @@ class ProfilerPlugin(AbcPlugin):
         self._profiler.start()
 
     def stop(self, *args, **kwargs):
-        logger.debug(f"Stop Profiler, the result will be saved to tensorboard {self.output_dir}")
+        logger.debug(
+            f"Stop Profiler, the result will be saved to tensorboard {self.output_dir}"
+        )
         if self._profiler is not None:
             self._profiler.stop()
 
@@ -74,4 +76,3 @@ class ProfilerPlugin(AbcPlugin):
         logger.debug("Step Profiler")
         if self._profiler is not None:
             self._profiler.step()
-

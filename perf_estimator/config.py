@@ -19,7 +19,10 @@ class Config(BaseModel):
     name: str = Field(default="DL-Estimator", description="Project Name")
     debug: bool = Field(default=False, description="Debug Mode")
     save2tmp: bool = Field(default=True, description="Save to Temp Directory")
-    run_id: str = Field(default=f"{time_now(iso8601=False)}-{str(uuid.uuid4().hex)[:4]}", description="Run ID")
+    run_id: str = Field(
+        default=f"{time_now(iso8601=False)}-{str(uuid.uuid4().hex)[:4]}",
+        description="Run ID",
+    )
     dataset: DatasetConfig = DatasetConfig()
     trainer: TrainerConfig = TrainerConfig()
 
@@ -28,7 +31,7 @@ class Config(BaseModel):
         if self.save2tmp:
             _base_dir = Path(temp_dir_with_specific_path(self.name, self.run_id))
         else:
-            _base_dir =  Path().home().joinpath(self.name, self.run_id)
+            _base_dir = Path().home().joinpath(self.name, self.run_id)
         _base_dir.mkdir(parents=True, exist_ok=True)
         return _base_dir
 
@@ -53,13 +56,9 @@ class Config(BaseModel):
     @property
     def permanent_gpu_memory_in_gb(self) -> dict[int, float]:
         return {
-            0: round(float(280/1024), 2),
-            1: round(float(15/1024), 2),
+            0: round(float(280 / 1024), 2),
+            1: round(float(15 / 1024), 2),
         }
 
 
 default_setting = Config(save2tmp=False)
-
-
-
-

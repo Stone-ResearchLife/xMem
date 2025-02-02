@@ -14,7 +14,7 @@ class MLP(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(nn.Linear(64, 8),
                                  nn.ReLU(),
-                                 nn.Linear(8, 32))   
+                                 nn.Linear(8, 32))
     def forward(self, x):
         return self.mlp(x)
 ```
@@ -46,7 +46,7 @@ detector.detect()
 
 I have made some comments on the right of the output for your understanding.
 
-Note that the total `Mem` of all the tensors and parameters is not equal to `Total GPU Memory Allocated`.  PyTorch's memory management is really complicated, and for models of a large scale, it's impossible to figure out clearly.
+Note that the total `Mem` of all the tensors and parameters is not equal to `Total GPU Memory Allocated`. PyTorch's memory management is really complicated, and for models of a large scale, it's impossible to figure out clearly.
 
 **The order of print is not equal to the order the tensor creates, but they are really close.**
 
@@ -123,6 +123,5 @@ Total GPU Memory Allocated on cuda:0 is 14.0 KB
 
 ## Reference
 
- This tool was inspired by https://github.com/Stonesjtu/pytorch_memlab/blob/master/pytorch_memlab/mem_reporter.py
- and https://github.com/Oldpan/Pytorch-Memory-Utils
-
+This tool was inspired by https://github.com/Stonesjtu/pytorch_memlab/blob/master/pytorch_memlab/mem_reporter.py
+and https://github.com/Oldpan/Pytorch-Memory-Utils

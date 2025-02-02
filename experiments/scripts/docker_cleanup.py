@@ -27,8 +27,12 @@ class DockerCleanup:
     def stopped_containers(self):
         client = self.client
 
-        stopped_containers = client.containers.list(all=True, filters={"status": "exited"})
-        just_created_containers = client.containers.list(all=True, filters={"status": "created"})
+        stopped_containers = client.containers.list(
+            all=True, filters={"status": "exited"}
+        )
+        just_created_containers = client.containers.list(
+            all=True, filters={"status": "created"}
+        )
 
         plan2remove_containers = stopped_containers + just_created_containers
 

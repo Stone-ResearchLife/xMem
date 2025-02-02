@@ -1,79 +1,79 @@
 {
-    "solution": {
-        "runtime": 24.750011920928955,
-        "memory": 6650068992,
-        "oom": false,
-        "ground": 7107248128,
-        "error": 0.06432575981115374,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": true,
-            "error": null
-        }
+  "config": {
+    "dataset": {
+      "shuffle": true
     },
-    "dnnmem": {
-        "runtime": 55.36985659599304,
-        "memory": 4152360960,
-        "oom": false,
-        "ground": 7107248128,
-        "error": 0.41575686043080556,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": true,
-            "error": null
-        }
-    },
-    "schedtune": {
-        "runtime": 1.2327055931091309,
-        "memory": 5478935429.12,
-        "oom": false,
-        "ground": 7107248128,
-        "error": 0.22910593096996767,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": true,
-            "error": null
-        }
-    },
-    "llmem": {
-        "runtime": 7.214971303939819,
-        "memory": 3201302528.0,
-        "oom": false,
-        "ground": 7107248128,
-        "error": 0.549572145175568,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": true,
-            "error": null
-        }
-    },
-    "train info": {
-        "model": "ConvNeXtBase",
-        "batch_size": 170,
-        "target_iteration": 2,
-        "optimiser": "Adam",
-        "device": 1,
-        "verification": 1.0,
-        "input_size": 86,
-        "zero_grad_mode": 0,
-        "total_gpu_memory": 7.642578125,
-        "used_gpu_memory": 0.017578125
-    },
-    "config": {
-        "name": "DL-Estimator",
-        "debug": false,
-        "save2tmp": false,
-        "run_id": "20241127-043040-57e0",
-        "dataset": {
-            "shuffle": true
-        },
-        "trainer": {
-            "lr": 0.001,
-            "epochs": 1
-        }
+    "debug": false,
+    "name": "DL-Estimator",
+    "run_id": "20241127-043040-57e0",
+    "save2tmp": false,
+    "trainer": {
+      "epochs": 1,
+      "lr": 0.001
     }
+  },
+  "dnnmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.41575686043080556,
+    "ground": 7107248128,
+    "memory": 4152360960,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 55.36985659599304
+  },
+  "llmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.549572145175568,
+    "ground": 7107248128,
+    "memory": 3201302528.0,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 7.214971303939819
+  },
+  "schedtune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.22910593096996767,
+    "ground": 7107248128,
+    "memory": 5478935429.12,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 1.2327055931091309
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.06432575981115374,
+    "ground": 7107248128,
+    "memory": 6650068992,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 24.750011920928955
+  },
+  "train info": {
+    "batch_size": 170,
+    "device": 1,
+    "input_size": 86,
+    "model": "ConvNeXtBase",
+    "optimiser": "Adam",
+    "target_iteration": 2,
+    "total_gpu_memory": 7.642578125,
+    "used_gpu_memory": 0.017578125,
+    "verification": 1.0,
+    "zero_grad_mode": 0
+  }
 }

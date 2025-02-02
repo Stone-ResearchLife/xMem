@@ -1,79 +1,79 @@
 {
-    "solution": {
-        "runtime": 5.2583417892456055,
-        "memory": 616562688,
-        "oom": false,
-        "ground": 914358272,
-        "error": 0.3256880733944954,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 0.18333333333333332
-        }
+  "config": {
+    "dataset": {
+      "shuffle": true
     },
-    "dnnmem": {
-        "runtime": 12.95059061050415,
-        "memory": 572522496,
-        "oom": false,
-        "ground": 914358272,
-        "error": 0.3738532110091743,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 0.24793388429752067
-        }
-    },
-    "schedtune": {
-        "runtime": 0.2744145393371582,
-        "memory": 2215410401.28,
-        "oom": false,
-        "ground": 914358272,
-        "error": 1.4229128437304714,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 1.4797887320809522
-        }
-    },
-    "llmem": {
-        "runtime": 2.680119514465332,
-        "memory": 923795456.0,
-        "oom": false,
-        "ground": 914358272,
-        "error": 0.010321100917431193,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 0.03161592505854801
-        }
-    },
-    "train info": {
-        "model": "MnasNet",
-        "batch_size": 70,
-        "target_iteration": 2,
-        "optimiser": "Adam",
-        "device": 0,
-        "verification": 1.0,
-        "input_size": 86,
-        "zero_grad_mode": 0,
-        "total_gpu_memory": 11.40625,
-        "used_gpu_memory": 0.2197265625
-    },
-    "config": {
-        "name": "DL-Estimator",
-        "debug": false,
-        "save2tmp": false,
-        "run_id": "20241201-222739-0455",
-        "dataset": {
-            "shuffle": true
-        },
-        "trainer": {
-            "lr": 0.001,
-            "epochs": 1
-        }
+    "debug": false,
+    "name": "DL-Estimator",
+    "run_id": "20241201-222739-0455",
+    "save2tmp": false,
+    "trainer": {
+      "epochs": 1,
+      "lr": 0.001
     }
+  },
+  "dnnmem": {
+    "2nd verification": {
+      "error": 0.24793388429752067,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.3738532110091743,
+    "ground": 914358272,
+    "memory": 572522496,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 12.95059061050415
+  },
+  "llmem": {
+    "2nd verification": {
+      "error": 0.03161592505854801,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.010321100917431193,
+    "ground": 914358272,
+    "memory": 923795456.0,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 2.680119514465332
+  },
+  "schedtune": {
+    "2nd verification": {
+      "error": 1.4797887320809522,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 1.4229128437304714,
+    "ground": 914358272,
+    "memory": 2215410401.28,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 0.2744145393371582
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.18333333333333332,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.3256880733944954,
+    "ground": 914358272,
+    "memory": 616562688,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 5.2583417892456055
+  },
+  "train info": {
+    "batch_size": 70,
+    "device": 0,
+    "input_size": 86,
+    "model": "MnasNet",
+    "optimiser": "Adam",
+    "target_iteration": 2,
+    "total_gpu_memory": 11.40625,
+    "used_gpu_memory": 0.2197265625,
+    "verification": 1.0,
+    "zero_grad_mode": 0
+  }
 }

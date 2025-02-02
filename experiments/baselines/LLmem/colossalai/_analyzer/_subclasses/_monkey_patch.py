@@ -33,9 +33,19 @@ _TorchNonOverrideableFactoryMethod = [
     "tensor",
 ]
 
-_TorchFactoryMethod = _TorchOverrideableFactoryMethod + _TorchNonOverrideableFactoryMethod
+_TorchFactoryMethod = (
+    _TorchOverrideableFactoryMethod + _TorchNonOverrideableFactoryMethod
+)
 
-_TensorPropertyMethod = ["dtype", "shape", "device", "requires_grad", "grad", "grad_fn", "data"]
+_TensorPropertyMethod = [
+    "dtype",
+    "shape",
+    "device",
+    "requires_grad",
+    "grad",
+    "grad_fn",
+    "data",
+]
 
 _DistCommMethod = [
     "all_gather",
@@ -48,7 +58,7 @@ _DistCommMethod = [
     "scatter",
 ]
 
-if version.parse(torch.__version__) >= version.parse('1.12.0'):
+if version.parse(torch.__version__) >= version.parse("1.12.0"):
     aten = torch.ops.aten
     # TODO: dive deep here
     # refer to https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/TensorShape.cpp

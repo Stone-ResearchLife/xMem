@@ -6,7 +6,7 @@ import json
 
 from .utils import is_dtensor_checkpoint
 
-__all__ = ['CheckpointIndexFile']
+__all__ = ["CheckpointIndexFile"]
 
 
 class CheckpointIndexFile:
@@ -48,7 +48,7 @@ class CheckpointIndexFile:
             json_path (str): path to the json file.
         """
         # load the json file
-        with open(json_path, 'r') as f:
+        with open(json_path, "r") as f:
             index = json.load(f)
 
         # assign attributes if exists
@@ -73,7 +73,7 @@ class CheckpointIndexFile:
         index["weight_map"] = self.weight_map
 
         # export the index file
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(index, f, indent=4)
 
     def append_weight_map(self, param_name: str, shard_file: str):
@@ -150,13 +150,13 @@ class CheckpointIndexFile:
         """
         ckpt_path = self.weight_map[param_name]
         return ckpt_path
-    
+
     def get_all_param_names(self):
         """
         Get all the weight keys.
         """
         return list(self.weight_map.keys())
-    
+
     def write_index_file(self, save_index_file):
         """
         Write index file.

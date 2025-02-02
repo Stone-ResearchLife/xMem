@@ -24,15 +24,15 @@ orig_empty_like = torch.empty_like
 
 
 def new(*args, **kwargs):
-    return orig_empty(*args, **kwargs, device=torch.device('meta'))
+    return orig_empty(*args, **kwargs, device=torch.device("meta"))
 
 
 def new_strided(*args, **kwargs):
-    return orig_empty_strided(*args, **kwargs, device=torch.device('meta'))
+    return orig_empty_strided(*args, **kwargs, device=torch.device("meta"))
 
 
 def new_like(*args, **kwargs):
-    return orig_empty_like(*args, **kwargs, device=torch.device('meta'))
+    return orig_empty_like(*args, **kwargs, device=torch.device("meta"))
 
 
 def register_meta(op, register_dispatcher=True):
@@ -42,7 +42,11 @@ def register_meta(op, register_dispatcher=True):
         def add_func(op):
             meta_table[op] = f
             if register_dispatcher:
-                name = (op.__name__ if op._overloadname != "default" else op.overloadpacket.__name__)
+                name = (
+                    op.__name__
+                    if op._overloadname != "default"
+                    else op.overloadpacket.__name__
+                )
                 try:
                     meta_lib.impl(name, f)
                 except:
@@ -54,7 +58,7 @@ def register_meta(op, register_dispatcher=True):
     return wrapper
 
 
-if version.parse(torch.__version__) >= version.parse('1.12.0'):
+if version.parse(torch.__version__) >= version.parse("1.12.0"):
     # ============================== Convolutions ======================================
     # https://github.com/pytorch/pytorch/pull/79834
     @register_meta(aten.convolution.default)
@@ -85,7 +89,9 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
             """
             return (ln + 2 * p - d * (k - 1) - 1) // s + 1
 
-        def _formula_transposed(ln: int, p: int, d: int, k: int, s: int, op: int) -> int:
+        def _formula_transposed(
+            ln: int, p: int, d: int, k: int, s: int, op: int
+        ) -> int:
             """
             Formula to apply to calculate the length of some dimension of the output
             if transposed convolution is used.
@@ -146,9 +152,14 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
                             kernel_size[i],
                             stride[i],
                             output_padding_list[i],
-                        ))
+                        )
+                    )
                 else:
-                    ret_shape.append(_formula(dims[i], padding[i], dilation[i], kernel_size[i], stride[i]))
+                    ret_shape.append(
+                        _formula(
+                            dims[i], padding[i], dilation[i], kernel_size[i], stride[i]
+                        )
+                    )
             return ret_shape
 
         def pick_memory_format():
@@ -177,22 +188,54 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
             out_channels = weight.shape[0]
             if weight.shape[1] != input_tensor.shape[1] / groups:
                 raise RuntimeError("Invalid channel dimensions")
-            shape_out = calc_conv_nd_return_shape(dims, kernel_size, stride, padding, dilation)
+            shape_out = calc_conv_nd_return_shape(
+                dims, kernel_size, stride, padding, dilation
+            )
         out = input_tensor.new_empty((input_tensor.shape[0], out_channels, *shape_out))
         mem_fmt = pick_memory_format()
-        out = out.to(memory_format=mem_fmt)    # type: ignore[call-overload]
+        out = out.to(memory_format=mem_fmt)  # type: ignore[call-overload]
         return out
 
     @register_meta(aten._convolution.default)
-    def meta__conv(input_tensor: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor, stride: List[int],
-                   padding: List[int], dilation: List[int], is_transposed: bool, output_padding: List[int], groups: int,
-                   *extra_args):
-        out = meta_conv(input_tensor, weight, bias, stride, padding, dilation, is_transposed, output_padding, groups)
+    def meta__conv(
+        input_tensor: torch.Tensor,
+        weight: torch.Tensor,
+        bias: torch.Tensor,
+        stride: List[int],
+        padding: List[int],
+        dilation: List[int],
+        is_transposed: bool,
+        output_padding: List[int],
+        groups: int,
+        *extra_args,
+    ):
+        out = meta_conv(
+            input_tensor,
+            weight,
+            bias,
+            stride,
+            padding,
+            dilation,
+            is_transposed,
+            output_padding,
+            groups,
+        )
         return out
 
     @register_meta(aten.convolution_backward.default)
-    def meta_conv_backward(grad_output: torch.Tensor, input: torch.Tensor, weight: torch.Tensor, bias_sizes, stride,
-                           padding, dilation, transposed, output_padding, groups, output_mask):
+    def meta_conv_backward(
+        grad_output: torch.Tensor,
+        input: torch.Tensor,
+        weight: torch.Tensor,
+        bias_sizes,
+        stride,
+        padding,
+        dilation,
+        transposed,
+        output_padding,
+        groups,
+        output_mask,
+    ):
         return new_like(input), new_like(weight), new((bias_sizes))
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/AdaptiveAveragePooling.cpp
@@ -240,8 +283,11 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
         if is_input_packed:
             out_shape = [batch_sizes_sum, out_size * num_directions]
         else:
-            out_shape = ([mini_batch, seq_length, out_size *
-                          num_directions] if batch_first else [seq_length, mini_batch, out_size * num_directions])
+            out_shape = (
+                [mini_batch, seq_length, out_size * num_directions]
+                if batch_first
+                else [seq_length, mini_batch, out_size * num_directions]
+            )
         output = input.new_empty(out_shape)
 
         cell_shape = [num_layers * num_directions, mini_batch, hidden_size]
@@ -257,15 +303,21 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cudnn/RNN.cpp
     @register_meta(aten._cudnn_rnn_backward.default)
-    def meta_cudnn_rnn_backward(input: torch.Tensor,
-                                weight: torch.Tensor,
-                                weight_stride0: int,
-                                hx: torch.Tensor,
-                                cx: Optional[torch.Tensor] = None,
-                                *args,
-                                **kwargs):
-        return new_like(input), new_like(weight), new_like(hx), new_like(cx) if cx is not None else new(
-            ())    # (grad_input, grad_weight, grad_hx, grad_cx)
+    def meta_cudnn_rnn_backward(
+        input: torch.Tensor,
+        weight: torch.Tensor,
+        weight_stride0: int,
+        hx: torch.Tensor,
+        cx: Optional[torch.Tensor] = None,
+        *args,
+        **kwargs,
+    ):
+        return (
+            new_like(input),
+            new_like(weight),
+            new_like(hx),
+            new_like(cx) if cx is not None else new(()),
+        )  # (grad_input, grad_weight, grad_hx, grad_cx)
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/Activation.cpp
     # ============================== Activations =======================================
@@ -278,7 +330,7 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
         aten.hardtanh_backward.default,
     ]
 
-    if version.parse(torch.__version__) < version.parse('2.0.0'):
+    if version.parse(torch.__version__) < version.parse("2.0.0"):
         _unregistered_ewise += [
             aten.prelu_backward.default,
         ]
@@ -290,43 +342,104 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
     # ============================== Normalization =====================================
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cudnn/BatchNorm.cpp
     @register_meta(aten.native_batch_norm.default)
-    def meta_bn(input: torch.Tensor, weight, bias, running_mean, running_var, training, momentum, eps):
+    def meta_bn(
+        input: torch.Tensor,
+        weight,
+        bias,
+        running_mean,
+        running_var,
+        training,
+        momentum,
+        eps,
+    ):
         n_input = input.size(1)
         return new_like(input), new((n_input)), new((n_input))
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cudnn/BatchNorm.cpp
     @register_meta(aten.native_batch_norm_backward.default)
-    def meta_bn_backward(dY: torch.Tensor, input: torch.Tensor, weight: torch.Tensor, running_mean, running_var,
-                         save_mean, save_invstd, train, eps, output_mask):
-        return new_like(input), new_like(weight), new_like(weight)    # (dX, dgamma, dbeta)
+    def meta_bn_backward(
+        dY: torch.Tensor,
+        input: torch.Tensor,
+        weight: torch.Tensor,
+        running_mean,
+        running_var,
+        save_mean,
+        save_invstd,
+        train,
+        eps,
+        output_mask,
+    ):
+        return (
+            new_like(input),
+            new_like(weight),
+            new_like(weight),
+        )  # (dX, dgamma, dbeta)
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cudnn/BatchNorm.cpp
     @register_meta(aten.cudnn_batch_norm.default)
-    def meta_cudnn_bn(input: torch.Tensor, weight, bias, running_mean, running_var, training, momentum, eps):
+    def meta_cudnn_bn(
+        input: torch.Tensor,
+        weight,
+        bias,
+        running_mean,
+        running_var,
+        training,
+        momentum,
+        eps,
+    ):
         n_input = input.size(1)
-        return new_like(input), new((n_input)), new((n_input)), new(
-            (0), dtype=torch.uint8)    # (output, running_mean, running_var, reserve)
+        return (
+            new_like(input),
+            new((n_input)),
+            new((n_input)),
+            new((0), dtype=torch.uint8),
+        )  # (output, running_mean, running_var, reserve)
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cudnn/BatchNorm.cpp
     # NB: CuDNN only implements the backward algorithm for batchnorm
     # in training mode (evaluation mode batchnorm has a different algorithm),
     # which is why this doesn't accept a 'training' parameter.
     @register_meta(aten.cudnn_batch_norm_backward.default)
-    def meta_cudnn_bn_backward(dY: torch.Tensor, input: torch.Tensor, weight: torch.Tensor, running_mean, running_var,
-                               save_mean, save_invstd, eps, reserve):
-        return new_like(input), new_like(weight), new_like(weight)    # (dX, dgamma, dbeta)
+    def meta_cudnn_bn_backward(
+        dY: torch.Tensor,
+        input: torch.Tensor,
+        weight: torch.Tensor,
+        running_mean,
+        running_var,
+        save_mean,
+        save_invstd,
+        eps,
+        reserve,
+    ):
+        return (
+            new_like(input),
+            new_like(weight),
+            new_like(weight),
+        )  # (dX, dgamma, dbeta)
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/layer_norm.cpp
     @register_meta(aten.native_layer_norm.default)
     def meta_ln(input: torch.Tensor, normalized_shape, weight, bias, eps):
         bs, n_input = input.size(0), input.size(1)
-        return new_like(input), new((bs, n_input, 1)), new((bs, n_input, 1))    # (output, running_mean, running_var)
+        return (
+            new_like(input),
+            new((bs, n_input, 1)),
+            new((bs, n_input, 1)),
+        )  # (output, running_mean, running_var)
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/layer_norm.cpp
     @register_meta(aten.native_layer_norm_backward.default)
-    def meta_ln_backward(dY: torch.Tensor, input: torch.Tensor, normalized_shape, mean, rstd, weight, bias,
-                         grad_input_mask):
-        return new_like(input), new_like(weight), new_like(bias)    # (dX, dgamma, dbeta)
+    def meta_ln_backward(
+        dY: torch.Tensor,
+        input: torch.Tensor,
+        normalized_shape,
+        mean,
+        rstd,
+        weight,
+        bias,
+        grad_input_mask,
+    ):
+        return new_like(input), new_like(weight), new_like(bias)  # (dX, dgamma, dbeta)
 
     # ================================== Misc ==========================================
     # Maybe incorrect
@@ -347,7 +460,9 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/TensorCompare.cpp
     @register_meta(aten.where.self)
-    def meta_where_self(condition: torch.Tensor, self: torch.Tensor, other: torch.Tensor):
+    def meta_where_self(
+        condition: torch.Tensor, self: torch.Tensor, other: torch.Tensor
+    ):
         result_type = torch.result_type(self, other)
         return new_like(condition + self + other, dtype=result_type)
 
@@ -355,23 +470,34 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/Embedding.cpp
 
     @register_meta(aten.embedding_dense_backward.default)
-    def meta_embedding_dense_backward(grad_output: torch.Tensor, indices: torch.Tensor, num_weights, padding_idx,
-                                      scale_grad_by_freq):
-        return new((num_weights, grad_output.size(-1)), dtype=grad_output.dtype, layout=grad_output.layout)
+    def meta_embedding_dense_backward(
+        grad_output: torch.Tensor,
+        indices: torch.Tensor,
+        num_weights,
+        padding_idx,
+        scale_grad_by_freq,
+    ):
+        return new(
+            (num_weights, grad_output.size(-1)),
+            dtype=grad_output.dtype,
+            layout=grad_output.layout,
+        )
 
     # ============================== Dropout ===========================================
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/Dropout.cpp
     @register_meta(aten.native_dropout.default)
     def meta_native_dropout_default(input: torch.Tensor, p: float, train: bool = False):
         # notice that mask is bool
-        return new_like(input), new_like(input, dtype=torch.bool)    # (output, mask)
+        return new_like(input), new_like(input, dtype=torch.bool)  # (output, mask)
 
     # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/Dropout.cpp
     @register_meta(aten.native_dropout_backward.default)
-    def meta_native_dropout_backward_default(grad: torch.Tensor, mask: torch.Tensor, scale: float):
-        return new_like(grad)    # (grad_in)
+    def meta_native_dropout_backward_default(
+        grad: torch.Tensor, mask: torch.Tensor, scale: float
+    ):
+        return new_like(grad)  # (grad_in)
 
-    if version.parse(torch.__version__) < version.parse('1.13.0'):
+    if version.parse(torch.__version__) < version.parse("1.13.0"):
         # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/native_functions.yaml
         @register_meta(aten.eye.m_out)
         def meta_eye(n: int, m: int, out: torch.Tensor):
@@ -385,24 +511,30 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
             result: List[Optional[torch.Tensor]] = []
             for i, index in enumerate(indices):
                 if index is not None:
-                    assert index.dtype in [torch.long, torch.int8, torch.bool],\
-                        "tensors used as indices must be long, byte or bool tensors"
+                    assert index.dtype in [
+                        torch.long,
+                        torch.int8,
+                        torch.bool,
+                    ], "tensors used as indices must be long, byte or bool tensors"
                     if index.dtype in [torch.int8, torch.bool]:
                         nonzero = index.nonzero()
                         k = len(result)
-                        assert k + index.ndim <= self.ndim, f"too many indices for tensor of dimension {self.ndim}"
+                        assert (
+                            k + index.ndim <= self.ndim
+                        ), f"too many indices for tensor of dimension {self.ndim}"
                         for j in range(index.ndim):
-                            assert index.shape[j] == self.shape[
-                                k +
-                                j], f"The shape of the mask {index.shape} at index {i} does not match the shape of the indexed tensor {self.shape} at index {k + j}"
+                            assert (
+                                index.shape[j] == self.shape[k + j]
+                            ), f"The shape of the mask {index.shape} at index {i} does not match the shape of the indexed tensor {self.shape} at index {k + j}"
                             result.append(nonzero.select(1, j))
                     else:
                         result.append(index)
                 else:
                     result.append(index)
             indices = result
-            assert len(
-                indices) <= self.ndim, f"too many indices for tensor of dimension {self.ndim} (got {len(indices)})"
+            assert (
+                len(indices) <= self.ndim
+            ), f"too many indices for tensor of dimension {self.ndim} (got {len(indices)})"
             # expand_outplace
             import torch._refs as refs
 

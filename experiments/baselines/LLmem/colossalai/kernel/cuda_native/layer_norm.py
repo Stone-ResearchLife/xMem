@@ -32,7 +32,9 @@ class FusedLayerNormAffineFunction(torch.autograd.Function):
         if layer_norm is None:
 
             layer_norm = LayerNormBuilder().load()
-        output, mean, invvar = layer_norm.forward_affine(input_, ctx.normalized_shape, weight_, bias_, ctx.eps)
+        output, mean, invvar = layer_norm.forward_affine(
+            input_, ctx.normalized_shape, weight_, bias_, ctx.eps
+        )
         ctx.layernorm_op = layer_norm
         ctx.save_for_backward(input_, weight_, bias_, mean, invvar)
 
@@ -43,11 +45,16 @@ class FusedLayerNormAffineFunction(torch.autograd.Function):
     def backward(ctx, grad_output):
         input_, weight_, bias_, mean, invvar = ctx.saved_tensors
         grad_input = grad_weight = grad_bias = None
-        grad_input, grad_weight, grad_bias \
-            = layer_norm.backward_affine(
-                grad_output.contiguous(), mean, invvar,
-                input_, ctx.normalized_shape,
-                weight_, bias_, ctx.eps)
+        grad_input, grad_weight, grad_bias = layer_norm.backward_affine(
+            grad_output.contiguous(),
+            mean,
+            invvar,
+            input_,
+            ctx.normalized_shape,
+            weight_,
+            bias_,
+            ctx.eps,
+        )
 
         return grad_input, grad_weight, grad_bias, None, None
 
@@ -61,8 +68,12 @@ class MixedFusedLayerNorm(torch.nn.Module):
             normalized_shape = (normalized_shape,)
         self.normalized_shape = torch.Size(normalized_shape)
         self.eps = eps
-        self.weight = Parameter(torch.empty(*normalized_shape, device=device, dtype=dtype))
-        self.bias = Parameter(torch.empty(*normalized_shape, device=device, dtype=dtype))
+        self.weight = Parameter(
+            torch.empty(*normalized_shape, device=device, dtype=dtype)
+        )
+        self.bias = Parameter(
+            torch.empty(*normalized_shape, device=device, dtype=dtype)
+        )
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -72,7 +83,9 @@ class MixedFusedLayerNorm(torch.nn.Module):
 
     def forward(self, input):
 
-        return FusedLayerNormAffineFunction.apply(input, self.weight, self.bias, self.normalized_shape, self.eps)
+        return FusedLayerNormAffineFunction.apply(
+            input, self.weight, self.bias, self.normalized_shape, self.eps
+        )
 
     def __repr__(self):
-        return f'MixedFusedLayerNorm(normalized_shape={self.normalized_shape}, eps={self.eps})'
+        return f"MixedFusedLayerNorm(normalized_shape={self.normalized_shape}, eps={self.eps})"

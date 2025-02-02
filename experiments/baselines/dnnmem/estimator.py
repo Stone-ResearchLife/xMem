@@ -66,12 +66,12 @@ class TensorMemoryBlock(MemoryBlock):
 
 class DNNmem:
     def __init__(
-            self,
-            model: torch.nn.Module,
-            data_x: torch.Tensor,
-            data_y: torch.Tensor,
-            loss_fn: Optional[torch.nn.Module] = None,
-            max_gpu_memory: Optional[int] = None
+        self,
+        model: torch.nn.Module,
+        data_x: torch.Tensor,
+        data_y: torch.Tensor,
+        loss_fn: Optional[torch.nn.Module] = None,
+        max_gpu_memory: Optional[int] = None,
     ):
         self._model = model
         self._data_x = data_x
@@ -99,23 +99,34 @@ class DNNmem:
         for index, (key, value) in enumerate(self._layers.items()):
             # Add all tensors belonging to forward propagation
             self._operator_index[index] = value
-            self._backward_index_map[value.real_layer_name] = (max_number_layer * 2 - 1) - index
+            self._backward_index_map[value.real_layer_name] = (
+                max_number_layer * 2 - 1
+            ) - index
             _op_type = value.op_type
             if _op_type == "output":
                 continue
             elif _op_type not in ["placeholder"]:
-                weight_block = self._add_into_tensor_set(value.weight, index=index, name=f"{value.real_layer_name}_weight")
+                weight_block = self._add_into_tensor_set(
+                    value.weight, index=index, name=f"{value.real_layer_name}_weight"
+                )
                 if weight_block is not None:
                     weight_block.set_unreleased()
-                bias_block = self._add_into_tensor_set(value.bias, index=index, name=f"{value.real_layer_name}_bias")
+                bias_block = self._add_into_tensor_set(
+                    value.bias, index=index, name=f"{value.real_layer_name}_bias"
+                )
                 if bias_block is not None:
                     bias_block.set_unreleased()
-                self._add_into_tensor_set(value.output, index=index, name=f"{value.real_layer_name}")
+                self._add_into_tensor_set(
+                    value.output, index=index, name=f"{value.real_layer_name}"
+                )
             else:
-                placeholder_tensor = self._add_into_tensor_set(value.output, index=index, name=f"{value.real_layer_name}_placeholder")
+                placeholder_tensor = self._add_into_tensor_set(
+                    value.output,
+                    index=index,
+                    name=f"{value.real_layer_name}_placeholder",
+                )
                 if placeholder_tensor is not None:
                     placeholder_tensor.set_unreleased()
-
 
             for _input in value.inputs:
                 _input_tensor_mem = TensorMemoryBlock(_input.output)
@@ -140,7 +151,9 @@ class DNNmem:
             for _input in value.inputs:
                 input_shape = _input.output.shape
                 new_output_tensor = torch.randn(input_shape)
-                tensor_mem = self._add_into_tensor_set(new_output_tensor, index=index, name=f"{value.real_layer_name}_grad")
+                tensor_mem = self._add_into_tensor_set(
+                    new_output_tensor, index=index, name=f"{value.real_layer_name}_grad"
+                )
                 tensor_consumer_id = self._backward_index_map[_input.real_layer_name]
                 tensor_mem.add_call_index(tensor_consumer_id)
 
@@ -149,17 +162,18 @@ class DNNmem:
                 for params in gradients.get("parameters", []):
                     _tensor = params[-1].variable
                     new_params_tensor = torch.randn(_tensor.shape)
-                    tensor_mem = self._add_into_tensor_set(new_params_tensor, index=index, name=f"{value.real_layer_name}_grad_params")
+                    tensor_mem = self._add_into_tensor_set(
+                        new_params_tensor,
+                        index=index,
+                        name=f"{value.real_layer_name}_grad_params",
+                    )
                     # Add 'optimiser' index to the tensor
                     # Why four times? Because the opertimiser is called after the backward propagation.
                     # Just set a big number to make sure it is larger than the backward propagation.
                     tensor_mem.add_call_index(max_number_layer * 3)
 
     def _add_into_tensor_set(
-            self,
-            tensor: torch.Tensor,
-            index: int,
-            name: Optional[str] = None
+        self, tensor: torch.Tensor, index: int, name: Optional[str] = None
     ):
         if tensor is None:
             return
@@ -179,21 +193,27 @@ class DNNmem:
             self._get_backward_tensors()
 
         # pre-process the tensor data into uniform format for plotting
-        time_slots = [mem.free_time for mem in self.tensor_memory_blocks.values() if mem.duration is not None]
+        time_slots = [
+            mem.free_time
+            for mem in self.tensor_memory_blocks.values()
+            if mem.duration is not None
+        ]
         max_time = max(time_slots)
         plot_block_data = []
         for index, memory in enumerate(self.tensor_memory_blocks.values()):
             start = memory.alloc_time
             dur = max_time - start if memory.duration is None else memory.duration
             bytes = memory.bytes
-            plot_block_data.append({
-                "x0": start,
-                "x1": start + dur,
-                "y0": index,
-                "y1": index + 0.7,
-                "name": memory.name,
-                "bytes": bytes
-            })
+            plot_block_data.append(
+                {
+                    "x0": start,
+                    "x1": start + dur,
+                    "y0": index,
+                    "y1": index + 0.7,
+                    "name": memory.name,
+                    "bytes": bytes,
+                }
+            )
 
         # plot the memory block data
         fig = go.Figure()
@@ -208,22 +228,21 @@ class DNNmem:
                 y1=plot_block["y1"],
                 line=dict(color="black", width=2),
                 fillcolor="blue",
-                name=plot_block["name"]
+                name=plot_block["name"],
             )
 
             fig.add_annotation(
-                x=(plot_block['x0'] + plot_block['x1']) / 2,
-                y=(plot_block['y0'] + plot_block['y1']) / 2,
+                x=(plot_block["x0"] + plot_block["x1"]) / 2,
+                y=(plot_block["y0"] + plot_block["y1"]) / 2,
                 text=f"{plot_block['name']}({format_memory(plot_block['bytes'])})",
                 showarrow=False,
                 font=dict(size=12, color="white"),
             )
 
-            if plot_block['y1'] > max_y:
-                max_y = plot_block['y1']
-            if plot_block['x1'] > max_x:
-                max_x = plot_block['x1']
-
+            if plot_block["y1"] > max_y:
+                max_y = plot_block["y1"]
+            if plot_block["x1"] > max_x:
+                max_x = plot_block["x1"]
 
         fig.update_layout(
             xaxis=dict(range=[0, max_x], title="Time(counts)"),
@@ -231,7 +250,7 @@ class DNNmem:
             showlegend=True,
             height=max_y * 30,
             width=800,
-            margin=dict(l=50, r=50, t=50, b=50)
+            margin=dict(l=50, r=50, t=50, b=50),
         )
 
         fig.show()
@@ -248,9 +267,3 @@ class DNNmem:
                 without_relu.append(memory_block)
         _result = _sim.simulate(without_relu)
         return _result
-
-
-
-
-
-

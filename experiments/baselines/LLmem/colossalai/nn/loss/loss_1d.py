@@ -17,7 +17,9 @@ class _VocabParallelCrossEntropy1D(torch.autograd.Function):
 
         # Maximum value along vocab dimension across all GPUs.
         logits_max = torch.max(vocab_parallel_logits, dim=-1)[0]
-        torch.distributed.all_reduce(logits_max, op=torch.distributed.ReduceOp.MAX, group=process_group)
+        torch.distributed.all_reduce(
+            logits_max, op=torch.distributed.ReduceOp.MAX, group=process_group
+        )
         # Subtract the maximum value.
         vocab_parallel_logits.sub_(logits_max.unsqueeze(dim=-1))
 
@@ -37,18 +39,24 @@ class _VocabParallelCrossEntropy1D(torch.autograd.Function):
         # [*, partition-vocab-size] and target to a 1-D tensor of size [*].
         logits_2d = vocab_parallel_logits.view(-1, partition_vocab_size)
         masked_target_1d = masked_target.view(-1)
-        arange_1d = torch.arange(start=0, end=logits_2d.size()[0], device=logits_2d.device)
+        arange_1d = torch.arange(
+            start=0, end=logits_2d.size()[0], device=logits_2d.device
+        )
         predicted_logits_1d = logits_2d[arange_1d, masked_target_1d]
         predicted_logits_1d = predicted_logits_1d.clone().contiguous()
         predicted_logits = predicted_logits_1d.view_as(targets)
         predicted_logits[target_mask] = 0.0
         # All reduce is needed to get the chunks from other GPUs.
-        torch.distributed.all_reduce(predicted_logits, op=torch.distributed.ReduceOp.SUM, group=process_group)
+        torch.distributed.all_reduce(
+            predicted_logits, op=torch.distributed.ReduceOp.SUM, group=process_group
+        )
 
         # Sum of exponential of logits along vocab dimension across all GPUs.
         exp_logits = torch.exp(vocab_parallel_logits)
         sum_exp_logits = exp_logits.sum(dim=-1)
-        torch.distributed.all_reduce(sum_exp_logits, op=torch.distributed.ReduceOp.SUM, group=process_group)
+        torch.distributed.all_reduce(
+            sum_exp_logits, op=torch.distributed.ReduceOp.SUM, group=process_group
+        )
 
         # Loss = log(sum(exp(logits))) - predicted-logit.
         loss = torch.log(sum_exp_logits) - predicted_logits
@@ -72,7 +80,7 @@ class _VocabParallelCrossEntropy1D(torch.autograd.Function):
 
         # Add the gradient from matching classes.
         arange_1d = torch.arange(start=0, end=grad_2d.size()[0], device=grad_2d.device)
-        grad_2d[arange_1d, masked_target_1d] -= (1.0 - target_mask.view(-1).float())
+        grad_2d[arange_1d, masked_target_1d] -= 1.0 - target_mask.view(-1).float()
 
         # Finally elementwise multiplication with the output gradients.
         grad_input.mul_(grad_output.unsqueeze(dim=-1))

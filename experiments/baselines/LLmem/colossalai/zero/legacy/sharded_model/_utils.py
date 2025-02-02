@@ -25,7 +25,7 @@ def free_storage(data: torch.Tensor) -> None:
 @torch.no_grad()
 def alloc_storage(data: torch.Tensor, size: torch.Size) -> None:
     """Allocate storage for a tensor."""
-    if data.storage().size() == size.numel():    # no need to reallocate
+    if data.storage().size() == size.numel():  # no need to reallocate
         return
     assert data.storage().size() == 0
     data.storage().resize_(size.numel())
@@ -43,7 +43,10 @@ def cast_tensor_to_fp32(tensor: Union[torch.Tensor, StatefulTensor]) -> torch.Te
     if isinstance(tensor, StatefulTensor):
         tensor = tensor.payload
 
-    if torch.is_floating_point(tensor) and tensor.dtype in (torch.float16, torch.bfloat16):
+    if torch.is_floating_point(tensor) and tensor.dtype in (
+        torch.float16,
+        torch.bfloat16,
+    ):
         return tensor.float()
     return tensor
 
@@ -81,5 +84,7 @@ def chunk_and_pad(tensor: torch.Tensor, num_chunks: int) -> List[torch.Tensor]:
     if num_pad_for_partial_chunk > 0:
         chunks[-1] = F.pad(chunks[-1], [0, num_pad_for_partial_chunk])
     if len(chunks) < num_chunks:
-        chunks.extend([torch.zeros_like(chunks[0]) for _ in range(num_chunks - len(chunks))])
+        chunks.extend(
+            [torch.zeros_like(chunks[0]) for _ in range(num_chunks - len(chunks))]
+        )
     return chunks

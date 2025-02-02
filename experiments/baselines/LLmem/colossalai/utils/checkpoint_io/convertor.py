@@ -6,13 +6,17 @@ from torch import Tensor
 
 from .distributed import merge_param, unmerge_param
 from .meta import ParamDistMeta, RedistMeta
-from .utils import (ModelCheckpointSharder, OptimizerCheckpointSharder, run_if_not_none)
+from .utils import ModelCheckpointSharder, OptimizerCheckpointSharder, run_if_not_none
 
 
 class CheckpointConvertor(ABC):
 
     @abstractmethod
-    def append(self, shard_dict: Dict[int, dict], dist_meta_list: List[Optional[Dict[str, ParamDistMeta]]]) -> None:
+    def append(
+        self,
+        shard_dict: Dict[int, dict],
+        dist_meta_list: List[Optional[Dict[str, ParamDistMeta]]],
+    ) -> None:
         pass
 
     @abstractmethod
@@ -28,10 +32,16 @@ class ModelCheckpointConvertor(CheckpointConvertor):
         self.buffer: Dict[str, Dict[int, Tensor]] = defaultdict(dict)
 
     @abstractmethod
-    def convert_tensors(self, key: str, tensors: List[Tensor], dist_metas: List[ParamDistMeta]) -> None:
+    def convert_tensors(
+        self, key: str, tensors: List[Tensor], dist_metas: List[ParamDistMeta]
+    ) -> None:
         pass
 
-    def append(self, shard_dict: Dict[int, dict], dist_meta_list: List[Optional[Dict[str, ParamDistMeta]]]) -> None:
+    def append(
+        self,
+        shard_dict: Dict[int, dict],
+        dist_meta_list: List[Optional[Dict[str, ParamDistMeta]]],
+    ) -> None:
         for rank, state_dict in shard_dict.items():
             for k, tensor in state_dict.items():
                 self.buffer[k][rank] = tensor
@@ -55,12 +65,19 @@ class ModelCheckpointConvertor(CheckpointConvertor):
 
 class ModelCheckpointMerger(ModelCheckpointConvertor):
 
-    def __init__(self, max_shard_size: int, save_fn: Callable[[dict], Any], param_count: Dict[str, int]) -> None:
+    def __init__(
+        self,
+        max_shard_size: int,
+        save_fn: Callable[[dict], Any],
+        param_count: Dict[str, int],
+    ) -> None:
         super().__init__(param_count)
         self.sharder = ModelCheckpointSharder(max_shard_size)
         self.save_fn = save_fn
 
-    def convert_tensors(self, key: str, tensors: List[Tensor], dist_metas: List[ParamDistMeta]) -> None:
+    def convert_tensors(
+        self, key: str, tensors: List[Tensor], dist_metas: List[ParamDistMeta]
+    ) -> None:
         assert len(dist_metas) == len(tensors)
         tensor = merge_param(tensors, dist_metas)
         shard = self.sharder.append(key, tensor)
@@ -73,8 +90,13 @@ class ModelCheckpointMerger(ModelCheckpointConvertor):
 
 class ModelCheckpointRedistor(ModelCheckpointConvertor):
 
-    def __init__(self, max_shard_size: int, save_fns: List[Callable[[dict], Any]], param_count: Dict[str, int],
-                 redist_meta: RedistMeta) -> None:
+    def __init__(
+        self,
+        max_shard_size: int,
+        save_fns: List[Callable[[dict], Any]],
+        param_count: Dict[str, int],
+        redist_meta: RedistMeta,
+    ) -> None:
         super().__init__(param_count)
         self.save_fns = save_fns
         self.redist_meta = redist_meta
@@ -85,14 +107,18 @@ class ModelCheckpointRedistor(ModelCheckpointConvertor):
             for rank, rank_info in rank_meta.items():
                 self.rank_map[k][rank_info.tp_rank][rank_info.dp_rank].append(rank)
 
-    def convert_tensors(self, key: str, tensors: List[Tensor], dist_metas: List[ParamDistMeta]) -> None:
+    def convert_tensors(
+        self, key: str, tensors: List[Tensor], dist_metas: List[ParamDistMeta]
+    ) -> None:
         if len(dist_metas) == 0:
             # already global
             tensor = tensors[0]
         else:
             assert len(dist_metas) == len(tensors)
             tensor = merge_param(tensors, dist_metas)
-        for tp_rank, tensor_list in enumerate(unmerge_param(tensor, self.redist_meta.param_meta[key])):
+        for tp_rank, tensor_list in enumerate(
+            unmerge_param(tensor, self.redist_meta.param_meta[key])
+        ):
             for dp_rank, t in enumerate(tensor_list):
                 for rank in self.rank_map[key][tp_rank][dp_rank]:
                     shard = self.sharders[rank].append(key, t)
@@ -106,8 +132,12 @@ class ModelCheckpointRedistor(ModelCheckpointConvertor):
 
 class OptimizerCheckpointConvertor(CheckpointConvertor):
 
-    def __init__(self, param_count: Dict[str, int], param_to_os: Optional[Dict[str, int]],
-                 paired_os: Optional[Dict[int, dict]]) -> None:
+    def __init__(
+        self,
+        param_count: Dict[str, int],
+        param_to_os: Optional[Dict[str, int]],
+        paired_os: Optional[Dict[int, dict]],
+    ) -> None:
         super().__init__()
         self.param_count = param_count
         self.param_to_os = param_to_os
@@ -120,13 +150,19 @@ class OptimizerCheckpointConvertor(CheckpointConvertor):
         pass
 
     @abstractmethod
-    def convert_states(self, idx: int, states: List[dict], dist_metas: List[ParamDistMeta]) -> None:
+    def convert_states(
+        self, idx: int, states: List[dict], dist_metas: List[ParamDistMeta]
+    ) -> None:
         pass
 
-    def append(self, shard_dict: Dict[int, dict], dist_meta_list: List[Optional[Dict[str, ParamDistMeta]]]) -> None:
+    def append(
+        self,
+        shard_dict: Dict[int, dict],
+        dist_meta_list: List[Optional[Dict[str, ParamDistMeta]]],
+    ) -> None:
         for rank, state_dict in shard_dict.items():
-            self.setup(state_dict['param_groups'])
-            for idx, state in state_dict['state'].items():
+            self.setup(state_dict["param_groups"])
+            for idx, state in state_dict["state"].items():
                 self.buffer[idx][rank] = state
         converted_indices = set()
         for idx, rank_dict in self.buffer.items():
@@ -148,8 +184,14 @@ class OptimizerCheckpointConvertor(CheckpointConvertor):
 
 class OptimizerCheckpointMerger(OptimizerCheckpointConvertor):
 
-    def __init__(self, max_shard_size: int, save_fn: Callable[[dict], Any], param_count: Dict[str, int],
-                 param_to_os: Optional[Dict[str, int]], paired_os: Optional[Dict[int, dict]]) -> None:
+    def __init__(
+        self,
+        max_shard_size: int,
+        save_fn: Callable[[dict], Any],
+        param_count: Dict[str, int],
+        param_to_os: Optional[Dict[str, int]],
+        paired_os: Optional[Dict[int, dict]],
+    ) -> None:
         super().__init__(param_count, param_to_os, paired_os)
         self.max_shard_size = max_shard_size
         self.save_fn = save_fn
@@ -159,12 +201,16 @@ class OptimizerCheckpointMerger(OptimizerCheckpointConvertor):
         if self.sharder is None:
             self.sharder = OptimizerCheckpointSharder(self.max_shard_size, param_groups)
 
-    def convert_states(self, idx: int, states: List[dict], dist_metas: List[ParamDistMeta]) -> None:
+    def convert_states(
+        self, idx: int, states: List[dict], dist_metas: List[ParamDistMeta]
+    ) -> None:
         assert len(dist_metas) == len(states)
         new_state = {}
         for state_key, state_tensor in states[0].items():
             if self.paired_os[idx][state_key]:
-                new_state[state_key] = merge_param([state[state_key] for state in states], dist_metas)
+                new_state[state_key] = merge_param(
+                    [state[state_key] for state in states], dist_metas
+                )
             else:
                 new_state[state_key] = state_tensor
         shard = self.sharder.append(idx, new_state)
@@ -177,9 +223,15 @@ class OptimizerCheckpointMerger(OptimizerCheckpointConvertor):
 
 class OptimizerCheckpointRedistor(OptimizerCheckpointConvertor):
 
-    def __init__(self, max_shard_size: int, save_fns: List[Callable[[dict], Any]], param_count: Dict[str, int],
-                 param_to_os: Optional[Dict[str, int]], paired_os: Optional[Dict[int, dict]],
-                 redist_meta: RedistMeta) -> None:
+    def __init__(
+        self,
+        max_shard_size: int,
+        save_fns: List[Callable[[dict], Any]],
+        param_count: Dict[str, int],
+        param_to_os: Optional[Dict[str, int]],
+        paired_os: Optional[Dict[int, dict]],
+        redist_meta: RedistMeta,
+    ) -> None:
         super().__init__(param_count, param_to_os, paired_os)
         self.max_shard_size = max_shard_size
         self.save_fns = save_fns
@@ -194,9 +246,13 @@ class OptimizerCheckpointRedistor(OptimizerCheckpointConvertor):
         if len(self.sharders) == 0:
             nprocs = len(self.save_fns)
             for _ in range(nprocs):
-                self.sharders.append(OptimizerCheckpointSharder(self.max_shard_size, param_groups))
+                self.sharders.append(
+                    OptimizerCheckpointSharder(self.max_shard_size, param_groups)
+                )
 
-    def convert_states(self, idx: int, states: List[dict], dist_metas: List[ParamDistMeta]) -> None:
+    def convert_states(
+        self, idx: int, states: List[dict], dist_metas: List[ParamDistMeta]
+    ) -> None:
         need_merge: bool = True
         if len(dist_metas) == 0:
             need_merge = False
@@ -206,13 +262,20 @@ class OptimizerCheckpointRedistor(OptimizerCheckpointConvertor):
         for state_key, state_tensor in states[0].items():
             if self.paired_os[idx][state_key]:
                 if need_merge:
-                    tensor = merge_param([state[state_key] for state in states], dist_metas)
+                    tensor = merge_param(
+                        [state[state_key] for state in states], dist_metas
+                    )
                 else:
                     tensor = state_tensor
                 for tp_rank, tensor_list in enumerate(
-                        unmerge_param(tensor, self.redist_meta.param_meta[self.os_to_param[idx]])):
+                    unmerge_param(
+                        tensor, self.redist_meta.param_meta[self.os_to_param[idx]]
+                    )
+                ):
                     for dp_rank, t in enumerate(tensor_list):
-                        for rank in self.rank_map[self.os_to_param[idx]][tp_rank][dp_rank]:
+                        for rank in self.rank_map[self.os_to_param[idx]][tp_rank][
+                            dp_rank
+                        ]:
                             new_states[rank][state_key] = t
             else:
                 for new_state in new_states:

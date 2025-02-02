@@ -11,8 +11,16 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 from torch.utils.data import DataLoader
 
-from colossalai.checkpoint_io import CheckpointIndexFile, CheckpointIO, GeneralCheckpointIO
-from colossalai.checkpoint_io.utils import get_base_filenames, get_shard_filename, save_state_dict
+from colossalai.checkpoint_io import (
+    CheckpointIndexFile,
+    CheckpointIO,
+    GeneralCheckpointIO,
+)
+from colossalai.checkpoint_io.utils import (
+    get_base_filenames,
+    get_shard_filename,
+    save_state_dict,
+)
 from colossalai.cluster import DistCoordinator
 from colossalai.interface import ModelWrapper, OptimizerWrapper
 from colossalai.utils import get_current_device
@@ -21,10 +29,10 @@ from colossalai.zero.gemini.memory_tracer import MemStats
 
 from .dp_plugin_base import DPPluginBase
 
-__all__ = ['GeminiPlugin']
+__all__ = ["GeminiPlugin"]
 
-SUPPORTED_PRECISION = ['fp16', 'bf16']
-PRECISION_STR_TO_DTYPE = {'fp16': torch.half, 'bf16': torch.bfloat16}
+SUPPORTED_PRECISION = ["fp16", "bf16"]
+PRECISION_STR_TO_DTYPE = {"fp16": torch.half, "bf16": torch.bfloat16}
 
 
 class GeminiCheckpointIO(GeneralCheckpointIO):
@@ -33,14 +41,23 @@ class GeminiCheckpointIO(GeneralCheckpointIO):
         super().__init__()
         self.coordinator = DistCoordinator()
 
-    def load_unsharded_model(self, model: GeminiDDP, checkpoint: str, strict: bool = True):
+    def load_unsharded_model(
+        self, model: GeminiDDP, checkpoint: str, strict: bool = True
+    ):
         """
         Load model from checkpoint with automatic unwrapping.
         """
         # the model should be unwrapped in self.load_model via ModelWrapper.unwrap
         return super().load_unsharded_model(model, checkpoint, strict=strict)
 
-    def save_unsharded_model(self, model: GeminiDDP, checkpoint: str, gather_dtensor: bool, use_safetensors: bool, tp_degree: int):
+    def save_unsharded_model(
+        self,
+        model: GeminiDDP,
+        checkpoint: str,
+        gather_dtensor: bool,
+        use_safetensors: bool,
+        tp_degree: int,
+    ):
         """
         Save model to checkpoint but only on master process.
         """
@@ -54,19 +71,24 @@ class GeminiCheckpointIO(GeneralCheckpointIO):
             state_dict = model.state_dict(only_rank_0=False)
             save_state_dict(state_dict, checkpoint, use_safetensors)
 
-    def save_unsharded_optimizer(self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool):
+    def save_unsharded_optimizer(
+        self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool
+    ):
         """
         Save optimizer to checkpoint but only on master process.
         """
         # TODO(ver217): optimizer state dict is sharded
-        warnings.warn('GeminiPlugin does not support save full optimizer checkpoint now. Save it on every process.')
-        checkpoint = f'{checkpoint}.rank{self.coordinator.rank}'
+        warnings.warn(
+            "GeminiPlugin does not support save full optimizer checkpoint now. Save it on every process."
+        )
+        checkpoint = f"{checkpoint}.rank{self.coordinator.rank}"
         super().save_unsharded_optimizer(optimizer, checkpoint, gather_dtensor)
 
     def load_optimizer(self, optimizer: Optimizer, checkpoint: str):
         warnings.warn(
-            'GeminiPlugin can only load optimizer checkpoint saved by itself with the same number of processes.')
-        checkpoint = f'{checkpoint}.rank{self.coordinator.rank}'
+            "GeminiPlugin can only load optimizer checkpoint saved by itself with the same number of processes."
+        )
+        checkpoint = f"{checkpoint}.rank{self.coordinator.rank}"
         super().load_optimizer(optimizer, checkpoint)
 
     def save_lr_scheduler(self, lr_scheduler: LRScheduler, checkpoint: str):
@@ -76,17 +98,21 @@ class GeminiCheckpointIO(GeneralCheckpointIO):
         if self.coordinator.is_master():
             super().save_lr_scheduler(lr_scheduler, checkpoint)
 
-    def save_sharded_model(self,
-                           model: GeminiDDP,
-                           checkpoint_path: str,
-                           gather_dtensor: bool = False,
-                           variant: Optional[str] = None,
-                           max_shard_size: int = 1024,
-                           use_safetensors: bool = False):
+    def save_sharded_model(
+        self,
+        model: GeminiDDP,
+        checkpoint_path: str,
+        gather_dtensor: bool = False,
+        variant: Optional[str] = None,
+        max_shard_size: int = 1024,
+        use_safetensors: bool = False,
+    ):
         """
         Save sharded model
         """
-        state_dict_shard = model.state_dict_shard(max_shard_size=max_shard_size, only_rank_0=True, dtype=torch.float32)
+        state_dict_shard = model.state_dict_shard(
+            max_shard_size=max_shard_size, only_rank_0=True, dtype=torch.float32
+        )
         weights_name, save_index_file = get_base_filenames(variant, use_safetensors)
         total_size = 0
         index_file = CheckpointIndexFile(checkpoint_path)
@@ -104,26 +130,36 @@ class GeminiCheckpointIO(GeneralCheckpointIO):
 
         index_file.append_meta_data("total_size", total_size)
         index_file.write_index_file(save_index_file)
-        logging.info(f"The model is going to be split to checkpoint shards. "
-                     f"You can find where each parameters has been saved in the "
-                     f"index located at {save_index_file}.")
+        logging.info(
+            f"The model is going to be split to checkpoint shards. "
+            f"You can find where each parameters has been saved in the "
+            f"index located at {save_index_file}."
+        )
 
-    def load_sharded_model(self,
-                           model: GeminiDDP,
-                           checkpoint_index_file: Path,
-                           strict: bool = False,
-                           use_safetensors: bool = False):
+    def load_sharded_model(
+        self,
+        model: GeminiDDP,
+        checkpoint_index_file: Path,
+        strict: bool = False,
+        use_safetensors: bool = False,
+    ):
         """
         load shard model, load model from multiple files
         """
-        return super().load_sharded_model(model, checkpoint_index_file, strict, use_safetensors, load_sub_module=False)
+        return super().load_sharded_model(
+            model, checkpoint_index_file, strict, use_safetensors, load_sub_module=False
+        )
 
 
 class GeminiModel(ModelWrapper):
 
-    def __init__(self, module: nn.Module, gemini_config: dict, verbose: bool = False) -> None:
+    def __init__(
+        self, module: nn.Module, gemini_config: dict, verbose: bool = False
+    ) -> None:
         super().__init__(module)
-        self.module = zero_model_wrapper(module, zero_stage=3, gemini_config=gemini_config, verbose=verbose)
+        self.module = zero_model_wrapper(
+            module, zero_stage=3, gemini_config=gemini_config, verbose=verbose
+        )
 
     def unwrap(self):
         # as save/load state dict is coupled with the GeminiDDP, we only return GeminiDDP model
@@ -132,32 +168,40 @@ class GeminiModel(ModelWrapper):
 
 class GeminiOptimizer(OptimizerWrapper):
 
-    def __init__(self,
-                 module: GeminiDDP,
-                 optimizer: Optimizer,
-                 zero_optim_config: dict,
-                 optim_kwargs: dict,
-                 verbose: bool = False) -> None:
-        optimizer = zero_optim_wrapper(module,
-                                       optimizer,
-                                       optim_config=zero_optim_config,
-                                       **optim_kwargs,
-                                       verbose=verbose)
+    def __init__(
+        self,
+        module: GeminiDDP,
+        optimizer: Optimizer,
+        zero_optim_config: dict,
+        optim_kwargs: dict,
+        verbose: bool = False,
+    ) -> None:
+        optimizer = zero_optim_wrapper(
+            module,
+            optimizer,
+            optim_config=zero_optim_config,
+            **optim_kwargs,
+            verbose=verbose,
+        )
         super().__init__(optimizer)
 
     def backward(self, loss: Tensor, *args, **kwargs):
         self.optim.backward(loss)
 
-    def clip_grad_by_norm(self,
-                          max_norm: Union[float, int],
-                          norm_type: Union[float, int] = 2,
-                          error_if_nonfinite: bool = False,
-                          *args,
-                          **kwargs) -> Tensor:
-        warnings.warn(f'Gemini controls grad clipping by itself, so you should not use clip_grad_by_norm')
+    def clip_grad_by_norm(
+        self,
+        max_norm: Union[float, int],
+        norm_type: Union[float, int] = 2,
+        error_if_nonfinite: bool = False,
+        *args,
+        **kwargs,
+    ) -> Tensor:
+        warnings.warn(
+            f"Gemini controls grad clipping by itself, so you should not use clip_grad_by_norm"
+        )
 
     def clip_grad_by_value(self, clip_value: float, *args, **kwargs) -> None:
-        raise NotImplementedError('Gemini does not support clip_grad_by_value')
+        raise NotImplementedError("Gemini does not support clip_grad_by_value")
 
 
 class GeminiPlugin(DPPluginBase):
@@ -232,7 +276,9 @@ class GeminiPlugin(DPPluginBase):
         verbose: bool = False,
     ) -> None:
         super().__init__()
-        assert precision in SUPPORTED_PRECISION, f'precision {precision} is not supported'
+        assert (
+            precision in SUPPORTED_PRECISION
+        ), f"precision {precision} is not supported"
         self.gemini_config = dict(
             device=(device or get_current_device()),
             placement_policy=placement_policy,
@@ -245,16 +291,20 @@ class GeminiPlugin(DPPluginBase):
             memstats=memstats,
             mixed_precision=PRECISION_STR_TO_DTYPE[precision],
         )
-        self.zero_optim_config = dict(gpu_margin_mem_ratio=gpu_margin_mem_ratio,)
-        self.optim_kwargs = dict(initial_scale=initial_scale,
-                                 growth_factor=growth_factor,
-                                 backoff_factor=backoff_factor,
-                                 growth_interval=growth_interval,
-                                 hysteresis=hysteresis,
-                                 min_scale=min_scale,
-                                 max_scale=max_scale,
-                                 max_norm=max_norm,
-                                 norm_type=norm_type)
+        self.zero_optim_config = dict(
+            gpu_margin_mem_ratio=gpu_margin_mem_ratio,
+        )
+        self.optim_kwargs = dict(
+            initial_scale=initial_scale,
+            growth_factor=growth_factor,
+            backoff_factor=backoff_factor,
+            growth_interval=growth_interval,
+            hysteresis=hysteresis,
+            min_scale=min_scale,
+            max_scale=max_scale,
+            max_norm=max_norm,
+            norm_type=norm_type,
+        )
         self.verbose = verbose
 
     def support_no_sync(self) -> bool:
@@ -270,7 +320,7 @@ class GeminiPlugin(DPPluginBase):
         return True
 
     def supported_devices(self) -> List[str]:
-        return ['cuda']
+        return ["cuda"]
 
     def configure(
         self,
@@ -295,8 +345,13 @@ class GeminiPlugin(DPPluginBase):
             model = GeminiModel(model, self.gemini_config, self.verbose)
 
         if not isinstance(optimizer, OptimizerWrapper):
-            optimizer = GeminiOptimizer(model.unwrap(), optimizer, self.zero_optim_config, self.optim_kwargs,
-                                        self.verbose)
+            optimizer = GeminiOptimizer(
+                model.unwrap(),
+                optimizer,
+                self.zero_optim_config,
+                self.optim_kwargs,
+                self.verbose,
+            )
 
         return model, optimizer, criterion, dataloader, lr_scheduler
 

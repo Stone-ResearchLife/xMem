@@ -10,15 +10,14 @@ JIT_OPTIONS_SET = False
 
 
 def set_jit_fusion_options():
-    """Set PyTorch JIT layer fusion options.
-    """
+    """Set PyTorch JIT layer fusion options."""
     # LSG: the latest pytorch and CUDA versions may not support
     # the following jit settings
     global JIT_OPTIONS_SET
     if JIT_OPTIONS_SET == False:
         # flags required to enable jit fusion kernels
-        TORCH_MAJOR = int(torch.__version__.split('.')[0])
-        TORCH_MINOR = int(torch.__version__.split('.')[1])
+        TORCH_MAJOR = int(torch.__version__.split(".")[0])
+        TORCH_MINOR = int(torch.__version__.split(".")[1])
         if (TORCH_MAJOR > 1) or (TORCH_MAJOR == 1 and TORCH_MINOR >= 10):
             # nvfuser
             torch._C._jit_set_profiling_executor(True)
@@ -38,18 +37,29 @@ def set_jit_fusion_options():
         JIT_OPTIONS_SET = True
 
 
-def warmup_jit_fusion(batch_size: int,
-                      hidden_size: int,
-                      seq_length: int = 512,
-                      vocab_size: int = 32768,
-                      dtype: torch.dtype = torch.float32):
-    """ Compile JIT functions before the main training steps """
+def warmup_jit_fusion(
+    batch_size: int,
+    hidden_size: int,
+    seq_length: int = 512,
+    vocab_size: int = 32768,
+    dtype: torch.dtype = torch.float32,
+):
+    """Compile JIT functions before the main training steps"""
 
     embed = Embedding(vocab_size, hidden_size).to(get_current_device())
-    linear_1 = Linear(hidden_size, hidden_size * 4, skip_bias_add=True).to(get_current_device())
-    linear_2 = Linear(hidden_size * 4, hidden_size, skip_bias_add=True).to(get_current_device())
+    linear_1 = Linear(hidden_size, hidden_size * 4, skip_bias_add=True).to(
+        get_current_device()
+    )
+    linear_2 = Linear(hidden_size * 4, hidden_size, skip_bias_add=True).to(
+        get_current_device()
+    )
 
-    x = torch.randint(vocab_size, (batch_size, seq_length), dtype=torch.long, device=get_current_device())
+    x = torch.randint(
+        vocab_size,
+        (batch_size, seq_length),
+        dtype=torch.long,
+        device=get_current_device(),
+    )
     x = embed(x)
     y, y_bias = linear_1(x)
     z, z_bias = linear_2(y)
@@ -66,7 +76,9 @@ def warmup_jit_fusion(batch_size: int,
     dropout_rate = 0.1
     # Warmup JIT fusions with the input grad_enable state of both forward
     # prop and recomputation
-    for input_grad, bias_grad, residual_grad in zip([False, True], [True, True], [True, True]):
+    for input_grad, bias_grad, residual_grad in zip(
+        [False, True], [True, True], [True, True]
+    ):
         for _ in range(10):
             input_ = torch.rand_like(z, dtype=dtype, device=get_current_device())
             residual = torch.rand_like(x, dtype=dtype, device=get_current_device())

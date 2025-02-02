@@ -41,6 +41,7 @@ def is_safetensors_available() -> bool:
     """
     try:
         import safetensors
+
         return True
     except ImportError:
         return False
@@ -56,7 +57,9 @@ def is_dtensor_checkpoint(checkpoint_file_path: str) -> bool:
     Returns:
         bool: whether the checkpoint file is a dtensor checkpoint.
     """
-    if checkpoint_file_path.endswith('.*.safetensors') or checkpoint_file_path.endswith('.*.bin'):
+    if checkpoint_file_path.endswith(".*.safetensors") or checkpoint_file_path.endswith(
+        ".*.bin"
+    ):
         return True
     else:
         return False
@@ -72,7 +75,7 @@ def is_safetensor_checkpoint(checkpoint_file_path: str) -> bool:
     Returns:
         bool: whether the checkpoint file is a safetensor checkpoint.
     """
-    if checkpoint_file_path.endswith('.safetensors'):
+    if checkpoint_file_path.endswith(".safetensors"):
         return True
     else:
         return False
@@ -81,7 +84,9 @@ def is_safetensor_checkpoint(checkpoint_file_path: str) -> bool:
 # ======================================
 # Helper functions for saving shard file
 # ======================================
-def shard_checkpoint(state_dict: torch.Tensor, max_shard_size: int = 1024) -> Iterator[Tuple[OrderedDict, int]]:
+def shard_checkpoint(
+    state_dict: torch.Tensor, max_shard_size: int = 1024
+) -> Iterator[Tuple[OrderedDict, int]]:
     """
     Splits a model state dictionary in sub-checkpoints so that the final size of each sub-checkpoint does not exceed a
     given size.
@@ -115,25 +120,31 @@ def load_shard_state_dict(checkpoint_file: Path, use_safetensors: bool = False):
     load shard state dict into model
     """
     if use_safetensors and not checkpoint_file.suffix == ".safetensors":
-        raise Exception("load the model using `safetensors`, but no file endwith .safetensors")
+        raise Exception(
+            "load the model using `safetensors`, but no file endwith .safetensors"
+        )
     if use_safetensors:
         from safetensors.torch import load_file as safe_load_file
         from safetensors.torch import safe_open
+
         with safe_open(checkpoint_file, framework="pt") as f:
             metadata = f.metadata()
         if metadata["format"] != "pt":
             raise NotImplementedError(
-                f"Conversion from a {metadata['format']} safetensors archive to PyTorch is not implemented yet.")
+                f"Conversion from a {metadata['format']} safetensors archive to PyTorch is not implemented yet."
+            )
         return safe_load_file(checkpoint_file)
     else:
         return torch.load(checkpoint_file)
 
 
-def load_state_dict_into_model(model: nn.Module,
-                               state_dict: torch.Tensor,
-                               missing_keys: List,
-                               strict: bool = False,
-                               load_sub_module: bool = True):
+def load_state_dict_into_model(
+    model: nn.Module,
+    state_dict: torch.Tensor,
+    missing_keys: List,
+    strict: bool = False,
+    load_sub_module: bool = True,
+):
     r"""Copies parameters and buffers from :attr:`state_dict` into
     this module and its descendants.
 
@@ -142,21 +153,31 @@ def load_state_dict_into_model(model: nn.Module,
             persistent buffers.
     """
     if not isinstance(state_dict, Mapping):
-        raise TypeError("Expected state_dict to be dict-like, got {}.".format(type(state_dict)))
+        raise TypeError(
+            "Expected state_dict to be dict-like, got {}.".format(type(state_dict))
+        )
 
     unexpected_keys: List[str] = []
     sub_missing_keys: List[str] = []
     error_msgs: List[str] = []
 
     # copy state_dict so _load_from_state_dict can modify it
-    metadata = getattr(state_dict, '_metadata', None)
+    metadata = getattr(state_dict, "_metadata", None)
     state_dict = OrderedDict(state_dict)
     if metadata is not None:
         state_dict._metadata = metadata
 
     def load(module: nn.Module, state_dict, prefix="", load_sub_module: bool = True):
         local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
-        args = (state_dict, prefix, local_metadata, True, sub_missing_keys, [], error_msgs)
+        args = (
+            state_dict,
+            prefix,
+            local_metadata,
+            True,
+            sub_missing_keys,
+            [],
+            error_msgs,
+        )
         # Parameters of module and children will start with prefix. We can exit early if there are none in this
         # state_dict
         if len([key for key in state_dict if key.startswith(prefix)]) > 0:
@@ -173,10 +194,14 @@ def load_state_dict_into_model(model: nn.Module,
 
     if strict:
         if len(unexpected_keys) > 0:
-            error_msgs = 'Unexpected key(s) in state_dict: {}. '.format(', '.join(
-                '"{}"'.format(k) for k in unexpected_keys))
-            raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
-                model.__class__.__name__, "\n\t".join(error_msgs)))
+            error_msgs = "Unexpected key(s) in state_dict: {}. ".format(
+                ", ".join('"{}"'.format(k) for k in unexpected_keys)
+            )
+            raise RuntimeError(
+                "Error(s) in loading state_dict for {}:\n\t{}".format(
+                    model.__class__.__name__, "\n\t".join(error_msgs)
+                )
+            )
 
 
 # ======================================
@@ -184,7 +209,9 @@ def load_state_dict_into_model(model: nn.Module,
 # ======================================
 
 
-def save_state_dict(state_dict: dict, checkpoint_file_path: str, use_safetensors: bool) -> None:
+def save_state_dict(
+    state_dict: dict, checkpoint_file_path: str, use_safetensors: bool
+) -> None:
     """
     Save state dict to checkpoint.
 
@@ -195,15 +222,22 @@ def save_state_dict(state_dict: dict, checkpoint_file_path: str, use_safetensors
     """
     if use_safetensors:
         assert is_safetensors_available(), "safetensors is not available."
-        assert checkpoint_file_path.endswith('.safetensors'), \
-            "safetensors only supports .safetensors suffix for checkpoint file."
+        assert checkpoint_file_path.endswith(
+            ".safetensors"
+        ), "safetensors only supports .safetensors suffix for checkpoint file."
         from safetensors.torch import save_file as safe_save_file
+
         safe_save_file(state_dict, checkpoint_file_path, metadata={"format": "pt"})
     else:
         torch.save(state_dict, checkpoint_file_path)
 
 
-def save_dtensor(name: str, tensor: torch.Tensor, index_file: "CheckpointIndexFile", use_safetensors: bool) -> None:
+def save_dtensor(
+    name: str,
+    tensor: torch.Tensor,
+    index_file: "CheckpointIndexFile",
+    use_safetensors: bool,
+) -> None:
     """
     Save distributed tensor to checkpoint. This checkpoint will be a dictionary which contains
     only one tensor.
@@ -214,7 +248,7 @@ def save_dtensor(name: str, tensor: torch.Tensor, index_file: "CheckpointIndexFi
         size_per_shard (int): size per shard in MB.
     """
     root_path = index_file.root_path
-    output_root_path = root_path.joinpath('dtensor')
+    output_root_path = root_path.joinpath("dtensor")
 
     # create directory
     output_root_path.mkdir(exist_ok=True)
@@ -234,7 +268,9 @@ def save_dtensor(name: str, tensor: torch.Tensor, index_file: "CheckpointIndexFi
 
     # update the weight map
     # * means all shards
-    ckpt_file_name_in_weight_map = 'dtensor/' + generate_dtensor_file_name(name, '*', use_safetensors)
+    ckpt_file_name_in_weight_map = "dtensor/" + generate_dtensor_file_name(
+        name, "*", use_safetensors
+    )
     index_file.append_weight_map(name, ckpt_file_name_in_weight_map)
 
 
@@ -249,15 +285,14 @@ def get_checkpoint_file_suffix(use_safetensors: bool) -> str:
         str: checkpoint file suffix.
     """
     if use_safetensors:
-        return '.safetensors'
+        return ".safetensors"
     else:
-        return '.bin'
+        return ".bin"
 
 
-def generate_checkpoint_shard_file_name(index: int,
-                                        total_number: int,
-                                        use_safetensors: bool,
-                                        prefix: str = None) -> str:
+def generate_checkpoint_shard_file_name(
+    index: int, total_number: int, use_safetensors: bool, prefix: str = None
+) -> str:
     """
     Generate checkpoint shard file name.
 
@@ -278,7 +313,9 @@ def generate_checkpoint_shard_file_name(index: int,
         return f"{prefix}-{index:05d}-of-{total_number:05d}.{suffix}"
 
 
-def generate_dtensor_file_name(param_name: str, index: int, use_safetensors: bool) -> str:
+def generate_dtensor_file_name(
+    param_name: str, index: int, use_safetensors: bool
+) -> str:
     """
     Generate dtensor file name.
 
@@ -291,7 +328,7 @@ def generate_dtensor_file_name(param_name: str, index: int, use_safetensors: boo
         str: dtensor file name.
     """
     suffix = get_checkpoint_file_suffix(use_safetensors)
-    return f'{param_name}.{index}.{suffix}'
+    return f"{param_name}.{index}.{suffix}"
 
 
 def save_state_dict_as_shard(
@@ -314,7 +351,9 @@ def save_state_dict_as_shard(
         use_safetensors (bool): whether to use safetensors to save the checkpoint.
     """
     # generate the shard name
-    shard_file_name = generate_checkpoint_shard_file_name(index, total_number, use_safetensors, prefix)
+    shard_file_name = generate_checkpoint_shard_file_name(
+        index, total_number, use_safetensors, prefix
+    )
     shard_file_path = Path(checkpoint_path).joinpath(shard_file_name).absolute()
 
     # save the shard
@@ -346,20 +385,22 @@ def has_index_file(checkpoint_path: str) -> Tuple[bool, Optional[Path]]:
             return False, None
     elif checkpoint_path.is_dir():
         # check if there is only one a file ending with .index.json in this directory
-        index_files = list(checkpoint_path.glob('*.index.*json'))
+        index_files = list(checkpoint_path.glob("*.index.*json"))
 
         # if we found a .index.json file, make sure there is only one
         if len(index_files) > 0:
-            assert len(
-                index_files
-            ) == 1, f'Expected to find one .index.json file in {checkpoint_path}, but found {len(index_files)}'
+            assert (
+                len(index_files) == 1
+            ), f"Expected to find one .index.json file in {checkpoint_path}, but found {len(index_files)}"
 
         if len(index_files) == 1:
             return True, index_files[0]
         else:
             return False, None
     else:
-        raise RuntimeError(f'Invalid checkpoint path {checkpoint_path}. Expected a file or a directory.')
+        raise RuntimeError(
+            f"Invalid checkpoint path {checkpoint_path}. Expected a file or a directory."
+        )
 
 
 def load_state_dict(checkpoint_file_path: Path):
@@ -373,14 +414,17 @@ def load_state_dict(checkpoint_file_path: Path):
         dict: state dict.
     """
 
-    assert not is_dtensor_checkpoint(checkpoint_file_path), \
-        f'Cannot load state dict from dtensor checkpoint {checkpoint_file_path}, you should convert the distributed tensors to gathered tensors with our CLI offline.'
+    assert not is_dtensor_checkpoint(
+        checkpoint_file_path
+    ), f"Cannot load state dict from dtensor checkpoint {checkpoint_file_path}, you should convert the distributed tensors to gathered tensors with our CLI offline."
 
     if is_safetensor_checkpoint(checkpoint_file_path):
-        assert is_safetensors_available(), \
-            f'Cannot load state dict from safetensor checkpoint {checkpoint_file_path}, because safetensors is not available. Please install safetensors first with pip install safetensors.'
+        assert (
+            is_safetensors_available()
+        ), f"Cannot load state dict from safetensor checkpoint {checkpoint_file_path}, because safetensors is not available. Please install safetensors first with pip install safetensors."
         # load with safetensors
         from safetensors import safe_open
+
         state_dict = {}
         with safe_open(checkpoint_file_path, framework="pt", device="cpu") as f:
             for k in f.keys():

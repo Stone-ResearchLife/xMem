@@ -13,15 +13,24 @@ def operator_getitem(a, b):
     def to_concrete(t):
         if isinstance(t, torch.Tensor):
             concrete = torch.ones_like(t, device="cpu")
-            if concrete.dtype in [torch.float16, torch.float32, torch.float64, torch.int32]:
+            if concrete.dtype in [
+                torch.float16,
+                torch.float32,
+                torch.float64,
+                torch.int32,
+            ]:
                 concrete = concrete.to(torch.int64)
             return concrete
         return t
 
     def _slice_convert(slice_obj):
-        attrs = {'start': slice_obj.start, 'stop': slice_obj.stop, 'step': slice_obj.step}
+        attrs = {
+            "start": slice_obj.start,
+            "stop": slice_obj.stop,
+            "step": slice_obj.step,
+        }
         new_attrs = _slice_attr_convert(attrs)
-        attr_dict_to_tuple = (new_attrs['start'], new_attrs['stop'], new_attrs['step'])
+        attr_dict_to_tuple = (new_attrs["start"], new_attrs["stop"], new_attrs["step"])
         return slice(*attr_dict_to_tuple)
 
     def _slice_attr_convert(attrs):
@@ -56,5 +65,7 @@ def operator_getitem(a, b):
             b = tuple(map(to_concrete, b))
         else:
             b = to_concrete(b)
-        return operator.getitem(torch.empty_like(a.meta_data, device="cpu"), b).to("meta")
+        return operator.getitem(torch.empty_like(a.meta_data, device="cpu"), b).to(
+            "meta"
+        )
     return operator.getitem(a, b)

@@ -7,7 +7,7 @@ from .node_handler import NodeHandler
 from .registry import operator_registry
 from .strategy import StrategyGenerator, TransposeGenerator
 
-__all__ = ['TransposeHandler']
+__all__ = ["TransposeHandler"]
 
 
 @operator_registry.register(torch.Tensor.transpose)
@@ -20,7 +20,9 @@ class TransposeHandler(NodeHandler):
     def get_strategy_generator(self) -> List[StrategyGenerator]:
         op_data_mapping = self.get_operation_data_mapping()
         generators = []
-        generators.append(TransposeGenerator(op_data_mapping, self.device_mesh, self.node.args[0]))
+        generators.append(
+            TransposeGenerator(op_data_mapping, self.device_mesh, self.node.args[0])
+        )
         return generators
 
     def get_operation_data_mapping(self) -> Dict[str, OperationData]:
@@ -31,7 +33,9 @@ class TransposeHandler(NodeHandler):
             data_type = OperationDataType.ARG
 
         input_data = self.node.args[0]._meta_data
-        physical_input_operand = OperationData(name=str(self.node.args[0]), type=data_type, data=input_data)
+        physical_input_operand = OperationData(
+            name=str(self.node.args[0]), type=data_type, data=input_data
+        )
 
         transpose_dims = []
         # torch.transpose (input, dim0, dim1)
@@ -48,17 +52,19 @@ class TransposeHandler(NodeHandler):
             if transpose_dims[i] < 0:
                 transpose_dims[i] += num_dims
 
-        physical_shape_operand = OperationData(name='transpose_dims',
-                                               type=OperationDataType.ARG,
-                                               data=list(transpose_dims))
+        physical_shape_operand = OperationData(
+            name="transpose_dims", type=OperationDataType.ARG, data=list(transpose_dims)
+        )
 
         output_data = self.node._meta_data
-        physical_output_operand = OperationData(name=str(self.node), type=OperationDataType.OUTPUT, data=output_data)
+        physical_output_operand = OperationData(
+            name=str(self.node), type=OperationDataType.OUTPUT, data=output_data
+        )
 
         mapping = {
             "input": physical_input_operand,
             "transpose_dims": physical_shape_operand,
-            "output": physical_output_operand
+            "output": physical_output_operand,
         }
 
         return mapping

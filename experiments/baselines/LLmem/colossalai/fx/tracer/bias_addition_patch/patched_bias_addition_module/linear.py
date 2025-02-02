@@ -13,5 +13,7 @@ class BiasAdditionLinear(BiasAdditionModule):
 
     def generate(self):
         non_bias_linear_func_proxy = self.create_non_bias_func_proxy()
-        bias_addition_proxy = self.create_bias_addition_proxy(non_bias_linear_func_proxy, self.bias_proxy)
+        bias_addition_proxy = self.create_bias_addition_proxy(
+            non_bias_linear_func_proxy, self.bias_proxy
+        )
         return bias_addition_proxy

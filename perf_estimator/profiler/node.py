@@ -52,7 +52,7 @@ class ProfilerNode(TreeNode, ABC):
         return self.value["pid"]
 
     def __repr__(self):
-        return (f"{self.namespace_name}::{self.function_name}({self.category}): {self.start_time}->{self.end_time}")
+        return f"{self.namespace_name}::{self.function_name}({self.category}): {self.start_time}->{self.end_time}"
 
     @abstractmethod
     def _parse_name(self) -> list:
@@ -87,6 +87,7 @@ class StackNode(ProfilerNode):
                 }
             }
     """
+
     def __init__(self, value: dict):
         """Build a node for each paython function call
 
@@ -126,7 +127,6 @@ class StackNode(ProfilerNode):
 
     def __repr__(self):
         return f"StackNode(children:{len(self.children)}): {self.name}, start: {self.start_time}, end: {self.end_time}"
-
 
     def _parse_name(self) -> List[str]:
         """Parse the python function name into two parts: file name and function name
@@ -200,7 +200,9 @@ class OperatorNode(ProfilerNode):
         for index, arg in enumerate(self.value["args"].get("Input Dims", [])):
             if len(arg) > 0:
                 bytes = np.prod(arg) * 4
-                _args.append({"type": _types[index], "dims": arg, "index": index, "bytes": bytes})
+                _args.append(
+                    {"type": _types[index], "dims": arg, "index": index, "bytes": bytes}
+                )
         return _args
 
     @property

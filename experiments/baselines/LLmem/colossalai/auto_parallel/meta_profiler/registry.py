@@ -1,4 +1,4 @@
-__all__ = ['Registry']
+__all__ = ["Registry"]
 
 
 class Registry:
@@ -21,7 +21,7 @@ class Registry:
         return wrapper
 
     def get(self, source):
-        assert source in self.store, f'{source} not found in the {self.name} registry'
+        assert source in self.store, f"{source} not found in the {self.name} registry"
         target = self.store[source]
         return target
 
@@ -29,4 +29,4 @@ class Registry:
         return source in self.store
 
 
-meta_register = Registry('meta')
+meta_register = Registry("meta")

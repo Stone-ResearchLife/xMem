@@ -50,21 +50,24 @@ def compute_act_peak_mem(region_list: List[Region]) -> float:
     # forward
     for region in region_list:
         for node in region.nodes:
-            runtime_mem = runtime_mem + \
-                          calculate_fwd_tmp(node) + calculate_fwd_out(node)
+            runtime_mem = (
+                runtime_mem + calculate_fwd_tmp(node) + calculate_fwd_out(node)
+            )
             act_peak_mem = max(runtime_mem, act_peak_mem)
     # backward
     bwd_deps = {}
     for region in region_list.__reversed__():
         for node in region.nodes.__reversed__():
             runtime_mem -= calculate_fwd_out(node)
-            runtime_mem = runtime_mem + \
-                          node.meta['bwd_mem_tmp'] + node.meta['bwd_mem_out']
+            runtime_mem = (
+                runtime_mem + node.meta["bwd_mem_tmp"] + node.meta["bwd_mem_out"]
+            )
 
             act_peak_mem = max(runtime_mem, act_peak_mem)
 
-            runtime_mem = runtime_mem - \
-                          node.meta['bwd_mem_tmp'] - calculate_fwd_tmp(node)
+            runtime_mem = (
+                runtime_mem - node.meta["bwd_mem_tmp"] - calculate_fwd_tmp(node)
+            )
 
             # free bwd_mem_out
             bwd_deps[node] = len(node.all_input_nodes)
@@ -72,7 +75,7 @@ def compute_act_peak_mem(region_list: List[Region]) -> float:
                 if user_node in bwd_deps:
                     bwd_deps[user_node] -= 1
                     if bwd_deps[user_node] <= 0:
-                        runtime_mem -= user_node.meta['bwd_mem_out']
+                        runtime_mem -= user_node.meta["bwd_mem_out"]
 
     return act_peak_mem
 
@@ -82,17 +85,21 @@ def compute_max_param_mem(region_list: List[Region]) -> float:
 
 
 def compute_total_param_mem(region_list: List[Region]) -> float:
-    return sum(region.param_size for region in region_list if region.r_id <= region.shared_rid)
+    return sum(
+        region.param_size for region in region_list if region.r_id <= region.shared_rid
+    )
 
 
 def requires_upload_p_in_fwd(shared_reg: Region):
-    return (shared_reg.r_id >= shared_reg.shared_rid) or (shared_reg.r_id < shared_reg.shared_rid
-                                                          and shared_reg.need_offload)
+    return (shared_reg.r_id >= shared_reg.shared_rid) or (
+        shared_reg.r_id < shared_reg.shared_rid and shared_reg.need_offload
+    )
 
 
 def requires_release_p_in_bwd(shared_reg: Region):
-    return (shared_reg.r_id >= shared_reg.shared_rid) or (shared_reg.r_id < shared_reg.shared_rid
-                                                          and shared_reg.need_offload)
+    return (shared_reg.r_id >= shared_reg.shared_rid) or (
+        shared_reg.r_id < shared_reg.shared_rid and shared_reg.need_offload
+    )
 
 
 def requires_offload_g_in_bwd(region: Region):

@@ -27,7 +27,9 @@ _multiplier = {
 @meta_profiler_function.register(torch.nn.functional.tanh)
 @meta_profiler_function.register(torch.nn.functional.hardswish)
 @meta_profiler_function.register(torch.nn.functional.hardsigmoid)
-def torch_nn_func_non_linear_act(input: torch.Tensor, inplace: bool = False) -> Tuple[int, int]:
+def torch_nn_func_non_linear_act(
+    input: torch.Tensor, inplace: bool = False
+) -> Tuple[int, int]:
     flops = input.numel()
     macs = 0
     return flops, macs

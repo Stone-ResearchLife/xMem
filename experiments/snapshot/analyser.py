@@ -1,7 +1,7 @@
 import json
 import pickle
 import copy
-from typing import Optional,List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple
 from matplotlib import pyplot as plt
 from perf_estimator.utilis.utilis import format_memory
 from .blocks import SnapshotTraceBlock, ActivityMemory, SegmentMemory
@@ -25,21 +25,24 @@ class SnapshotAnalyser:
 
     @property
     def segments(self) -> List[Dict]:
-        return self._data['segments']
+        return self._data["segments"]
 
     @property
     def device_traces(self) -> List[Dict]:
-        if len(self._data['device_traces']) >= 1 and len(self._data['device_traces'][0]) > 0:
-            return self._data['device_traces'][0]
+        if (
+            len(self._data["device_traces"]) >= 1
+            and len(self._data["device_traces"][0]) > 0
+        ):
+            return self._data["device_traces"][0]
         else:
-            return self._data['device_traces'][1]
+            return self._data["device_traces"][1]
 
     @property
     def allocator_setting(self) -> Dict:
-        return self._data['allocator_setting']
+        return self._data["allocator_setting"]
 
     def _load(self, path: str) -> None:
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             self._data = pickle.load(f)
 
     def to_json(self) -> str:
@@ -47,42 +50,34 @@ class SnapshotAnalyser:
 
     def save_json(self, json_path: str) -> None:
         _data = copy.deepcopy(self._data)
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(_data, f, indent=4)
 
     def _build_trace_blocks(self) -> Tuple:
         blocks = {
-            "trace": {
-                "collective": {},
-                "active": {},
-                "func": ActivityMemory
-            },
-            "segment": {
-                "collective": {},
-                "active": {},
-                "func": SegmentMemory
-            }
+            "trace": {"collective": {}, "active": {}, "func": ActivityMemory},
+            "segment": {"collective": {}, "active": {}, "func": SegmentMemory},
         }
         _current_used_collective_blocks = None
         _current_used_active_blocks = None
         _field_name = None
         for trace in self.device_traces:
             _trace_block: SnapshotTraceBlock = SnapshotTraceBlock(trace)
-            if _trace_block.action in ['alloc', 'free_requested', 'free_completed']:
-                if _trace_block.action == 'free_requested':
+            if _trace_block.action in ["alloc", "free_requested", "free_completed"]:
+                if _trace_block.action == "free_requested":
                     # todo: leave it for now
                     continue
-                _field_name = 'trace'
-            elif _trace_block.action in ['segment_alloc', 'segment_free']:
-                _field_name = 'segment'
+                _field_name = "trace"
+            elif _trace_block.action in ["segment_alloc", "segment_free"]:
+                _field_name = "segment"
             else:
                 # todo: should handle oom and snapshot later
                 continue
 
             _conf_segment = blocks[_field_name]
-            collective_blocks = _conf_segment['collective']
-            active_blocks = _conf_segment['active']
-            mem_func = _conf_segment['func']
+            collective_blocks = _conf_segment["collective"]
+            active_blocks = _conf_segment["active"]
+            mem_func = _conf_segment["func"]
 
             _address = _trace_block.address
             if _address not in active_blocks.keys():
@@ -95,23 +90,22 @@ class SnapshotAnalyser:
                 collective_blocks[_pop_block.alloc_time].append(_pop_block)
 
         for _type in blocks.keys():
-            _active = blocks[_type]['active']
+            _active = blocks[_type]["active"]
             for _block in _active.values():
-                if _block.alloc_time not in blocks[_type]['collective'].keys():
-                    blocks[_type]['collective'][_block.alloc_time] = []
-                blocks[_type]['collective'][_block.alloc_time].append(_block)
+                if _block.alloc_time not in blocks[_type]["collective"].keys():
+                    blocks[_type]["collective"][_block.alloc_time] = []
+                blocks[_type]["collective"][_block.alloc_time].append(_block)
 
-        ordered_trace_blocks = dict(sorted(blocks['trace']['collective'].items(), key=lambda item: item[0]))
-        ordered_segment_blocks = dict(sorted(blocks['segment']['collective'].items(), key=lambda item: item[0]))
+        ordered_trace_blocks = dict(
+            sorted(blocks["trace"]["collective"].items(), key=lambda item: item[0])
+        )
+        ordered_segment_blocks = dict(
+            sorted(blocks["segment"]["collective"].items(), key=lambda item: item[0])
+        )
         return ordered_trace_blocks, ordered_segment_blocks
 
     def breakdown_into_multiple_sections(self):
-        sections = {
-            "model": [],
-            "forward": [],
-            "backward": [],
-            "optim": []
-        }
+        sections = {"model": [], "forward": [], "backward": [], "optim": []}
         iterations = {}
         model = False
         forward = False
@@ -121,30 +115,36 @@ class SnapshotAnalyser:
         for blocks in self._trace_blocks.values():
             for block in blocks:
                 _name = block.ops_name
-                if 'to_dtype_layout' in _name and not model:
+                if "to_dtype_layout" in _name and not model:
                     model = True
                     forward = False
                     backward = False
                     optim = False
-                    field_name = 'model'
-                elif model and not forward and _name != 'to_dtype_layout':
+                    field_name = "model"
+                elif model and not forward and _name != "to_dtype_layout":
                     model = True
                     forward = True
                     backward = False
                     optim = False
-                    field_name = 'forward'
-                elif model and forward and not backward and 'Backward' in _name:
+                    field_name = "forward"
+                elif model and forward and not backward and "Backward" in _name:
                     model = True
                     forward = True
                     backward = True
                     optim = False
-                    field_name = 'backward'
-                elif model and forward and backward and not optim and 'zeros_like' in _name:
+                    field_name = "backward"
+                elif (
+                    model
+                    and forward
+                    and backward
+                    and not optim
+                    and "zeros_like" in _name
+                ):
                     model = True
                     forward = True
                     backward = True
                     optim = True
-                    field_name = 'optim'
+                    field_name = "optim"
                     if "to_dtype_layout" in _name:
                         break
 
@@ -154,14 +154,22 @@ class SnapshotAnalyser:
     def forward_backward_memory_sequence(self):
         breakdown_memory = self.breakdown_into_multiple_sections()
         memory_trace = []
-        for _forward in breakdown_memory['forward']:
-            memory_trace.append((_forward.alloc_time, _forward.ops_name, _forward.bytes, 'F'))
+        for _forward in breakdown_memory["forward"]:
+            memory_trace.append(
+                (_forward.alloc_time, _forward.ops_name, _forward.bytes, "F")
+            )
             if _forward.free_time:
-                memory_trace.append((_forward.free_time, _forward.ops_name, -_forward.bytes, 'F'))
-        for _backward in breakdown_memory['backward']:
-            memory_trace.append((_backward.alloc_time, _backward.ops_name, _backward.bytes, 'B'))
+                memory_trace.append(
+                    (_forward.free_time, _forward.ops_name, -_forward.bytes, "F")
+                )
+        for _backward in breakdown_memory["backward"]:
+            memory_trace.append(
+                (_backward.alloc_time, _backward.ops_name, _backward.bytes, "B")
+            )
             if _backward.free_time:
-                memory_trace.append((_backward.free_time, _backward.ops_name, -_backward.bytes, 'B'))
+                memory_trace.append(
+                    (_backward.free_time, _backward.ops_name, -_backward.bytes, "B")
+                )
         memory_trace = sorted(memory_trace, key=lambda x: x[0])
         return memory_trace
 
@@ -180,7 +188,9 @@ class SnapshotAnalyser:
                     trace_mem_by_time[trace.free_time] = -trace.bytes
 
         ordered_seg = dict(sorted(seg_mem_by_time.items(), key=lambda item: item[0]))
-        ordered_trace = dict(sorted(trace_mem_by_time.items(), key=lambda item: item[0]))
+        ordered_trace = dict(
+            sorted(trace_mem_by_time.items(), key=lambda item: item[0])
+        )
         return ordered_seg, ordered_trace
 
     def gpu_and_segment_max_memory_changes_data(self):
@@ -203,19 +213,15 @@ class SnapshotAnalyser:
         trace_times = list(trace_mems.keys())
         total_timeline = list(set(seg_times + trace_times))
         total_timeline.sort()
-        mem_dict = {
-            "time": [],
-            "seg": [],
-            "trace": []
-        }
+        mem_dict = {"time": [], "seg": [], "trace": []}
         max_seg_mem = 0
         max_trace_mem = 0
         for time in total_timeline:
             max_seg_mem += seg_mems.get(time, 0)
             max_trace_mem += trace_mems.get(time, 0)
-            mem_dict['time'].append(time)
-            mem_dict['seg'].append(max_seg_mem)
-            mem_dict['trace'].append(max_trace_mem)
+            mem_dict["time"].append(time)
+            mem_dict["seg"].append(max_seg_mem)
+            mem_dict["trace"].append(max_trace_mem)
         return mem_dict
 
     def fetch_gpu_segment_max_changes_directly(self) -> Tuple[List[int], List[int]]:
@@ -224,20 +230,21 @@ class SnapshotAnalyser:
         trace_list = []
         seg_list = []
         for trace in self.device_traces:
-            if trace['action'] == 'alloc':
-                max_trace += trace['size']
-            elif trace['action'] == 'free_completed':
-                max_trace -= trace['size']
+            if trace["action"] == "alloc":
+                max_trace += trace["size"]
+            elif trace["action"] == "free_completed":
+                max_trace -= trace["size"]
             elif trace["action"] == "segment_alloc":
-                max_seg += trace['size']
+                max_seg += trace["size"]
             elif trace["action"] == "segment_free":
-                max_seg -= trace['size']
+                max_seg -= trace["size"]
             seg_list.append(max_seg)
             trace_list.append(max_trace)
         return seg_list, trace_list
 
-
-    def analysis_relationship_between_request_and_max_sgement_memory(self, max_allowed_memory_gb: int):
+    def analysis_relationship_between_request_and_max_sgement_memory(
+        self, max_allowed_memory_gb: int
+    ):
         class Segment:
             def __init__(self, tr):
                 self._data = tr
@@ -251,29 +258,29 @@ class SnapshotAnalyser:
                 self._update()
 
             def _update(self):
-                self.total = self._data['size']
+                self.total = self._data["size"]
                 self.remaining = self.total
-                self.start_addr = self._data['addr']
+                self.start_addr = self._data["addr"]
                 self.end_addr = self.start_addr + self.total
 
             def insert_block(self, block):
-                if self.start_addr <= block['addr'] < self.end_addr:
-                    self.blocks[block['addr']] = block
-                    self.remaining -= block['size']
-                    self.used += block['size']
+                if self.start_addr <= block["addr"] < self.end_addr:
+                    self.blocks[block["addr"]] = block
+                    self.remaining -= block["size"]
+                    self.used += block["size"]
                     return True
                 return False
 
             def remove_block(self, block):
-                if block['addr'] in self.blocks:
-                    self.remaining += self.blocks[block['addr']]['size']
-                    self.used -= self.blocks[block['addr']]['size']
-                    del self.blocks[block['addr']]
+                if block["addr"] in self.blocks:
+                    self.remaining += self.blocks[block["addr"]]["size"]
+                    self.used -= self.blocks[block["addr"]]["size"]
+                    del self.blocks[block["addr"]]
                     return True
                 return False
 
             def check(self, block):
-                if block['addr'] in self.blocks:
+                if block["addr"] in self.blocks:
                     return True
                 return False
 
@@ -281,7 +288,7 @@ class SnapshotAnalyser:
                 available_blocks = self.get_available_blocks()
                 if len(available_blocks) == 0:
                     return 0
-                return max([_block['size'] for _block in available_blocks])
+                return max([_block["size"] for _block in available_blocks])
 
             def get_available_blocks(self):
                 """
@@ -292,36 +299,36 @@ class SnapshotAnalyser:
 
                 # If no blocks are allocated, the entire segment is available
                 if not self.blocks:
-                    available.append({'addr': self.start_addr, 'size': self.total})
+                    available.append({"addr": self.start_addr, "size": self.total})
                     return available
 
                 # Sort the allocated blocks by their starting address
-                sorted_blocks = sorted(self.blocks.values(), key=lambda b: b['addr'])
+                sorted_blocks = sorted(self.blocks.values(), key=lambda b: b["addr"])
 
                 # Check for available space before the first allocated block
                 first_block = sorted_blocks[0]
-                if self.start_addr < first_block['addr']:
-                    gap_size = first_block['addr'] - self.start_addr
-                    available.append({'addr': self.start_addr, 'size': gap_size})
+                if self.start_addr < first_block["addr"]:
+                    gap_size = first_block["addr"] - self.start_addr
+                    available.append({"addr": self.start_addr, "size": gap_size})
 
                 # Check for gaps between consecutive allocated blocks
                 for i in range(len(sorted_blocks) - 1):
-                    current_end = sorted_blocks[i]['addr'] + sorted_blocks[i]['size']
-                    next_start = sorted_blocks[i + 1]['addr']
+                    current_end = sorted_blocks[i]["addr"] + sorted_blocks[i]["size"]
+                    next_start = sorted_blocks[i + 1]["addr"]
                     if current_end < next_start:
                         gap_size = next_start - current_end
-                        available.append({'addr': current_end, 'size': gap_size})
+                        available.append({"addr": current_end, "size": gap_size})
 
                 # Check for available space after the last allocated block
                 last_block = sorted_blocks[-1]
-                last_end = last_block['addr'] + last_block['size']
+                last_end = last_block["addr"] + last_block["size"]
                 if last_end < self.end_addr:
                     gap_size = self.end_addr - last_end
-                    available.append({'addr': last_end, 'size': gap_size})
+                    available.append({"addr": last_end, "size": gap_size})
 
                 _new_available = []
                 for _available in available:
-                    _available['is_free'] = True
+                    _available["is_free"] = True
                     _new_available.append(_available)
                 return _new_available
 
@@ -335,17 +342,27 @@ class SnapshotAnalyser:
                 current_position = 0
 
                 for block in blocks:
-                    start = block['addr'] - self.start_addr
-                    size = block['size']
-                    is_free = block.get('is_free', False)
-                    color = 'green' if is_free else 'red'
-                    ax.barh(0, size, left=start, height=0.5, color=color, edgecolor='black')
+                    start = block["addr"] - self.start_addr
+                    size = block["size"]
+                    is_free = block.get("is_free", False)
+                    color = "green" if is_free else "red"
+                    ax.barh(
+                        0, size, left=start, height=0.5, color=color, edgecolor="black"
+                    )
                     # Label the block
-                    ax.text(start + size / 2, 0, f"{format_memory(size)}", ha='center', va='center', fontsize=8, color='white')
+                    ax.text(
+                        start + size / 2,
+                        0,
+                        f"{format_memory(size)}",
+                        ha="center",
+                        va="center",
+                        fontsize=8,
+                        color="white",
+                    )
 
                 ax.set_xlim(0, total_size)
                 ax.set_ylim(-0.5, 1)
-                ax.axis('off')
+                ax.axis("off")
                 ax.set_title(f"Segment {self.index} Memory Distribution")
                 # plt.tight_layout()
                 return plt
@@ -360,15 +377,15 @@ class SnapshotAnalyser:
         _p_request = 0
         segments_index = 0
         for index, trace in enumerate(self.device_traces):
-            action = trace['action']
+            action = trace["action"]
 
             if index == 20:
                 pass
 
             target_seg = None
-            request_size = copy.deepcopy(trace['size'])
-            trace['size'] = ((trace['size'] + 512 -1) // 512) * 512
-            size = copy.deepcopy(trace['size'])
+            request_size = copy.deepcopy(trace["size"])
+            trace["size"] = ((trace["size"] + 512 - 1) // 512) * 512
+            size = copy.deepcopy(trace["size"])
             if action == "segment_alloc":
                 _sge = Segment(trace)
                 _sge.index = segments_index
@@ -400,7 +417,6 @@ class SnapshotAnalyser:
             else:
                 continue
 
-
             # kSmallSize = 1048576
             # if target_seg.remaining < kSmallSize or target_seg.total == target_seg.remaining:
             #     size = target_seg.total
@@ -409,15 +425,16 @@ class SnapshotAnalyser:
                 msg = None
             else:
                 msg = f"{None} Block from Segment {target_seg.index} for request {request_size}"
-            record.append({
-                "action": action,
-                "size": size,
-                "requested_size": request_size,
-                "block": trace,
-                "msg": msg,
-                "segments": copy.deepcopy(segments)
-            })
-
+            record.append(
+                {
+                    "action": action,
+                    "size": size,
+                    "requested_size": request_size,
+                    "block": trace,
+                    "msg": msg,
+                    "segments": copy.deepcopy(segments),
+                }
+            )
 
         return record
 
@@ -428,28 +445,21 @@ class SnapshotAnalyser:
         trace_list = []
         seg_list = []
         for trace in self.device_traces:
-            if trace['action'] == 'alloc':
-                max_trace += trace['size']
-            elif trace['action'] == 'free_completed':
-                max_trace -= trace['size']
+            if trace["action"] == "alloc":
+                max_trace += trace["size"]
+            elif trace["action"] == "free_completed":
+                max_trace -= trace["size"]
             elif trace["action"] == "segment_alloc":
-                max_seg += trace['size']
+                max_seg += trace["size"]
             elif trace["action"] == "segment_free":
-                max_seg -= trace['size']
+                max_seg -= trace["size"]
             seg_list.append(max_seg)
             trace_list.append(max_trace)
-            frames = trace['frames']
+            frames = trace["frames"]
             for frame in frames:
-                filepath = frame['filename']
-                lines = frame['line']
+                filepath = frame["filename"]
+                lines = frame["line"]
                 if lines == 43:
-                    iterations.append({
-                        "seg": max(seg_list),
-                        "trace": max(trace_list)
-                    })
+                    iterations.append({"seg": max(seg_list), "trace": max(trace_list)})
                     break
         return iterations[::3]
-
-
-
-

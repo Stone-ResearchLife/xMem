@@ -10,10 +10,10 @@ from colossalai.zero.legacy.gemini.ophooks.runtime_mem_tracer_hook import (
 
 from .memory_stats import MemStats
 
-__all__ = ['RuntimeMemTracer']
+__all__ = ["RuntimeMemTracer"]
 
 
-class RuntimeMemTracer():
+class RuntimeMemTracer:
     """RuntimeMemTracer for the module training using ColoParameter.
 
     Trace non-model memory usage during fwd+bwd process.
@@ -54,7 +54,9 @@ class RuntimeMemTracer():
         The function is called before forward. Backup model params on cpu.
         """
         for p in self.module.parameters():
-            self.cpu_param_data_dict[p] = torch.empty(p.data.shape, dtype=self.dtype, device="cpu")
+            self.cpu_param_data_dict[p] = torch.empty(
+                p.data.shape, dtype=self.dtype, device="cpu"
+            )
             self.cpu_param_data_dict[p].copy_(p.data)
 
     def _restore_params(self):
@@ -62,7 +64,12 @@ class RuntimeMemTracer():
         This function is called after backward. Restore model params.
         """
         for p in self.module.parameters():
-            p.data = torch.empty(p.data.shape, dtype=self.dtype, device="cpu", requires_grad=p.data.requires_grad)
+            p.data = torch.empty(
+                p.data.shape,
+                dtype=self.dtype,
+                device="cpu",
+                requires_grad=p.data.requires_grad,
+            )
             p.data.copy_(self.cpu_param_data_dict[p])
         self.cpu_param_data_dict.clear()
 
@@ -81,7 +88,9 @@ class RuntimeMemTracer():
         return outputs
 
     def backward(self, loss):
-        with self.param_op_hook.switch_to_backward(), ColoParamOpHookManager.use_hooks(self.param_op_hook):
+        with self.param_op_hook.switch_to_backward(), ColoParamOpHookManager.use_hooks(
+            self.param_op_hook
+        ):
             loss.backward()
         self._post_backward()
 

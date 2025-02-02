@@ -6,7 +6,7 @@ class ColoEmbedding(ColoModule):
 
     def __init__(self):
         super(ColoEmbedding, self).__init__()
-        self._register_shard_params(['weight'])
+        self._register_shard_params(["weight"])
 
     def register(self, compute_pattern, pg: ProcessGroup):
         if not compute_pattern in self._allowed_patterns:
@@ -19,18 +19,20 @@ class ColoEmbedding(ColoModule):
         self._register_allowed_patterns(
             compute_pattern=_compute_pattern,
             dist_specs={
-                'weight': ShardSpec([0], [pg.tp_world_size()]),
+                "weight": ShardSpec([0], [pg.tp_world_size()]),
             },
-            mode='row',
+            mode="row",
         )
 
         # TP1D Col Linear
         self._register_allowed_patterns(
             compute_pattern=_compute_pattern,
             dist_specs={
-                'weight': ShardSpec([-1], [pg.tp_world_size()]),
+                "weight": ShardSpec([-1], [pg.tp_world_size()]),
             },
-            mode='col',
+            mode="col",
         )
 
-        self._set_default(compute_pattern=_compute_pattern, target_mode='col') # target_mode='row'
+        self._set_default(
+            compute_pattern=_compute_pattern, target_mode="col"
+        )  # target_mode='row'

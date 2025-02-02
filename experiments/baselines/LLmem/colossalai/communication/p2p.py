@@ -15,7 +15,9 @@ from .utils import split_tensor_into_1d_equal_chunks, gather_split_1d_tensor
 TensorShape = Union[torch.Size, List[int], Tuple[int]]
 
 
-def _get_tensor_shape(tensor_shape: TensorShape, chunk_tensor: bool = False) -> Tuple[TensorShape, bool]:
+def _get_tensor_shape(
+    tensor_shape: TensorShape, chunk_tensor: bool = False
+) -> Tuple[TensorShape, bool]:
     """get the exact tensor shape when communicating and return whether the tensor is a chunk
 
     Args:
@@ -40,13 +42,27 @@ def _get_tensor_shape(tensor_shape: TensorShape, chunk_tensor: bool = False) -> 
 
 def create_recv_buffer_with_shapes(recv_shapes, dtype, scatter_gather_tensors):
     if isinstance(recv_shapes, torch.Size):
-        recv_chunk_shape, recv_split = _get_tensor_shape(recv_shapes, scatter_gather_tensors)
-        buffer_recv = torch.empty(recv_chunk_shape, requires_grad=True, device=get_current_device(), dtype=dtype)
+        recv_chunk_shape, recv_split = _get_tensor_shape(
+            recv_shapes, scatter_gather_tensors
+        )
+        buffer_recv = torch.empty(
+            recv_chunk_shape,
+            requires_grad=True,
+            device=get_current_device(),
+            dtype=dtype,
+        )
         return buffer_recv, recv_split
     buffer_recv = []
     for recv_shape in recv_shapes:
-        recv_chunk_shape, recv_split = _get_tensor_shape(recv_shape, scatter_gather_tensors)
-        tensor_recv = torch.empty(recv_chunk_shape, requires_grad=True, device=get_current_device(), dtype=dtype)
+        recv_chunk_shape, recv_split = _get_tensor_shape(
+            recv_shape, scatter_gather_tensors
+        )
+        tensor_recv = torch.empty(
+            recv_chunk_shape,
+            requires_grad=True,
+            device=get_current_device(),
+            dtype=dtype,
+        )
         buffer_recv.append(tensor_recv)
     return buffer_recv, recv_split
 
@@ -80,16 +96,18 @@ def filling_ops_queue(obj, comm_op, comm_rank, ops_queue):
             ops_queue.append(op_to_add)
 
 
-def _communicate(object_send_next: Union[torch.Tensor, List[torch.Tensor]] = None,
-                 object_send_prev: Union[torch.Tensor, List[torch.Tensor]] = None,
-                 recv_prev: bool = False,
-                 recv_next: bool = False,
-                 recv_prev_shape: Union[torch.Size, List[torch.Size]] = None,
-                 recv_next_shape: Union[torch.Size, List[torch.Size]] = None,
-                 prev_rank: int = None,
-                 next_rank: int = None,
-                 dtype: torch.dtype = None,
-                 scatter_gather_tensors: bool = False) -> Tuple[Union[torch.Tensor, List[torch.Tensor]]]:
+def _communicate(
+    object_send_next: Union[torch.Tensor, List[torch.Tensor]] = None,
+    object_send_prev: Union[torch.Tensor, List[torch.Tensor]] = None,
+    recv_prev: bool = False,
+    recv_next: bool = False,
+    recv_prev_shape: Union[torch.Size, List[torch.Size]] = None,
+    recv_next_shape: Union[torch.Size, List[torch.Size]] = None,
+    prev_rank: int = None,
+    next_rank: int = None,
+    dtype: torch.dtype = None,
+    scatter_gather_tensors: bool = False,
+) -> Tuple[Union[torch.Tensor, List[torch.Tensor]]]:
     """
     Adapted from megatron.p2p_communication.
     Communicate tensors between stages. Used as helper method in other
@@ -121,13 +139,15 @@ def _communicate(object_send_next: Union[torch.Tensor, List[torch.Tensor]] = Non
 
     if recv_prev:
         assert recv_prev_shape is not None
-        tensor_recv_prev, recv_prev_split = create_recv_buffer_with_shapes(recv_prev_shape, dtype,
-                                                                           scatter_gather_tensors)
+        tensor_recv_prev, recv_prev_split = create_recv_buffer_with_shapes(
+            recv_prev_shape, dtype, scatter_gather_tensors
+        )
 
     if recv_next:
         assert recv_next_shape is not None
-        tensor_recv_next, recv_next_split = create_recv_buffer_with_shapes(recv_next_shape, dtype,
-                                                                           scatter_gather_tensors)
+        tensor_recv_next, recv_next_split = create_recv_buffer_with_shapes(
+            recv_next_shape, dtype, scatter_gather_tensors
+        )
 
     if object_send_prev is not None or recv_prev:
         if prev_rank is None:
@@ -138,10 +158,14 @@ def _communicate(object_send_next: Union[torch.Tensor, List[torch.Tensor]] = Non
             next_rank = gpc.get_next_global_rank(ParallelMode.PIPELINE)
 
     if object_send_prev is not None:
-        object_send_prev = process_object_to_send(object_send_prev, scatter_gather_tensors)
+        object_send_prev = process_object_to_send(
+            object_send_prev, scatter_gather_tensors
+        )
 
     if object_send_next is not None:
-        object_send_next = process_object_to_send(object_send_next, scatter_gather_tensors)
+        object_send_next = process_object_to_send(
+            object_send_next, scatter_gather_tensors
+        )
 
     ops = []
     if object_send_prev is not None:
@@ -165,27 +189,40 @@ def _communicate(object_send_next: Union[torch.Tensor, List[torch.Tensor]] = Non
 
     if recv_prev and recv_prev_split:
         if isinstance(tensor_recv_prev, torch.Tensor):
-            tensor_recv_prev = gather_split_1d_tensor(tensor_recv_prev).view(recv_prev_shape).requires_grad_()
+            tensor_recv_prev = (
+                gather_split_1d_tensor(tensor_recv_prev)
+                .view(recv_prev_shape)
+                .requires_grad_()
+            )
         else:
             for index in range(len(tensor_recv_prev)):
-                tensor_recv_prev[index] = gather_split_1d_tensor(tensor_recv_prev[index]).view(
-                    recv_prev_shape[index]).requires_grad_()
+                tensor_recv_prev[index] = (
+                    gather_split_1d_tensor(tensor_recv_prev[index])
+                    .view(recv_prev_shape[index])
+                    .requires_grad_()
+                )
 
     if recv_next and recv_next_split:
         if isinstance(tensor_recv_next, torch.Tensor):
-            tensor_recv_next = gather_split_1d_tensor(tensor_recv_next).view(recv_next_shape).requires_grad_()
+            tensor_recv_next = (
+                gather_split_1d_tensor(tensor_recv_next)
+                .view(recv_next_shape)
+                .requires_grad_()
+            )
         else:
             for index in range(len(tensor_recv_next)):
-                tensor_recv_next[index] = gather_split_1d_tensor(tensor_recv_next[index]).view(
-                    recv_next_shape[index]).requires_grad_()
+                tensor_recv_next[index] = (
+                    gather_split_1d_tensor(tensor_recv_next[index])
+                    .view(recv_next_shape[index])
+                    .requires_grad_()
+                )
 
     return tensor_recv_prev, tensor_recv_next
 
 
-def recv_forward(input_tensor_shape,
-                 prev_rank=None,
-                 dtype=torch.float,
-                 scatter_gather_tensors=False) -> Union[torch.Tensor, List[torch.Tensor]]:
+def recv_forward(
+    input_tensor_shape, prev_rank=None, dtype=torch.float, scatter_gather_tensors=False
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     """Copy the forward output from the previous stage in pipeline as the input tensor of this stage.
 
     Args:
@@ -198,18 +235,19 @@ def recv_forward(input_tensor_shape,
     if gpc.is_pipeline_first_stage():
         input_tensor = None
     else:
-        input_tensor, _ = _communicate(recv_prev=True,
-                                       recv_prev_shape=input_tensor_shape,
-                                       prev_rank=prev_rank,
-                                       dtype=dtype,
-                                       scatter_gather_tensors=scatter_gather_tensors)
+        input_tensor, _ = _communicate(
+            recv_prev=True,
+            recv_prev_shape=input_tensor_shape,
+            prev_rank=prev_rank,
+            dtype=dtype,
+            scatter_gather_tensors=scatter_gather_tensors,
+        )
     return input_tensor
 
 
-def recv_backward(output_grad_shape,
-                  next_rank=None,
-                  dtype=torch.float,
-                  scatter_gather_tensors=False) -> Union[torch.Tensor, List[torch.Tensor]]:
+def recv_backward(
+    output_grad_shape, next_rank=None, dtype=torch.float, scatter_gather_tensors=False
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     """Copy the gradient tensor from the next stage in pipeline as the input gradient of this stage.
 
     Args:
@@ -222,11 +260,13 @@ def recv_backward(output_grad_shape,
     if gpc.is_pipeline_last_stage():
         output_tensor_grad = None
     else:
-        _, output_tensor_grad = _communicate(recv_next=True,
-                                             recv_next_shape=output_grad_shape,
-                                             next_rank=next_rank,
-                                             dtype=dtype,
-                                             scatter_gather_tensors=scatter_gather_tensors)
+        _, output_tensor_grad = _communicate(
+            recv_next=True,
+            recv_next_shape=output_grad_shape,
+            next_rank=next_rank,
+            dtype=dtype,
+            scatter_gather_tensors=scatter_gather_tensors,
+        )
     return output_tensor_grad
 
 
@@ -238,10 +278,16 @@ def send_forward(output_tensor, next_rank=None, scatter_gather_tensors=False) ->
         next_rank (int, optional): The rank of the recipient of the tensor.
     """
     if not gpc.is_pipeline_last_stage():
-        _communicate(object_send_next=output_tensor, next_rank=next_rank, scatter_gather_tensors=scatter_gather_tensors)
+        _communicate(
+            object_send_next=output_tensor,
+            next_rank=next_rank,
+            scatter_gather_tensors=scatter_gather_tensors,
+        )
 
 
-def send_backward(input_tensor_grad, prev_rank=None, scatter_gather_tensors=False) -> None:
+def send_backward(
+    input_tensor_grad, prev_rank=None, scatter_gather_tensors=False
+) -> None:
     """Sends the gradient tensor to the previous stage in pipeline.
 
     Args:
@@ -249,18 +295,22 @@ def send_backward(input_tensor_grad, prev_rank=None, scatter_gather_tensors=Fals
         prev_rank (int, optional): The rank of the recipient of the tensor
     """
     if not gpc.is_pipeline_first_stage():
-        _communicate(object_send_prev=input_tensor_grad,
-                     prev_rank=prev_rank,
-                     scatter_gather_tensors=scatter_gather_tensors)
+        _communicate(
+            object_send_prev=input_tensor_grad,
+            prev_rank=prev_rank,
+            scatter_gather_tensors=scatter_gather_tensors,
+        )
 
 
-def send_forward_recv_backward(output_tensor,
-                               output_grad_shape,
-                               recv_next=True,
-                               next_rank=None,
-                               dtype=torch.float,
-                               scatter_gather_tensors=False) -> Union[torch.Tensor, List[torch.Tensor]]:
-    """Batched communication operation. Sends the input tensor to the 
+def send_forward_recv_backward(
+    output_tensor,
+    output_grad_shape,
+    recv_next=True,
+    next_rank=None,
+    dtype=torch.float,
+    scatter_gather_tensors=False,
+) -> Union[torch.Tensor, List[torch.Tensor]]:
+    """Batched communication operation. Sends the input tensor to the
     next stage in pipeline, while receives the gradient tensor from the
     next stage in pipeline as the input gradient tensor of this stage.
 
@@ -274,21 +324,25 @@ def send_forward_recv_backward(output_tensor,
     if gpc.is_pipeline_last_stage():
         output_tensor_grad = None
     else:
-        _, output_tensor_grad = _communicate(object_send_next=output_tensor,
-                                             recv_next=recv_next,
-                                             recv_next_shape=output_grad_shape,
-                                             next_rank=next_rank,
-                                             dtype=dtype,
-                                             scatter_gather_tensors=scatter_gather_tensors)
+        _, output_tensor_grad = _communicate(
+            object_send_next=output_tensor,
+            recv_next=recv_next,
+            recv_next_shape=output_grad_shape,
+            next_rank=next_rank,
+            dtype=dtype,
+            scatter_gather_tensors=scatter_gather_tensors,
+        )
     return output_tensor_grad
 
 
-def send_backward_recv_forward(input_tensor_grad,
-                               input_tensor_shape,
-                               recv_prev=True,
-                               prev_rank=None,
-                               dtype=torch.float,
-                               scatter_gather_tensors=False) -> Union[torch.Tensor, List[torch.Tensor]]:
+def send_backward_recv_forward(
+    input_tensor_grad,
+    input_tensor_shape,
+    recv_prev=True,
+    prev_rank=None,
+    dtype=torch.float,
+    scatter_gather_tensors=False,
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     """Batched communication operation. Sends the gradient tensor to the
     previous stage in pipeline, while receives the output tensor from the
     previous stage in pipeline as the input of this stage.
@@ -303,23 +357,27 @@ def send_backward_recv_forward(input_tensor_grad,
     if gpc.is_pipeline_first_stage():
         input_tensor = None
     else:
-        input_tensor, _ = _communicate(object_send_prev=input_tensor_grad,
-                                       recv_prev=recv_prev,
-                                       recv_prev_shape=input_tensor_shape,
-                                       prev_rank=prev_rank,
-                                       dtype=dtype,
-                                       scatter_gather_tensors=scatter_gather_tensors)
+        input_tensor, _ = _communicate(
+            object_send_prev=input_tensor_grad,
+            recv_prev=recv_prev,
+            recv_prev_shape=input_tensor_shape,
+            prev_rank=prev_rank,
+            dtype=dtype,
+            scatter_gather_tensors=scatter_gather_tensors,
+        )
     return input_tensor
 
 
-def send_forward_recv_forward(output_tensor,
-                              input_tensor_shape,
-                              recv_prev=True,
-                              prev_rank=None,
-                              next_rank=None,
-                              dtype=torch.float,
-                              scatter_gather_tensors=False) -> Union[torch.Tensor, List[torch.Tensor]]:
-    """Batched communication operation. Sends the input tensor to the 
+def send_forward_recv_forward(
+    output_tensor,
+    input_tensor_shape,
+    recv_prev=True,
+    prev_rank=None,
+    next_rank=None,
+    dtype=torch.float,
+    scatter_gather_tensors=False,
+) -> Union[torch.Tensor, List[torch.Tensor]]:
+    """Batched communication operation. Sends the input tensor to the
     next stage in pipeline, while receives the output tensor from the
     previous stage in pipeline as the input of this stage.
 
@@ -330,23 +388,27 @@ def send_forward_recv_forward(output_tensor,
     Returns:
         Union[:class:`torch.Tensor`, List[:class:`torch.Tensor`]]: The input tensor.
     """
-    input_tensor, _ = _communicate(object_send_next=output_tensor,
-                                   recv_prev=recv_prev,
-                                   recv_prev_shape=input_tensor_shape,
-                                   prev_rank=prev_rank,
-                                   next_rank=next_rank,
-                                   dtype=dtype,
-                                   scatter_gather_tensors=scatter_gather_tensors)
+    input_tensor, _ = _communicate(
+        object_send_next=output_tensor,
+        recv_prev=recv_prev,
+        recv_prev_shape=input_tensor_shape,
+        prev_rank=prev_rank,
+        next_rank=next_rank,
+        dtype=dtype,
+        scatter_gather_tensors=scatter_gather_tensors,
+    )
     return input_tensor
 
 
-def send_backward_recv_backward(input_tensor_grad,
-                                output_grad_shape,
-                                recv_next=True,
-                                prev_rank=None,
-                                next_rank=None,
-                                dtype=torch.float,
-                                scatter_gather_tensors=False) -> Union[torch.Tensor, List[torch.Tensor]]:
+def send_backward_recv_backward(
+    input_tensor_grad,
+    output_grad_shape,
+    recv_next=True,
+    prev_rank=None,
+    next_rank=None,
+    dtype=torch.float,
+    scatter_gather_tensors=False,
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     """Batched communication operation. Sends the gradient tensor to the
     previous stage in pipeline, while receives the gradient tensor from the
     next member in pipeline as the input of this stage.
@@ -358,27 +420,30 @@ def send_backward_recv_backward(input_tensor_grad,
     Returns:
         Union[:class:`torch.Tensor`, List[:class:`torch.Tensor`]]: The input gradient tensor.
     """
-    _, output_tensor_grad = _communicate(object_send_prev=input_tensor_grad,
-                                         recv_next=recv_next,
-                                         recv_next_shape=output_grad_shape,
-                                         prev_rank=prev_rank,
-                                         next_rank=next_rank,
-                                         dtype=dtype,
-                                         scatter_gather_tensors=scatter_gather_tensors)
+    _, output_tensor_grad = _communicate(
+        object_send_prev=input_tensor_grad,
+        recv_next=recv_next,
+        recv_next_shape=output_grad_shape,
+        prev_rank=prev_rank,
+        next_rank=next_rank,
+        dtype=dtype,
+        scatter_gather_tensors=scatter_gather_tensors,
+    )
     return output_tensor_grad
 
 
 def send_forward_backward_recv_forward_backward(
-        output_tensor,
-        input_tensor_grad,
-        input_tensor_shape,
-        output_grad_shape,
-        recv_prev=True,
-        recv_next=True,
-        prev_rank=None,
-        next_rank=None,
-        dtype=torch.float,
-        scatter_gather_tensors=False) -> Tuple[Union[torch.Tensor, List[torch.Tensor]]]:
+    output_tensor,
+    input_tensor_grad,
+    input_tensor_shape,
+    output_grad_shape,
+    recv_prev=True,
+    recv_next=True,
+    prev_rank=None,
+    next_rank=None,
+    dtype=torch.float,
+    scatter_gather_tensors=False,
+) -> Tuple[Union[torch.Tensor, List[torch.Tensor]]]:
     """Batched communication operation. Sends the input tensor to the next stage in pipeline and
     the gradient tensor to the previous stage, while receives the input gradient tensor from the
     next stage and the input tensor from the previous stage.
@@ -392,14 +457,16 @@ def send_forward_backward_recv_forward_backward(
     Returns:
         Tuple(Union[:class:`torch.Tensor`, List[:class:`torch.Tensor`]], Union[:class:`torch.Tensor`, List[:class:`torch.Tensor`]]): (the input tensor, the input gradient tensor)
     """
-    input_tensor, output_tensor_grad = _communicate(object_send_next=output_tensor,
-                                                    object_send_prev=input_tensor_grad,
-                                                    recv_prev=recv_prev,
-                                                    recv_next=recv_next,
-                                                    recv_prev_shape=input_tensor_shape,
-                                                    recv_next_shape=output_grad_shape,
-                                                    prev_rank=prev_rank,
-                                                    next_rank=next_rank,
-                                                    dtype=dtype,
-                                                    scatter_gather_tensors=scatter_gather_tensors)
+    input_tensor, output_tensor_grad = _communicate(
+        object_send_next=output_tensor,
+        object_send_prev=input_tensor_grad,
+        recv_prev=recv_prev,
+        recv_next=recv_next,
+        recv_prev_shape=input_tensor_shape,
+        recv_next_shape=output_grad_shape,
+        prev_rank=prev_rank,
+        next_rank=next_rank,
+        dtype=dtype,
+        scatter_gather_tensors=scatter_gather_tensors,
+    )
     return input_tensor, output_tensor_grad

@@ -5,7 +5,7 @@ import torch
 from ..proxy import ColoAttribute, ColoProxy
 from .meta_patch import meta_patched_function, meta_patched_module
 
-__all__ = ['is_element_in_list', 'extract_meta']
+__all__ = ["is_element_in_list", "extract_meta"]
 
 
 def is_element_in_list(elements: Union[List[Any], Any], list_: List[Any]):

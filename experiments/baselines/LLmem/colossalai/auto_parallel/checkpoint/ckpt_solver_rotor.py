@@ -4,8 +4,13 @@ from typing import Any, Dict, List, Tuple
 from torch import Tensor
 from torch.fx import Graph, Node
 
-from colossalai.auto_parallel.passes.runtime_apply_pass import runtime_apply, runtime_comm_spec_apply
-from colossalai.fx.codegen.activation_checkpoint_codegen import _find_nested_ckpt_regions
+from colossalai.auto_parallel.passes.runtime_apply_pass import (
+    runtime_apply,
+    runtime_comm_spec_apply,
+)
+from colossalai.fx.codegen.activation_checkpoint_codegen import (
+    _find_nested_ckpt_regions,
+)
 from colossalai.fx.profiler import (
     activation_size,
     calculate_bwd_time,
@@ -16,19 +21,29 @@ from colossalai.fx.profiler import (
 from colossalai.logging import get_dist_logger
 
 from .ckpt_solver_base import CheckpointSolverBase
-from .operation import Backward, Chain, ForwardCheck, ForwardEnable, ForwardNograd, Loss, Sequence
+from .operation import (
+    Backward,
+    Chain,
+    ForwardCheck,
+    ForwardEnable,
+    ForwardNograd,
+    Loss,
+    Sequence,
+)
 
-__all__ = ['CheckpointSolverRotor']
+__all__ = ["CheckpointSolverRotor"]
 
 
 class CheckpointSolverRotor(CheckpointSolverBase):
 
-    def __init__(self,
-                 graph: Graph,
-                 free_memory: float = -1,
-                 cnode: List[str] = None,
-                 memory_slots: int = 500,
-                 optim_multiplier: float = 1.0):
+    def __init__(
+        self,
+        graph: Graph,
+        free_memory: float = -1,
+        cnode: List[str] = None,
+        memory_slots: int = 500,
+        optim_multiplier: float = 1.0,
+    ):
         """This is the simple implementation of dynamic programming algorithm rotor
         in https://hal.inria.fr/hal-02352969. Some code are adapted from
         https://gitlab.inria.fr/hiepacs/rotor.
@@ -76,22 +91,32 @@ class CheckpointSolverRotor(CheckpointSolverBase):
 
         # compute cost table
         if force_python:
-            self.cost_table, self.back_ptr = self._compute_table(chain, self.memory_slots)
+            self.cost_table, self.back_ptr = self._compute_table(
+                chain, self.memory_slots
+            )
         else:
-            self.cost_table, self.back_ptr = self._compute_table_c(chain, self.memory_slots)
+            self.cost_table, self.back_ptr = self._compute_table_c(
+                chain, self.memory_slots
+            )
 
         if verbose:
             self.print_chain()
 
         # backtrack
         try:
-            self.sequence = self._backtrack(chain, 0, len(chain), self.memory_slots - chain.x[0], self.cost_table,
-                                            self.back_ptr)
+            self.sequence = self._backtrack(
+                chain,
+                0,
+                len(chain),
+                self.memory_slots - chain.x[0],
+                self.cost_table,
+                self.back_ptr,
+            )
             self._annotate_from_sequence(self.sequence, self.node_list)
         except ValueError as e:
             # using logger to annonce that the solver is failed
             logger = get_dist_logger()
-            logger.warning(f'Checkpoint solver failed: {e}')
+            logger.warning(f"Checkpoint solver failed: {e}")
             raise ValueError
 
         if verbose:
@@ -100,14 +125,25 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         return deepcopy(self.graph)
 
     def print_chain(self):
-        print('[input]', self.chain.x[0], self.chain.xbar[0], self.chain.ftmp[0], self.chain.btmp[0])
+        print(
+            "[input]",
+            self.chain.x[0],
+            self.chain.xbar[0],
+            self.chain.ftmp[0],
+            self.chain.btmp[0],
+        )
         for idx in range(len(self.node_list) - 1):
-            print(self.node_list[idx], self.chain.x[idx + 1], self.chain.xbar[idx + 1], self.chain.ftmp[idx],
-                  self.chain.btmp[idx])
-        print(f'Chain = {self.chain}')
+            print(
+                self.node_list[idx],
+                self.chain.x[idx + 1],
+                self.chain.xbar[idx + 1],
+                self.chain.ftmp[idx],
+                self.chain.btmp[idx],
+            )
+        print(f"Chain = {self.chain}")
 
     def print_sequence(self):
-        print(f'Sequence = {self.sequence}')
+        print(f"Sequence = {self.sequence}")
 
     @classmethod
     def _construct_chain(cls, graph: Graph, node_list: List[List[Node]]) -> Chain:
@@ -138,14 +174,17 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         btime = 0
         fwd_mem_peak = 0
         for n in node:
-            assert isinstance(n, Node), f'{n} is not a Node'
+            assert isinstance(n, Node), f"{n} is not a Node"
             if n.target == runtime_apply or n.target == runtime_comm_spec_apply:
                 # in this case we need to calculate memory usage directly based on the statics that hooked in node.meta
-                xbar += n.meta['fwd_mem_out']
-                fwd_mem_peak = max(fwd_mem_peak, xbar + n.meta['fwd_mem_tmp'])
+                xbar += n.meta["fwd_mem_out"]
+                fwd_mem_peak = max(fwd_mem_peak, xbar + n.meta["fwd_mem_tmp"])
             else:
                 xbar += calculate_fwd_tmp(n) + calculate_fwd_out(n)
-                fwd_mem_peak = max(fwd_mem_peak, xbar + n.meta['fwd_mem_tmp'] + cls._extract_unused_output(n))
+                fwd_mem_peak = max(
+                    fwd_mem_peak,
+                    xbar + n.meta["fwd_mem_tmp"] + cls._extract_unused_output(n),
+                )
 
             # minimum flop count is required
             ftime += max(calculate_fwd_time(n), 1.0)
@@ -162,14 +201,14 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         """Extract input tensors from a Graph"""
         input_tensors = []
         for node in graph.nodes:
-            if node.op == 'placeholder':
-                input_tensors.append(node.meta['fwd_out'])
+            if node.op == "placeholder":
+                input_tensors.append(node.meta["fwd_out"])
         return input_tensors
 
     @staticmethod
     def _extract_unused_output(node: Node) -> int:
         """Extract unused output from `torch.fx.Node`"""
-        return activation_size(node.meta['fwd_out']) - calculate_fwd_out(node)
+        return activation_size(node.meta["fwd_out"]) - calculate_fwd_out(node)
 
     @staticmethod
     def _extract_btmp(node: List[Node]) -> int:
@@ -180,8 +219,8 @@ class CheckpointSolverRotor(CheckpointSolverBase):
             for k, v in deps.items():
                 k: Node
                 if v > 0:
-                    deps_size += k.meta['bwd_mem_out']
-                if v == float('-inf'):
+                    deps_size += k.meta["bwd_mem_out"]
+                if v == float("-inf"):
                     deps_size -= calculate_fwd_tmp(k) + calculate_fwd_out(k)
 
             return deps_size
@@ -190,12 +229,12 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         deps = {}
         for n in reversed(node):
             deps[n] = len(n.all_input_nodes)
-            btmp = max(btmp, _extract_deps_size() + n.meta['bwd_mem_tmp'])
+            btmp = max(btmp, _extract_deps_size() + n.meta["bwd_mem_tmp"])
             for child in n.users:
                 if child in deps:
                     deps[child] -= 1
                     if deps[child] <= 0:
-                        deps[child] = float('-inf')    # free
+                        deps[child] = float("-inf")  # free
         return btmp
 
     @staticmethod
@@ -227,7 +266,9 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         # Initialize corner cases where length of sequence equals to 1, i.e. lhs == rhs
         for m in range(mmax + 1):
             for i in range(len(chain) + 1):
-                limit = max(x[i + 1] + xbar[i + 1] + ftmp[i], x[i + 1] + xbar[i + 1] + btmp[i])
+                limit = max(
+                    x[i + 1] + xbar[i + 1] + ftmp[i], x[i + 1] + xbar[i + 1] + btmp[i]
+                )
                 if m >= limit:
                     cost_table[m][i][i] = ftime[i] + btime[i]
                 else:
@@ -240,20 +281,33 @@ class CheckpointSolverRotor(CheckpointSolverBase):
                     idx = i + d
                     mmin = x[idx + 1] + x[i + 1] + ftmp[i]
                     if idx > i + 1:
-                        mmin = max(mmin, x[idx + 1] + max(x[j] + x[j + 1] + ftmp[j] for j in range(i + 1, idx)))
+                        mmin = max(
+                            mmin,
+                            x[idx + 1]
+                            + max(x[j] + x[j + 1] + ftmp[j] for j in range(i + 1, idx)),
+                        )
                     if m < mmin:
                         cost_table[m][i][idx] = float("inf")
                     else:
-                        leaf_checkpoints = [(j,
-                                             sum(ftime[i:j]) + cost_table[m - x[j]][j][idx] + cost_table[m][i][j - 1])
-                                            for j in range(i + 1, idx + 1)
-                                            if m >= x[j]]
+                        leaf_checkpoints = [
+                            (
+                                j,
+                                sum(ftime[i:j])
+                                + cost_table[m - x[j]][j][idx]
+                                + cost_table[m][i][j - 1],
+                            )
+                            for j in range(i + 1, idx + 1)
+                            if m >= x[j]
+                        ]
                         if leaf_checkpoints:
                             best_leaf = min(leaf_checkpoints, key=lambda t: t[1])
                         else:
                             best_leaf = None
                         if m >= xbar[i + 1]:
-                            chain_checkpoint = cost_table[m][i][i] + cost_table[m - xbar[i + 1]][i + 1][idx]
+                            chain_checkpoint = (
+                                cost_table[m][i][i]
+                                + cost_table[m - xbar[i + 1]][i + 1][idx]
+                            )
                         else:
                             chain_checkpoint = float("inf")
                         if best_leaf and best_leaf[1] <= chain_checkpoint:
@@ -274,13 +328,16 @@ class CheckpointSolverRotor(CheckpointSolverBase):
             import os
             import subprocess
             import sys
+
             logger = get_dist_logger()
             logger.info("rotorc hasn't been built! Building library...", ranks=[0])
             this_dir = os.path.dirname(os.path.abspath(__file__))
             result = subprocess.Popen(
                 [
-                    f"{sys.executable}", f"{os.path.join(this_dir, 'build_c_ext.py')}", "build_ext",
-                    f"--build-lib={this_dir}"
+                    f"{sys.executable}",
+                    f"{os.path.join(this_dir, 'build_c_ext.py')}",
+                    "build_ext",
+                    f"--build-lib={this_dir}",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -294,8 +351,14 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         return compute_table(chain, mmax)
 
     @staticmethod
-    def _backtrack(chain: Chain, lhs: int, rhs: int, budget: int, cost_table: List[Any],
-                   back_ptr: List[Any]) -> "Sequence":
+    def _backtrack(
+        chain: Chain,
+        lhs: int,
+        rhs: int,
+        budget: int,
+        cost_table: List[Any],
+        back_ptr: List[Any],
+    ) -> "Sequence":
         """Backtrack the cost table and retrieve the optimal checkpointing strategy.
 
         Args:
@@ -315,7 +378,9 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         if budget <= 0:
             raise ValueError(f"Can not process a chain with negative memory {budget}")
         elif cost_table[budget][lhs][rhs] == float("inf"):
-            raise ValueError(f"Can not process this chain from index {lhs} to {rhs} with memory {budget}")
+            raise ValueError(
+                f"Can not process this chain from index {lhs} to {rhs} with memory {budget}"
+            )
 
         sequence = Sequence()
         if rhs == lhs:
@@ -328,8 +393,14 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         if back_ptr[budget][lhs][rhs][0]:
             sequence += [
                 ForwardEnable(lhs),
-                CheckpointSolverRotor._backtrack(chain, lhs + 1, rhs, budget - chain.xbar[lhs + 1], cost_table,
-                                                 back_ptr),
+                CheckpointSolverRotor._backtrack(
+                    chain,
+                    lhs + 1,
+                    rhs,
+                    budget - chain.xbar[lhs + 1],
+                    cost_table,
+                    back_ptr,
+                ),
                 Backward(lhs),
             ]
         else:
@@ -337,9 +408,17 @@ class CheckpointSolverRotor(CheckpointSolverBase):
             sequence += [ForwardCheck(lhs)]
             sequence += [ForwardNograd(k) for k in range(lhs + 1, best_leaf)]
             sequence += [
-                CheckpointSolverRotor._backtrack(chain, best_leaf, rhs, budget - chain.x[best_leaf], cost_table,
-                                                 back_ptr),
-                CheckpointSolverRotor._backtrack(chain, lhs, best_leaf - 1, budget, cost_table, back_ptr),
+                CheckpointSolverRotor._backtrack(
+                    chain,
+                    best_leaf,
+                    rhs,
+                    budget - chain.x[best_leaf],
+                    cost_table,
+                    back_ptr,
+                ),
+                CheckpointSolverRotor._backtrack(
+                    chain, lhs, best_leaf - 1, budget, cost_table, back_ptr
+                ),
             ]
         return sequence
 
@@ -353,8 +432,8 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         """
         op_list = sequence.list_operations()
         loss_op = next(op for op in op_list if isinstance(op, Loss))
-        fwd_list = op_list[:op_list.index(loss_op)]
-        bwd_list = op_list[op_list.index(loss_op) + 1:]
+        fwd_list = op_list[: op_list.index(loss_op)]
+        bwd_list = op_list[op_list.index(loss_op) + 1 :]
         ckpt_idx = 0
         in_ckpt = False
         ckpt_region = []
@@ -369,7 +448,7 @@ class CheckpointSolverRotor(CheckpointSolverBase):
                     in_ckpt = False
                     for node_idx in ckpt_region:
                         for n in node_list[node_idx]:
-                            n.meta['activation_checkpoint'] = [ckpt_idx]
+                            n.meta["activation_checkpoint"] = [ckpt_idx]
 
                     ckpt_idx += 1
                     ckpt_region = []
@@ -377,7 +456,7 @@ class CheckpointSolverRotor(CheckpointSolverBase):
                 elif isinstance(op, ForwardCheck):
                     for node_idx in ckpt_region:
                         for n in node_list[node_idx]:
-                            n.meta['activation_checkpoint'] = [ckpt_idx]
+                            n.meta["activation_checkpoint"] = [ckpt_idx]
 
                     ckpt_idx += 1
                     ckpt_region = [idx]
@@ -397,7 +476,7 @@ class CheckpointSolverRotor(CheckpointSolverBase):
                 elif isinstance(op, ForwardEnable):
                     for node_idx in ckpt_region:
                         for n in node_list[node_idx]:
-                            n.meta['activation_checkpoint'].append(ckpt_idx)
+                            n.meta["activation_checkpoint"].append(ckpt_idx)
 
                     ckpt_idx += 1
                     ckpt_region = []
@@ -405,7 +484,7 @@ class CheckpointSolverRotor(CheckpointSolverBase):
                 elif isinstance(op, ForwardCheck):
                     for node_idx in ckpt_region:
                         for n in node_list[node_idx]:
-                            n.meta['activation_checkpoint'].append(ckpt_idx)
+                            n.meta["activation_checkpoint"].append(ckpt_idx)
 
                     ckpt_idx += 1
                     ckpt_region = [op.index]
@@ -413,7 +492,7 @@ class CheckpointSolverRotor(CheckpointSolverBase):
                 elif isinstance(op, Backward):
                     for node_idx in ckpt_region:
                         for n in node_list[node_idx]:
-                            n.meta['activation_checkpoint'].append(ckpt_idx)
+                            n.meta["activation_checkpoint"].append(ckpt_idx)
 
                     in_recompute = False
 
@@ -431,9 +510,12 @@ class CheckpointSolverRotor(CheckpointSolverBase):
         for node in node_list:
             op_list += node
         ckpt_regions = _find_nested_ckpt_regions(op_list)
-        for (start_idx, end_idx) in ckpt_regions:
+        for start_idx, end_idx in ckpt_regions:
             nested_length = max(
-                len(op_list[idx].meta['activation_checkpoint']) for idx in range(start_idx, end_idx + 1))
+                len(op_list[idx].meta["activation_checkpoint"])
+                for idx in range(start_idx, end_idx + 1)
+            )
             for idx in range(start_idx, end_idx + 1):
-                op_list[idx].meta['activation_checkpoint'] += [None] * (nested_length -
-                                                                        len(op_list[idx].meta['activation_checkpoint']))
+                op_list[idx].meta["activation_checkpoint"] += [None] * (
+                    nested_length - len(op_list[idx].meta["activation_checkpoint"])
+                )

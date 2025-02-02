@@ -27,14 +27,14 @@ def call_to_str(base, *args, **kwargs):
     Returns:
         str: A string representation of base(*args, **kwargs)
     """
-    name = f'{base}('
+    name = f"{base}("
     if args:
-        name += ', '.join(repr(arg) for arg in args)
+        name += ", ".join(repr(arg) for arg in args)
         if kwargs:
-            name += ', '
+            name += ", "
     if kwargs:
-        name += ', '.join(f'{key}={repr(arg)}' for key, arg in kwargs.items())
-    name += ')'
+        name += ", ".join(f"{key}={repr(arg)}" for key, arg in kwargs.items())
+    name += ")"
     return name
 
 
@@ -71,10 +71,14 @@ class InsertPostInitMethodToModuleSubClasses(object):
 
         # Replace .__init__() for all existing subclasses of torch.nn.Module
         # Execution self._post_init_method after the default init function.
-        substitute_init_recursively(torch.nn.modules.module.Module, _enable_class, set())
+        substitute_init_recursively(
+            torch.nn.modules.module.Module, _enable_class, set()
+        )
 
         # holding on to the current __init__subclass__ for exit
-        torch.nn.modules.module.Module._old_init_subclass = (torch.nn.modules.module.Module.__init_subclass__)
+        torch.nn.modules.module.Module._old_init_subclass = (
+            torch.nn.modules.module.Module.__init_subclass__
+        )
         # Replace .__init__() for future subclasses of torch.nn.Module
         torch.nn.modules.module.Module.__init_subclass__ = classmethod(_init_subclass)
 
@@ -87,17 +91,21 @@ class InsertPostInitMethodToModuleSubClasses(object):
             torch.set_default_dtype(self._old_default_dtype)
 
         def _disable_class(cls):
-            if not hasattr(cls, '_old_init'):
+            if not hasattr(cls, "_old_init"):
                 raise AttributeError(
                     f"_old_init is not found in the {cls.__name__}, please make sure that you have imported {cls.__name__} before entering the context."
                 )
             cls.__init__ = cls._old_init
 
         # Replace .__init__() for all existing subclasses of torch.nn.Module
-        substitute_init_recursively(torch.nn.modules.module.Module, _disable_class, set())
+        substitute_init_recursively(
+            torch.nn.modules.module.Module, _disable_class, set()
+        )
 
         # Replace .__init__() for future subclasses of torch.nn.Module
-        torch.nn.modules.module.Module.__init_subclass__ = (torch.nn.modules.module.Module._old_init_subclass)
+        torch.nn.modules.module.Module.__init_subclass__ = (
+            torch.nn.modules.module.Module._old_init_subclass
+        )
 
         self._post_context_exec()
         # Now that we cleaned up the metaclass injection, raise the exception.

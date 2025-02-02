@@ -20,7 +20,6 @@ class ForwardBackward:
     def forward_timestamp(self) -> List[List[float]]:
         return self._merge_intervals(self.forward)
 
-
     @property
     def backward_timestamp(self) -> List[List[float]]:
         return self._merge_intervals(self.backward)
@@ -101,7 +100,9 @@ class Operators:
 
         return _ops_nodes, _sequences
 
-    def search_ops_in_time_range(self, start: Union[int, float], end: Union[int, float]) -> List[OperatorNode]:
+    def search_ops_in_time_range(
+        self, start: Union[int, float], end: Union[int, float]
+    ) -> List[OperatorNode]:
         """The function is built upon the binary search algorithm to find all the operator nodes within a specified time range.
 
         Args:

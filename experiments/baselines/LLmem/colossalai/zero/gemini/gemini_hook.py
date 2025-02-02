@@ -40,7 +40,11 @@ class GeminiZeROHook(ColoParamOpHook):
     def post_op(self, params):
         params = [p for p in params if not is_ddp_ignored(p)]
         for p in params:
-            tensor_state = TensorState.HOLD if self._training_phase == TrainingPhase.FORWARD or not p.requires_grad else TensorState.HOLD_AFTER_BWD
+            tensor_state = (
+                TensorState.HOLD
+                if self._training_phase == TrainingPhase.FORWARD or not p.requires_grad
+                else TensorState.HOLD_AFTER_BWD
+            )
             self._chunk_manager.trans_tensor_state(p, tensor_state)
 
     def pre_forward(self, params: List[torch.Tensor]) -> None:
@@ -56,7 +60,9 @@ class GeminiZeROHook(ColoParamOpHook):
         self.post_op(params)
 
     @contextmanager
-    def switch_training_phase(self, training_phase: TrainingPhase = TrainingPhase.BACKWARD):
+    def switch_training_phase(
+        self, training_phase: TrainingPhase = TrainingPhase.BACKWARD
+    ):
         old_training_phase = self._training_phase
         try:
             self._training_phase = training_phase
@@ -65,4 +71,6 @@ class GeminiZeROHook(ColoParamOpHook):
             self._training_phase = old_training_phase
 
     switch_to_backward = switch_training_phase
-    switch_to_forward = partial(switch_to_backward, training_phase=TrainingPhase.FORWARD)
+    switch_to_forward = partial(
+        switch_to_backward, training_phase=TrainingPhase.FORWARD
+    )

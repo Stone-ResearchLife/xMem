@@ -8,25 +8,43 @@ import torch.nn as nn
 from torch.nn.modules.module import _addindent
 
 try:
-    from torch.fx.graph import Graph, PythonCode, _custom_builtins, _is_from_torch, _PyTreeCodeGen
-    from torch.fx.graph_module import GraphModule, _EvalCacheLoader, _exec_with_source, _forward_from_src, _WrappedCall
+    from torch.fx.graph import (
+        Graph,
+        PythonCode,
+        _custom_builtins,
+        _is_from_torch,
+        _PyTreeCodeGen,
+    )
+    from torch.fx.graph_module import (
+        GraphModule,
+        _EvalCacheLoader,
+        _exec_with_source,
+        _forward_from_src,
+        _WrappedCall,
+    )
 
-    from colossalai.fx.codegen.activation_checkpoint_codegen import ActivationCheckpointCodeGen
+    from colossalai.fx.codegen.activation_checkpoint_codegen import (
+        ActivationCheckpointCodeGen,
+    )
+
     COLOGM = True
 except:
     from torch.fx.graph import Graph
     from torch.fx.graph_module import GraphModule
+
     COLOGM = False
 
 if COLOGM:
 
     class ColoGraphModule(GraphModule):
 
-        def __init__(self,
-                     root: Union[torch.nn.Module, Dict[str, Any]],
-                     graph: Graph,
-                     class_name: str = 'GraphModule',
-                     ckpt_codegen: bool = True):
+        def __init__(
+            self,
+            root: Union[torch.nn.Module, Dict[str, Any]],
+            graph: Graph,
+            class_name: str = "GraphModule",
+            ckpt_codegen: bool = True,
+        ):
             if ckpt_codegen:
                 graph.set_codegen(ActivationCheckpointCodeGen())
             super().__init__(root, graph, class_name)
@@ -45,7 +63,11 @@ if COLOGM:
             ckpt_code = "\n".join(ckpt_def)
             globals_copy = globals.copy()
             _exec_with_source(ckpt_code, globals_copy)
-            func_list = [func for func in globals_copy.keys() if "checkpoint" in func or "pack" in func]
+            func_list = [
+                func
+                for func in globals_copy.keys()
+                if "checkpoint" in func or "pack" in func
+            ]
             for func in func_list:
                 tmp_func = globals_copy[func]
                 setattr(self, func, tmp_func.__get__(self, self.__class__))
@@ -60,7 +82,7 @@ if COLOGM:
             if isinstance(self._graph._codegen, _PyTreeCodeGen):
                 self._in_spec = self._graph._codegen.pytree_info.in_spec
                 self._out_spec = self._graph._codegen.pytree_info.out_spec
-            python_code = self._graph.python_code(root_module='self')
+            python_code = self._graph.python_code(root_module="self")
             self._code = python_code.src
 
             # To split ckpt functions code and forward code
@@ -83,8 +105,8 @@ if COLOGM:
             # bypass patching of torch.nn.Module.__call__ done while symbolic tracing.
             cls_call = cls.__call__ if "__call__" in vars(cls) else None
 
-            if '_wrapped_call' not in vars(cls):
-                cls._wrapped_call = _WrappedCall(cls, cls_call)    # type: ignore[attr-defined]
+            if "_wrapped_call" not in vars(cls):
+                cls._wrapped_call = _WrappedCall(cls, cls_call)  # type: ignore[attr-defined]
 
             def call_wrapped(self, *args, **kwargs):
                 return self._wrapped_call(self, *args, **kwargs)
@@ -95,7 +117,9 @@ if COLOGM:
             self._code = python_code.src
             return python_code
 
-        def to_folder(self, folder: Union[str, os.PathLike], module_name: str = "FxModule"):
+        def to_folder(
+            self, folder: Union[str, os.PathLike], module_name: str = "FxModule"
+        ):
             """Dumps out module to ``folder`` with ``module_name`` so that it can be
             imported with ``from <folder> import <module_name>``
 
@@ -108,7 +132,7 @@ if COLOGM:
             """
             folder = Path(folder)
             Path(folder).mkdir(exist_ok=True)
-            torch.save(self.state_dict(), folder / 'state_dict.pt')
+            torch.save(self.state_dict(), folder / "state_dict.pt")
             tab = " " * 4
 
             # we add import colossalai here
@@ -123,9 +147,17 @@ class {module_name}(torch.nn.Module):
         super().__init__()
 """
 
-            def _gen_model_repr(module_name: str, module: torch.nn.Module) -> Optional[str]:
+            def _gen_model_repr(
+                module_name: str, module: torch.nn.Module
+            ) -> Optional[str]:
                 safe_reprs = [
-                    nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d, nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d
+                    nn.Linear,
+                    nn.Conv1d,
+                    nn.Conv2d,
+                    nn.Conv3d,
+                    nn.BatchNorm1d,
+                    nn.BatchNorm2d,
+                    nn.BatchNorm3d,
                 ]
                 if type(module) in safe_reprs:
                     return f"{module.__repr__()}"
@@ -136,10 +168,12 @@ class {module_name}(torch.nn.Module):
             for module_name, module in self.named_children():
                 module_str = _gen_model_repr(module_name, module)
                 if module_str is None:
-                    module_file = folder / f'{module_name}.pt'
+                    module_file = folder / f"{module_name}.pt"
                     torch.save(module, module_file)
                     blobified_modules.append(module_name)
-                    module_repr = module.__repr__().replace('\r', ' ').replace('\n', ' ')
+                    module_repr = (
+                        module.__repr__().replace("\r", " ").replace("\n", " ")
+                    )
                     module_str = f"torch.load(r'{module_file}') # {module_repr}"
                 model_str += f"{tab*2}self.{module_name} = {module_str}\n"
 
@@ -153,22 +187,31 @@ class {module_name}(torch.nn.Module):
                     continue
                 model_str += f"{tab*2}self.{param_name} = torch.nn.Parameter(torch.empty({list(param.shape)}, dtype={param.dtype}))\n"
 
-            model_str += f"{tab*2}self.load_state_dict(torch.load(r'{folder}/state_dict.pt'))\n"
+            model_str += (
+                f"{tab*2}self.load_state_dict(torch.load(r'{folder}/state_dict.pt'))\n"
+            )
             model_str += f"{_addindent(self.code, 4)}\n"
 
-            module_file = folder / 'module.py'
+            module_file = folder / "module.py"
             module_file.write_text(model_str)
 
-            init_file = folder / '__init__.py'
-            init_file.write_text('from .module import *')
+            init_file = folder / "__init__.py"
+            init_file.write_text("from .module import *")
 
             if len(blobified_modules) > 0:
-                warnings.warn("Was not able to save the following children modules as reprs -"
-                              f"saved as pickled files instead: {blobified_modules}")
+                warnings.warn(
+                    "Was not able to save the following children modules as reprs -"
+                    f"saved as pickled files instead: {blobified_modules}"
+                )
 
 else:
 
     class ColoGraphModule(GraphModule):
 
-        def __init__(self, root: Union[torch.nn.Module, Dict[str, Any]], graph: Graph, class_name: str = 'GraphModule'):
+        def __init__(
+            self,
+            root: Union[torch.nn.Module, Dict[str, Any]],
+            graph: Graph,
+            class_name: str = "GraphModule",
+        ):
             super().__init__(root, graph, class_name)

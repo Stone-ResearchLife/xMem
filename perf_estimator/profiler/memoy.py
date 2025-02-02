@@ -27,7 +27,7 @@ class MemoryBlock(AbstractMemoryBlock):
     @property
     def free_time(self) -> Optional[int]:
         return self._end.end_time if self._end is not None else None
-    
+
     @property
     def is_freed(self) -> bool:
         return self._end is not None
@@ -54,15 +54,17 @@ class MemoryBlock(AbstractMemoryBlock):
 
     @property
     def duration(self) -> Optional[int]:
-        return (self.free_time - self.alloc_time) if self.free_time is not None else None
+        return (
+            (self.free_time - self.alloc_time) if self.free_time is not None else None
+        )
 
     def __repr__(self):
         if self.is_forward:
-            _mem_type = 'forward'
+            _mem_type = "forward"
         elif self.is_backward:
-            _mem_type = 'backward'
+            _mem_type = "backward"
         else:
-            _mem_type = 'other'
+            _mem_type = "other"
         return f"Memory({_mem_type}|{self.address}|{'free' if self.is_freed else 'persis'}): Bytes:{self.bytes}, Start:{self.alloc_time}, End:{self.free_time}, Comments: {' '.join(self.comments)}"
 
     def set_forward(self):
@@ -75,9 +77,13 @@ class MemoryBlock(AbstractMemoryBlock):
 
     def set_free_node(self, node: CpuInstantNode):
         if str(node.address) != self.address:
-            raise ValueError("The address of the free node is not the same as the current block.")
+            raise ValueError(
+                "The address of the free node is not the same as the current block."
+            )
         if self.bytes != (node.bytes * -1):
-            raise ValueError("The amount of memory freed is not the same as the current block.")
+            raise ValueError(
+                "The amount of memory freed is not the same as the current block."
+            )
         self._end = node
 
 
@@ -117,7 +123,9 @@ class MemoryActivity:
 
         return _activities
 
-    def search_activities_in_time_range(self, start: Union[int, float], end: Union[int, float]) -> List[MemoryBlock]:
+    def search_activities_in_time_range(
+        self, start: Union[int, float], end: Union[int, float]
+    ) -> List[MemoryBlock]:
         """The function is built upon the binary search algorithm to find all the operator nodes within a specified time range.
 
         Args:

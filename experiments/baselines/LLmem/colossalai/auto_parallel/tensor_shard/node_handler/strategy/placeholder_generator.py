@@ -10,7 +10,7 @@ from colossalai.device.device_mesh import DeviceMesh
 
 from .strategy_generator import StrategyGenerator
 
-__all__ = ['PlaceholderGenerator']
+__all__ = ["PlaceholderGenerator"]
 
 
 class PlaceholderGenerator(StrategyGenerator):
@@ -18,8 +18,12 @@ class PlaceholderGenerator(StrategyGenerator):
     PlaceholderGenerator is a generic class to generate strategies for placeholder node.
     """
 
-    def __init__(self, operation_data_mapping: Dict[str, OperationData], device_mesh: DeviceMesh,
-                 placeholder_option: str):
+    def __init__(
+        self,
+        operation_data_mapping: Dict[str, OperationData],
+        device_mesh: DeviceMesh,
+        placeholder_option: str,
+    ):
         super().__init__(operation_data_mapping, device_mesh)
         self.placeholder_option = placeholder_option
 
@@ -31,10 +35,12 @@ class PlaceholderGenerator(StrategyGenerator):
         strategy.compute_cost = compute_cost
 
     def update_memory_cost(self, strategy: ShardingStrategy):
-        '''
+        """
         Compute the memory cost per device with this specific strategy.
-        '''
-        forward_size_mapping = {'output': self._compute_size_in_bytes(strategy, "output")}
+        """
+        forward_size_mapping = {
+            "output": self._compute_size_in_bytes(strategy, "output")
+        }
 
         # compute fwd cost incurred
         # fwd_cost = output
@@ -45,7 +51,9 @@ class PlaceholderGenerator(StrategyGenerator):
 
         # compute total cost
         total_mem_cost = MemoryCost(activation=fwd_activation_cost, parameter=0)
-        memory_cost = TrainCycleItem(fwd=fwd_mem_cost, bwd=bwd_mem_cost, total=total_mem_cost)
+        memory_cost = TrainCycleItem(
+            fwd=fwd_mem_cost, bwd=bwd_mem_cost, total=total_mem_cost
+        )
         strategy.memory_cost = memory_cost
 
     def replica_placeholder(self) -> ShardingStrategy:
@@ -56,13 +64,17 @@ class PlaceholderGenerator(StrategyGenerator):
             "output": {},
         }
         communication_action_mapping = {}
-        sharding_spec_mapping = self.to_sharding_spec_mapping(dim_partition_dict_mapping)
+        sharding_spec_mapping = self.to_sharding_spec_mapping(
+            dim_partition_dict_mapping
+        )
 
-        name = 'Replica Placeholder'
+        name = "Replica Placeholder"
 
-        strategy = self.get_sharding_strategy(name=name,
-                                              sharding_spec_mapping=sharding_spec_mapping,
-                                              communication_action_mapping=communication_action_mapping)
+        strategy = self.get_sharding_strategy(
+            name=name,
+            sharding_spec_mapping=sharding_spec_mapping,
+            communication_action_mapping=communication_action_mapping,
+        )
 
         return strategy
 
@@ -71,29 +83,33 @@ class PlaceholderGenerator(StrategyGenerator):
         Generate distributed strategy for placeholder node.
         """
         dim_partition_dict_mapping = {
-            "output": {
-                0: mesh_list
-            },
+            "output": {0: mesh_list},
         }
         communication_action_mapping = {}
-        sharding_spec_mapping = self.to_sharding_spec_mapping(dim_partition_dict_mapping)
+        sharding_spec_mapping = self.to_sharding_spec_mapping(
+            dim_partition_dict_mapping
+        )
 
-        name = 'Distributed Placeholder'
+        name = "Distributed Placeholder"
 
-        strategy = self.get_sharding_strategy(name=name,
-                                              sharding_spec_mapping=sharding_spec_mapping,
-                                              communication_action_mapping=communication_action_mapping)
+        strategy = self.get_sharding_strategy(
+            name=name,
+            sharding_spec_mapping=sharding_spec_mapping,
+            communication_action_mapping=communication_action_mapping,
+        )
 
         return strategy
 
     def collate_strategies(self) -> List[ShardingStrategy]:
         strategy_list = []
-        if self.placeholder_option == 'distributed':
+        if self.placeholder_option == "distributed":
             mesh_list = [0, 1]
             distributed_strategy = self.distributed_placeholder(mesh_list)
             strategy_list.append(distributed_strategy)
         else:
-            assert self.placeholder_option == 'replicated', f'placeholder_option {self.placeholder_option} is not supported'
+            assert (
+                self.placeholder_option == "replicated"
+            ), f"placeholder_option {self.placeholder_option} is not supported"
             replicated_strategy = self.replica_placeholder()
             strategy_list.append(replicated_strategy)
 

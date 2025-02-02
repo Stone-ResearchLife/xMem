@@ -6,7 +6,7 @@ from torch.fx.proxy import Attribute, Proxy
 
 from colossalai.fx.tracer.meta_patch import meta_patched_function
 
-__all__ = ['ColoProxy']
+__all__ = ["ColoProxy"]
 
 
 class ColoProxy(Proxy):
@@ -39,11 +39,12 @@ class ColoProxy(Proxy):
         return self._meta_data is not None
 
     def _assert_meta_data_is_tensor(self):
-        assert torch.is_tensor(
-            self._meta_data) and self._meta_data.is_meta, f'Meta data is not a meta tensor for {self.node.name}'
+        assert (
+            torch.is_tensor(self._meta_data) and self._meta_data.is_meta
+        ), f"Meta data is not a meta tensor for {self.node.name}"
 
     def _assert_has_meta_data(self):
-        assert self._meta_data is not None, f'Meta data is not set for {self.node.name}'
+        assert self._meta_data is not None, f"Meta data is not set for {self.node.name}"
 
     def __len__(self):
         self._assert_has_meta_data()
@@ -102,7 +103,9 @@ class ColoAttribute(ColoProxy):
     @property
     def node(self):
         if self._node is None:
-            proxy = self.tracer.create_proxy("call_function", getattr, (self.root, self.attr), {})
+            proxy = self.tracer.create_proxy(
+                "call_function", getattr, (self.root, self.attr), {}
+            )
             if not isinstance(proxy, ColoProxy):
                 meta_args, meta_kwargs = extract_meta(*(self.root, self.attr))
                 meta_out = getattr(*meta_args, **meta_kwargs)
@@ -113,7 +116,9 @@ class ColoAttribute(ColoProxy):
         return self._node
 
     def __call__(self, *args, **kwargs):
-        proxy = self.tracer.create_proxy("call_method", self.attr, (self.root,) + args, kwargs)
+        proxy = self.tracer.create_proxy(
+            "call_method", self.attr, (self.root,) + args, kwargs
+        )
         if not isinstance(proxy, ColoProxy):
             meta_args, meta_kwargs = extract_meta(*((self.root,) + args), **kwargs)
             method = getattr(meta_args[0].__class__, self.attr)

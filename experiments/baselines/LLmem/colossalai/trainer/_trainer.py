@@ -151,7 +151,12 @@ class Trainer:
     @staticmethod
     def _should_display_progress(display_progress: bool):
         """Only display progress on DP rank 0, TP rank 0 and PP last rank"""
-        return (display_progress and is_dp_rank_0() and is_tp_rank_0() and is_no_pp_or_last_stage())
+        return (
+            display_progress
+            and is_dp_rank_0()
+            and is_tp_rank_0()
+            and is_no_pp_or_last_stage()
+        )
 
     def _train_epoch(
         self,
@@ -290,11 +295,14 @@ class Trainer:
         # reset hooks
         self._reset_states()
         if hooks is not None:
-            assert isinstance(hooks, list), f"expected argument hooks be to list, but got {type(hooks)}"
+            assert isinstance(
+                hooks, list
+            ), f"expected argument hooks be to list, but got {type(hooks)}"
 
             for hook in hooks:
-                assert isinstance(hook, BaseHook), \
-                    f'expected the hook to be of type BaseHook, but got {type(hook)}'
+                assert isinstance(
+                    hook, BaseHook
+                ), f"expected the hook to be of type BaseHook, but got {type(hook)}"
         else:
             hooks = []
         self.hooks = hooks
@@ -305,7 +313,9 @@ class Trainer:
                     f"Using {hook.__class__.__name__} for training, priority = {hook.priority}",
                     ranks=[0],
                 )
-            self._logger.info("Lower value means higher priority for calling hook function", ranks=[0])
+            self._logger.info(
+                "Lower value means higher priority for calling hook function", ranks=[0]
+            )
         self._call_hooks("after_hook_is_attached")
 
         self._engine.train()
@@ -368,7 +378,9 @@ class Trainer:
         # reset hooks
         self._reset_states()
         if hooks is not None:
-            assert isinstance(hooks, list), f"expected argument hooks be to list, but got {type(hooks)}"
+            assert isinstance(
+                hooks, list
+            ), f"expected argument hooks be to list, but got {type(hooks)}"
         else:
             hooks = []
         self.hooks = hooks
@@ -379,7 +391,9 @@ class Trainer:
                     f"Using {hook.__class__.__name__} for training, priority = {hook.priority}",
                     ranks=[0],
                 )
-            self._logger.info("Lower value means higher priority for calling hook function", ranks=[0])
+            self._logger.info(
+                "Lower value means higher priority for calling hook function", ranks=[0]
+            )
         self._call_hooks("after_hook_is_attached")
 
         # eval
@@ -405,5 +419,7 @@ class Trainer:
         # for compatibility with schedule
         simple_dataloader = [(data, None)]
         data_iter = iter(simple_dataloader)
-        output, _, _ = self.engine.execute_schedule(data_iter, forward_only=True, return_loss=False)
+        output, _, _ = self.engine.execute_schedule(
+            data_iter, forward_only=True, return_loss=False
+        )
         return output

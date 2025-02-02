@@ -43,13 +43,15 @@ def torch_where(condition: torch.Tensor, x: Any, y: Any) -> Tuple[int, int]:
 
 
 @meta_profiler_function.register(torch.max)
-def torch_max(input: torch.Tensor,
-              dim: int = None,
-              keepdim: bool = False,
-              *,
-              out: Optional[torch.Tensor] = None) -> Tuple[int, int]:
+def torch_max(
+    input: torch.Tensor,
+    dim: int = None,
+    keepdim: bool = False,
+    *,
+    out: Optional[torch.Tensor] = None
+) -> Tuple[int, int]:
     macs = 0
-    assert out is None, 'assigning value to out is not supported yet'
+    assert out is None, "assigning value to out is not supported yet"
     if dim is not None:
         shape = list(input.shape)
         shape.pop(int(dim))

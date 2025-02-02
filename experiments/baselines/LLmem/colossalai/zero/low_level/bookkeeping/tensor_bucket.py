@@ -26,8 +26,10 @@ class TensorBucket:
         tensor_size = tensor.numel()
 
         if not allow_oversize and self.will_exceed_max_size(tensor_size):
-            msg = f"The param bucket max size {self._max_size} is exceeded" \
+            msg = (
+                f"The param bucket max size {self._max_size} is exceeded"
                 + f"by tensor (size {tensor_size})"
+            )
             raise RuntimeError(msg)
 
         self._bucket.append(tensor)

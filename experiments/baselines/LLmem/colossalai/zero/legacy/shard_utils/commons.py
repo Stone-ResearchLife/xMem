@@ -3,7 +3,9 @@ from typing import Tuple
 import torch
 
 
-def get_shard(tensor: torch.Tensor, rank: int, world_size: int) -> Tuple[torch.Tensor, int]:
+def get_shard(
+    tensor: torch.Tensor, rank: int, world_size: int
+) -> Tuple[torch.Tensor, int]:
     """Return the local shard of a full tensor."""
     # Shard using torch.chunk to match all-gather/reduce-scatter.
     chunks = list(torch.flatten(tensor).chunk(world_size))

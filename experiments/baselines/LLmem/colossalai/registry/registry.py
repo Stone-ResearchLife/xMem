@@ -6,7 +6,7 @@ from typing import List
 
 
 class Registry:
-    """This is a registry class used to register classes and modules so that a universal 
+    """This is a registry class used to register classes and modules so that a universal
     object builder can be enabled.
 
     Args:
@@ -35,14 +35,16 @@ class Registry:
             AssertionError: Raises an AssertionError if the module has already been registered before.
         """
         module_name = module_class.__name__
-        assert module_name not in self._registry, f"{module_name} not found in {self.name}"
+        assert (
+            module_name not in self._registry
+        ), f"{module_name} not found in {self.name}"
         self._registry[module_name] = module_class
 
         # return so as to use it normally if via importing
         return module_class
 
     def get_module(self, module_name: str):
-        """Retrieves a module with name `module_name` and returns the module if it has 
+        """Retrieves a module with name `module_name` and returns the module if it has
         already been registered before.
 
         Args:
@@ -59,7 +61,9 @@ class Registry:
             for lib in self._third_party_lib:
                 if hasattr(lib, module_name):
                     return getattr(lib, module_name)
-            raise NameError(f'Module {module_name} not found in the registry {self.name}')
+            raise NameError(
+                f"Module {module_name} not found in the registry {self.name}"
+            )
 
     def has(self, module_name: str):
         """Searches for a module with name `module_name` and returns a boolean value indicating

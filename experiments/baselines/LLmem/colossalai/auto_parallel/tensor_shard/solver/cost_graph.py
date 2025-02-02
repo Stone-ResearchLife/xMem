@@ -4,7 +4,7 @@ from colossalai.auto_parallel.tensor_shard.constants import INFINITY_COST
 
 
 class CostGraph:
-    '''
+    """
     A graph data structure to simplify the edge cost graph. It has two main functions:
     1. To feed the quadratic resharding costs into solver, we need to linearize it. We build edge_cost in
     CostGraph, and it stored every combinations of strategies for a src-dst node pair in an 1D list.
@@ -15,13 +15,18 @@ class CostGraph:
     Argument:
         leaf_strategies(List[StrategiesVector]): It stores StrategiesVector of every nodes on the graph.
         simplify(bool, optional): The generated cost graph will be simplified if it is true. (default to True)
-    '''
+    """
 
     def __init__(self, leaf_strategies, simplify=True, forward_only=False):
         self.leaf_strategies = leaf_strategies
-        self.nodes = [strategies_vector.node for strategies_vector in self.leaf_strategies]
+        self.nodes = [
+            strategies_vector.node for strategies_vector in self.leaf_strategies
+        ]
         # stores number of strategies in each node
-        self.node_lens = {strategies_vector.node: len(strategies_vector) for strategies_vector in self.leaf_strategies}
+        self.node_lens = {
+            strategies_vector.node: len(strategies_vector)
+            for strategies_vector in self.leaf_strategies
+        }
         # extra_node_costs will store the extra costs introduced by merging nodes
         self.extra_node_costs = {}
         self.following_dict = {}
@@ -39,10 +44,10 @@ class CostGraph:
             target_node_list.remove(element)
 
     def _build_cost_graph(self):
-        '''
+        """
         This method will generate edge_cost for adjacent node pair. Additionally, 'parents' and 'children' attribute will be
         set to node.
-        '''
+        """
         self.edge_costs = {}
         if self.simplify:
             self.merge_pair = []
@@ -56,7 +61,9 @@ class CostGraph:
                 edge_cost = {}
                 for i in range(len(strategies_vector)):
                     for j in range(len(src_node.strategies_vector)):
-                        resharding_cost_item = strategies_vector[i].resharding_costs[src_node][j]
+                        resharding_cost_item = strategies_vector[i].resharding_costs[
+                            src_node
+                        ][j]
                         if self.forward_only:
                             edge_cost[(j, i)] = resharding_cost_item.fwd
                         else:
@@ -84,8 +91,8 @@ class CostGraph:
                 if _check_tensor_in_node(node._meta_data):
                     children_nodes.append(node)
 
-            setattr(dst_node, 'parents', parent_nodes)
-            setattr(dst_node, 'children', children_nodes)
+            setattr(dst_node, "parents", parent_nodes)
+            setattr(dst_node, "children", children_nodes)
 
             if self.simplify and strategies_vector.check_merge():
                 for followed_node in strategies_vector.predecessor_nodes:
@@ -99,7 +106,7 @@ class CostGraph:
         return self.edge_costs[(src_node, dst_node)]
 
     def merge_node(self, src_node, dst_node):
-        '''
+        """
         To merge dst_node into src_node, we need to do it in following steps:
 
         1. For each strategy in dst_node, we need to pick an appropriate strategy
@@ -119,14 +126,16 @@ class CostGraph:
         Argument:
             src_node(Node): The node will be merged into dst_node.
             dst_node(Node): The node to integrate src_node.
-        '''
+        """
         # build merge_map
         merge_map = {}
         for src_index, _ in enumerate(src_node.strategies_vector):
             min_cost = INFINITY_COST
             lowest_cost_index = -1
             for dst_index, dst_strategy in enumerate(dst_node.strategies_vector):
-                resharding_cost_item = dst_strategy.resharding_costs[src_node][src_index]
+                resharding_cost_item = dst_strategy.resharding_costs[src_node][
+                    src_index
+                ]
                 if self.forward_only:
                     resharding_cost = resharding_cost_item.fwd
                 else:
@@ -148,7 +157,9 @@ class CostGraph:
                 resharding_cost_to_add = resharding_cost_item.total
             self.extra_node_costs[src_node][src_index] += resharding_cost_to_add
             if dst_node in self.extra_node_costs:
-                self.extra_node_costs[src_node][src_index] += self.extra_node_costs[dst_node][target_strate_index]
+                self.extra_node_costs[src_node][src_index] += self.extra_node_costs[
+                    dst_node
+                ][target_strate_index]
 
         # add new node pair to cost graph
         for child_node in dst_node.children:
@@ -160,7 +171,9 @@ class CostGraph:
             for i in range(self.node_lens[src_node]):
                 for j in range(self.node_lens[child_node]):
                     dst_strate_index = merge_map[i]
-                    edge_cost[(i, j)] = self.edge_costs[old_node_pair][(dst_strate_index, j)]
+                    edge_cost[(i, j)] = self.edge_costs[old_node_pair][
+                        (dst_strate_index, j)
+                    ]
             if new_node_pair not in self.edge_costs:
                 self.edge_costs[new_node_pair] = edge_cost
             else:
@@ -196,7 +209,7 @@ class CostGraph:
         if not self.simplify:
             return
         self.merge_pair.reverse()
-        for (src_node, dst_node) in self.merge_pair:
+        for src_node, dst_node in self.merge_pair:
             self.merge_node(src_node, dst_node)
         self.merge_pair.reverse()
         reindexing_following_dict = {}

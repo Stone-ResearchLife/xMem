@@ -7,7 +7,7 @@ from .node_handler import NodeHandler
 from .registry import operator_registry
 from .strategy import SplitGenerator, StrategyGenerator
 
-__all__ = ['SplitHandler']
+__all__ = ["SplitHandler"]
 
 
 @operator_registry.register(torch.Tensor.split)
@@ -20,7 +20,9 @@ class SplitHandler(NodeHandler):
     def get_strategy_generator(self) -> List[StrategyGenerator]:
         op_data_mapping = self.get_operation_data_mapping()
         generators = []
-        generators.append(SplitGenerator(op_data_mapping, self.device_mesh, self.node.args[0]))
+        generators.append(
+            SplitGenerator(op_data_mapping, self.device_mesh, self.node.args[0])
+        )
         return generators
 
     def get_operation_data_mapping(self) -> Dict[str, OperationData]:
@@ -31,14 +33,16 @@ class SplitHandler(NodeHandler):
             data_type = OperationDataType.ARG
 
         input_data = self.node.args[0]._meta_data
-        physical_input_operand = OperationData(name=str(self.node.args[0]), type=data_type, data=input_data)
+        physical_input_operand = OperationData(
+            name=str(self.node.args[0]), type=data_type, data=input_data
+        )
         split_size = self.node.args[1]
         if len(self.node.args) == 3:
             # (input, split_size, split_dim)
             split_dim = self.node.args[2]
         else:
             if self.node.kwargs:
-                split_dim = self.node.kwargs['dim']
+                split_dim = self.node.kwargs["dim"]
             else:
                 split_dim = 0
 
@@ -48,15 +52,19 @@ class SplitHandler(NodeHandler):
             split_dim += num_dims
 
         split_info = (split_size, split_dim)
-        physical_shape_operand = OperationData(name='split_info', type=OperationDataType.ARG, data=split_info)
+        physical_shape_operand = OperationData(
+            name="split_info", type=OperationDataType.ARG, data=split_info
+        )
 
         output_data = self.node._meta_data
-        physical_output_operand = OperationData(name=str(self.node), type=OperationDataType.OUTPUT, data=output_data)
+        physical_output_operand = OperationData(
+            name=str(self.node), type=OperationDataType.OUTPUT, data=output_data
+        )
 
         mapping = {
             "input": physical_input_operand,
             "split_info": physical_shape_operand,
-            "output": physical_output_operand
+            "output": physical_output_operand,
         }
 
         return mapping

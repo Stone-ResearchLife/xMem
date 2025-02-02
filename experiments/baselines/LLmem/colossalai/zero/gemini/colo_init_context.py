@@ -11,7 +11,7 @@ from colossalai.utils.model.utils import InsertPostInitMethodToModuleSubClasses
 
 def _named_params_with_replica(
     module: nn.Module,
-    prefix: str = '',
+    prefix: str = "",
     recurse: bool = True,
 ) -> Iterator[Tuple[str, Union[nn.Parameter, ColoTensor]]]:
     modules = module.named_modules(prefix=prefix) if recurse else [(prefix, module)]
@@ -20,15 +20,17 @@ def _named_params_with_replica(
         for name, val in mod._parameters.items():
             if val is None:
                 continue
-            name = mod_prefix + ('.' if mod_prefix else '') + name
+            name = mod_prefix + ("." if mod_prefix else "") + name
             yield name, val
 
 
-def _convert_to_coloparam(param: torch.nn.Parameter,
-                          device: torch.device,
-                          dtype=torch.float,
-                          default_pg: Optional[ProcessGroup] = None,
-                          default_dist_spec: Optional[Any] = None) -> ColoParameter:
+def _convert_to_coloparam(
+    param: torch.nn.Parameter,
+    device: torch.device,
+    dtype=torch.float,
+    default_pg: Optional[ProcessGroup] = None,
+    default_dist_spec: Optional[Any] = None,
+) -> ColoParameter:
 
     if type(param) is ColoParameter:
         return param
@@ -39,7 +41,9 @@ def _convert_to_coloparam(param: torch.nn.Parameter,
     if param.device.type == "meta":
         colo_param = ColoParameter(param, requires_grad=requires_grad)
     else:
-        colo_param = ColoParameter(param.to(device=device, dtype=dtype), requires_grad=requires_grad)
+        colo_param = ColoParameter(
+            param.to(device=device, dtype=dtype), requires_grad=requires_grad
+        )
 
     # if default_shard_plan exists, shard the param during initialization.
     # This can reduce the model size after initialization.
@@ -67,14 +71,16 @@ def ColoModulize(module):
 
 class ColoInitContext(InsertPostInitMethodToModuleSubClasses):
 
-    def __init__(self,
-                 device: torch.device = torch.device('cpu'),
-                 dtype: torch.dtype = torch.float,
-                 default_pg: Optional[ProcessGroup] = None,
-                 embedding_dist_spec=None,
-                 linear_dist_spec=None,
-                 model_name='llama-7b',
-                 norm_sharding=False):
+    def __init__(
+        self,
+        device: torch.device = torch.device("cpu"),
+        dtype: torch.dtype = torch.float,
+        default_pg: Optional[ProcessGroup] = None,
+        embedding_dist_spec=None,
+        linear_dist_spec=None,
+        model_name="llama-7b",
+        norm_sharding=False,
+    ):
         """
         Args:
             device (torch.device): the device where parameters initialized are resident. Defaults to torch.device('cpu').
@@ -95,7 +101,12 @@ class ColoInitContext(InsertPostInitMethodToModuleSubClasses):
         self._norm_sharding = norm_sharding
 
     def _register_colo_modules(self, model_name):
-        from colossalai.nn.parallel.layers import ColoEmbedding, ColoLinear, register_colo_module
+        from colossalai.nn.parallel.layers import (
+            ColoEmbedding,
+            ColoLinear,
+            register_colo_module,
+        )
+
         register_colo_module(torch.nn.Linear, ColoLinear(model_name=model_name))
         register_colo_module(torch.nn.Embedding, ColoEmbedding())
 
@@ -112,17 +123,18 @@ class ColoInitContext(InsertPostInitMethodToModuleSubClasses):
             if type(param) is ColoParameter:
                 continue
 
-            split = name.rfind('.')
-            if split >= 0:    # param in submodule
+            split = name.rfind(".")
+            if split >= 0:  # param in submodule
                 module_name = name[:split]
-                param_name = name[split + 1:]
+                param_name = name[split + 1 :]
             else:
-                module_name = ''    # param in current module
+                module_name = ""  # param in current module
                 param_name = name
             name_list.append((module_name, param_name))
 
-        replaced_tensors = dict(
-        )    # record mapping between (torch.Tensor, ColoTensor) to distinguish the same reference
+        replaced_tensors = (
+            dict()
+        )  # record mapping between (torch.Tensor, ColoTensor) to distinguish the same reference
         for module_name, param_name in name_list:
             submodule = module.get_submodule(module_name)
             param = submodule.get_parameter(param_name)
@@ -130,25 +142,40 @@ class ColoInitContext(InsertPostInitMethodToModuleSubClasses):
             if param in replaced_tensors:
                 colo_param = replaced_tensors[param]
             else:
-                if param_name == 'bias':
+                if param_name == "bias":
                     colo_param = _convert_to_coloparam(param, self._device, self._dtype)
-                elif 'Embedding' in str(submodule.named_parameters):
-                    colo_param = _convert_to_coloparam(param, self._device, self._dtype, self._default_pg,
-                                                    self._embedding_dist_spec)
-                elif 'Linear' in str(submodule.named_parameters):
-                    colo_param = _convert_to_coloparam(param, self._device, self._dtype, self._default_pg,
-                                                    self._linear_dist_spec)
+                elif "Embedding" in str(submodule.named_parameters):
+                    colo_param = _convert_to_coloparam(
+                        param,
+                        self._device,
+                        self._dtype,
+                        self._default_pg,
+                        self._embedding_dist_spec,
+                    )
+                elif "Linear" in str(submodule.named_parameters):
+                    colo_param = _convert_to_coloparam(
+                        param,
+                        self._device,
+                        self._dtype,
+                        self._default_pg,
+                        self._linear_dist_spec,
+                    )
                 elif self._norm_sharding:
-                    colo_param = _convert_to_coloparam(param, self._device, self._dtype, self._default_pg,
-                                                    self._linear_dist_spec)
+                    colo_param = _convert_to_coloparam(
+                        param,
+                        self._device,
+                        self._dtype,
+                        self._default_pg,
+                        self._linear_dist_spec,
+                    )
                 else:
                     colo_param = _convert_to_coloparam(param, self._device, self._dtype)
                 replaced_tensors[param] = colo_param
-      
+
             delattr(submodule, param_name)
             setattr(submodule, param_name, colo_param)
             colo_param.shared_param_modules.append(submodule)
-            
+
         param_number = 0
         meta_param_number = 0
         buffer_number = 0
@@ -156,27 +183,33 @@ class ColoInitContext(InsertPostInitMethodToModuleSubClasses):
 
         for param in module.parameters():
             param_number += 1
-            meta_param_number += (param.device.type == 'meta')
+            meta_param_number += param.device.type == "meta"
 
         for buffer in module.buffers():
             buffer_number += 1
-            meta_buffer_number += (buffer.device.type == 'meta')
+            meta_buffer_number += buffer.device.type == "meta"
 
         if meta_param_number > 0 and meta_param_number != param_number:
-            raise ValueError("Meta parameters and valued parameters can not  be in the same model")
+            raise ValueError(
+                "Meta parameters and valued parameters can not  be in the same model"
+            )
         if meta_buffer_number > 0 and meta_buffer_number != buffer_number:
-            raise ValueError("Meta buffers and valued buffers can not be in the same model")
+            raise ValueError(
+                "Meta buffers and valued buffers can not be in the same model"
+            )
 
         if meta_buffer_number == 0:
             for buffer in module.buffers():
                 buffer.data = buffer.data.to(device=self._device)
 
 
-def post_process_colo_init_ctx(model: torch.nn.Module,
-                               device: torch.device = torch.device('cpu'),
-                               dtype: torch.dtype = torch.float,
-                               default_pg: Optional[ProcessGroup] = None,
-                               default_dist_spec=None):
+def post_process_colo_init_ctx(
+    model: torch.nn.Module,
+    device: torch.device = torch.device("cpu"),
+    dtype: torch.dtype = torch.float,
+    default_pg: Optional[ProcessGroup] = None,
+    default_dist_spec=None,
+):
     """post_process_colo_init_ctx
 
     This function is called after `ColoInitContext`.
@@ -198,13 +231,17 @@ def post_process_colo_init_ctx(model: torch.nn.Module,
             # print(f"{n} is not a ColoParameter. We are going to converting it to ColoParameter")
             torch_params.append((n, p))
 
-    for (n, param) in torch_params:
-        name_list = n.split('.')
+    for n, param in torch_params:
+        name_list = n.split(".")
         module = model
         for i in range(len(name_list) - 1):
             module = module._modules[name_list[i]]
         delattr(module, name_list[-1])
-        setattr(module, name_list[-1], _convert_to_coloparam(param, device, dtype, default_pg, default_dist_spec))
+        setattr(
+            module,
+            name_list[-1],
+            _convert_to_coloparam(param, device, dtype, default_pg, default_dist_spec),
+        )
 
     del torch_params
     for n, p in model.named_parameters():

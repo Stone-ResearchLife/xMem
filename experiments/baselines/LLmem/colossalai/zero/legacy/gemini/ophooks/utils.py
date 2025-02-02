@@ -38,7 +38,9 @@ def _apply_to_tensors_only(module, functional, backward_function, outputs):
     if type(outputs) is tuple:
         touched_outputs = []
         for output in outputs:
-            touched_output = _apply_to_tensors_only(module, functional, backward_function, output)
+            touched_output = _apply_to_tensors_only(
+                module, functional, backward_function, output
+            )
             touched_outputs.append(touched_output)
         return tuple(touched_outputs)
     elif type(outputs) is torch.Tensor:
@@ -84,16 +86,20 @@ class PostBackwardFunction(torch.autograd.Function):
         return (None, None) + args
 
 
-def register_ophooks_recursively(module: torch.nn.Module,
-                                 ophook_list: List[BaseOpHook],
-                                 name: str = "",
-                                 filter_fn: Optional[Callable] = None):
+def register_ophooks_recursively(
+    module: torch.nn.Module,
+    ophook_list: List[BaseOpHook],
+    name: str = "",
+    filter_fn: Optional[Callable] = None,
+):
     r"""Recursively register pre/post hooks for all submodules in the module in FWD and BWD."""
     assert isinstance(module, torch.nn.Module)
     assert isinstance(ophook_list, (list, tuple))
-    assert len(ophook_list) > 0, 'expected at least 1 hook in the argument ophook_list but found 0'
+    assert (
+        len(ophook_list) > 0
+    ), "expected at least 1 hook in the argument ophook_list but found 0"
     for hook in ophook_list:
-        assert (isinstance(hook, BaseOpHook))
+        assert isinstance(hook, BaseOpHook)
 
     # Add hooks for submodules
     for child_name, child in module.named_children():
@@ -124,7 +130,9 @@ def register_ophooks_recursively(module: torch.nn.Module,
                 assert isinstance(submodule, torch.nn.Module)
                 hook.pre_bwd_exec(submodule, inputs, output)
 
-        return _apply_to_tensors_only(submodule, PreBackwardFunction, _run_before_backward_function, output)
+        return _apply_to_tensors_only(
+            submodule, PreBackwardFunction, _run_before_backward_function, output
+        )
 
     def _post_backward_module_hook(submodule, inputs):
 
@@ -133,7 +141,9 @@ def register_ophooks_recursively(module: torch.nn.Module,
                 assert isinstance(submodule, torch.nn.Module)
                 hook.post_bwd_exec(submodule, inputs)
 
-        return _apply_to_tensors_only(submodule, PostBackwardFunction, _run_after_backward_function, inputs)
+        return _apply_to_tensors_only(
+            submodule, PostBackwardFunction, _run_after_backward_function, inputs
+        )
 
     module.register_forward_pre_hook(_pre_forward_module_hook)
     module.register_forward_hook(_post_forward_module_hook)

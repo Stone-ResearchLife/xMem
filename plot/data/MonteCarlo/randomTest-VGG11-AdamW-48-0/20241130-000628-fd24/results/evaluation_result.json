@@ -1,79 +1,79 @@
 {
-    "solution": {
-        "runtime": 0.7877891063690186,
-        "memory": 3667918848,
-        "oom": false,
-        "ground": 2701131776,
-        "error": 0.3579192546583851,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 0.1865671641791045
-        }
+  "config": {
+    "dataset": {
+      "shuffle": true
     },
-    "dnnmem": {
-        "runtime": 15.071016788482666,
-        "memory": 1488977920,
-        "oom": false,
-        "ground": 2701131776,
-        "error": 0.44875776397515527,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": true,
-            "error": null
-        }
-    },
-    "schedtune": {
-        "runtime": 0.36293888092041016,
-        "memory": 4031764234.24,
-        "oom": false,
-        "ground": 2701131776,
-        "error": 0.49262034152605516,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 0.31317964473057314
-        }
-    },
-    "llmem": {
-        "runtime": 2.926609754562378,
-        "memory": 3408920576.0,
-        "oom": false,
-        "ground": 2701131776,
-        "error": 0.2620341614906832,
-        "real_oom": false,
-        "correct_estimation": true,
-        "2nd verification": {
-            "oom": false,
-            "error": 0.11031420765027322
-        }
-    },
-    "train info": {
-        "model": "VGG11",
-        "batch_size": 48,
-        "target_iteration": 2,
-        "optimiser": "AdamW",
-        "device": 0,
-        "verification": 1.0,
-        "input_size": 86,
-        "zero_grad_mode": 0,
-        "total_gpu_memory": 11.40625,
-        "used_gpu_memory": 0.2197265625
-    },
-    "config": {
-        "name": "DL-Estimator",
-        "debug": false,
-        "save2tmp": false,
-        "run_id": "20241130-000628-fd24",
-        "dataset": {
-            "shuffle": true
-        },
-        "trainer": {
-            "lr": 0.001,
-            "epochs": 1
-        }
+    "debug": false,
+    "name": "DL-Estimator",
+    "run_id": "20241130-000628-fd24",
+    "save2tmp": false,
+    "trainer": {
+      "epochs": 1,
+      "lr": 0.001
     }
+  },
+  "dnnmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.44875776397515527,
+    "ground": 2701131776,
+    "memory": 1488977920,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 15.071016788482666
+  },
+  "llmem": {
+    "2nd verification": {
+      "error": 0.11031420765027322,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.2620341614906832,
+    "ground": 2701131776,
+    "memory": 3408920576.0,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 2.926609754562378
+  },
+  "schedtune": {
+    "2nd verification": {
+      "error": 0.31317964473057314,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.49262034152605516,
+    "ground": 2701131776,
+    "memory": 4031764234.24,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 0.36293888092041016
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.1865671641791045,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.3579192546583851,
+    "ground": 2701131776,
+    "memory": 3667918848,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 0.7877891063690186
+  },
+  "train info": {
+    "batch_size": 48,
+    "device": 0,
+    "input_size": 86,
+    "model": "VGG11",
+    "optimiser": "AdamW",
+    "target_iteration": 2,
+    "total_gpu_memory": 11.40625,
+    "used_gpu_memory": 0.2197265625,
+    "verification": 1.0,
+    "zero_grad_mode": 0
+  }
 }

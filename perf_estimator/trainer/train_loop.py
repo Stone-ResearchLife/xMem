@@ -4,17 +4,17 @@ from .plugins import InterfacePlugin
 
 
 def conv_train_loop(
-        model: torch.nn.Module,
-        data_loader: torch.utils.data.DataLoader,
-        epochs: int,
-        device: torch.device,
-        batch_size: int = None,
-        iterations: Optional[int] = None,
-        loss: Optional[torch.nn.Module] = None,
-        lr: float = 0.001,
-        plugins: List[InterfacePlugin] = [],
-        optimizer: torch.optim.Optimizer = None,
-        zero_grad_mode: int = 1
+    model: torch.nn.Module,
+    data_loader: torch.utils.data.DataLoader,
+    epochs: int,
+    device: torch.device,
+    batch_size: int = None,
+    iterations: Optional[int] = None,
+    loss: Optional[torch.nn.Module] = None,
+    lr: float = 0.001,
+    plugins: List[InterfacePlugin] = [],
+    optimizer: torch.optim.Optimizer = None,
+    zero_grad_mode: int = 1,
 ):
     """
     Examples:
@@ -49,7 +49,9 @@ def conv_train_loop(
                     optimizer.step()
                 _, preds = torch.max(outputs, 1)
                 scheduler.step()
-                print(f"Epoch: {epoch}/{index}, learning rate: {scheduler.get_last_lr()}")
+                print(
+                    f"Epoch: {epoch}/{index}, learning rate: {scheduler.get_last_lr()}"
+                )
 
                 if iterations is not None and index >= iterations:
                     break

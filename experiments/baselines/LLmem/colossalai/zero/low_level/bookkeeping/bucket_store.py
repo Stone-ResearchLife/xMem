@@ -34,7 +34,9 @@ class BucketStore(BaseStore):
         param_list = self.get_param(reduce_rank)
         for param in param_list:
             # the param must have grad for reduction
-            assert param.grad is not None, f'Parameter of size ({param.size()}) has None grad, cannot be reduced'
+            assert (
+                param.grad is not None
+            ), f"Parameter of size ({param.size()}) has None grad, cannot be reduced"
         return [param.grad for param in param_list]
 
     def get_param(self, reduce_rank: int = None):

@@ -20,26 +20,42 @@ def get_timestamp_us():
 
 
 def generic_instant_event(name, pid, tid, timestamp, args):
-    return {'ph': 'i', 's': 't', 'name': name, 'pid': pid, 'tid': tid, 'ts': timestamp, 'args': args}
+    return {
+        "ph": "i",
+        "s": "t",
+        "name": name,
+        "pid": pid,
+        "tid": tid,
+        "ts": timestamp,
+        "args": args,
+    }
 
 
 class StatefulTensorMemoryEvent:
-    EVENT_NAME = '[statefulTensorMemory]'
+    EVENT_NAME = "[statefulTensorMemory]"
 
     def __init__(self, timestamp: int, device_type: DeviceType, bytes_: int) -> None:
         self.pid = os.getpid()
         self.tid = threading.get_ident()
         self.timestamp = timestamp
         self.device_type = device_type
-        self.device_id = torch.cuda.current_device() if device_type == DeviceType.CUDA else -1
+        self.device_id = (
+            torch.cuda.current_device() if device_type == DeviceType.CUDA else -1
+        )
         self.bytes = bytes_
 
     def state_dict(self):
-        return generic_instant_event(StatefulTensorMemoryEvent.EVENT_NAME, self.pid, self.tid, self.timestamp, {
-            'Device Type': self.device_type.value,
-            'Device Id': self.device_id,
-            'Bytes': self.bytes
-        })
+        return generic_instant_event(
+            StatefulTensorMemoryEvent.EVENT_NAME,
+            self.pid,
+            self.tid,
+            self.timestamp,
+            {
+                "Device Type": self.device_type.value,
+                "Device Id": self.device_id,
+                "Bytes": self.bytes,
+            },
+        )
 
 
 class StatefulTensorMemoryTracer:
@@ -49,12 +65,16 @@ class StatefulTensorMemoryTracer:
         self._tracing = False
 
     def sample(self):
-        cuda_mem = StatefulTensor.GST_MGR.total_mem['cuda']
-        cpu_mem = StatefulTensor.GST_MGR.total_mem['cpu']
+        cuda_mem = StatefulTensor.GST_MGR.total_mem["cuda"]
+        cpu_mem = StatefulTensor.GST_MGR.total_mem["cpu"]
         timestamp = get_timestamp_us()
         if self._tracing:
-            self.events.append(StatefulTensorMemoryEvent(timestamp, DeviceType.CUDA, cuda_mem))
-            self.events.append(StatefulTensorMemoryEvent(timestamp, DeviceType.CPU, cpu_mem))
+            self.events.append(
+                StatefulTensorMemoryEvent(timestamp, DeviceType.CUDA, cuda_mem)
+            )
+            self.events.append(
+                StatefulTensorMemoryEvent(timestamp, DeviceType.CPU, cpu_mem)
+            )
 
     def start_trace(self):
         self.events.clear()
@@ -129,5 +149,5 @@ class StatefulTensorMemoryProfilerExtention(ProfilerExtension):
             # self.hook_registered = False
 
     def extend_chrome_trace(self, trace: dict) -> dict:
-        trace['traceEvents'].extend(self.tracer.state_dict())
+        trace["traceEvents"].extend(self.tracer.state_dict())
         return trace

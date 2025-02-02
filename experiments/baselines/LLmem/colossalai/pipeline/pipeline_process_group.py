@@ -14,16 +14,20 @@ class PipelineProcessGroup:
     def __init__(self) -> None:
         self.is_initialize = False
 
-    def set_global_info(self,
-                        rank: int,
-                        world_size: int,
-                        dp_degree: int = 1,
-                        tp_degree: int = 1,
-                        num_worker_threads: int = 1,
-                        device: str = "cuda") -> None:
+    def set_global_info(
+        self,
+        rank: int,
+        world_size: int,
+        dp_degree: int = 1,
+        tp_degree: int = 1,
+        num_worker_threads: int = 1,
+        device: str = "cuda",
+    ) -> None:
 
         device_mesh_size = dp_degree * tp_degree
-        assert world_size % device_mesh_size == 0, "world_size must be the multiple of dp_degree * tp_degree !!!"
+        assert (
+            world_size % device_mesh_size == 0
+        ), "world_size must be the multiple of dp_degree * tp_degree !!!"
         self._num_worker_threads = num_worker_threads
 
         self._device_mesh_size = device_mesh_size
@@ -34,8 +38,14 @@ class PipelineProcessGroup:
         self.device = device
         self._stage_num = world_size // device_mesh_size
         self._pp_rank = rank // device_mesh_size
-        self._pp_ranks = [(rank % device_mesh_size) + i * device_mesh_size for i in range(self._stage_num)]
-        self._local_stage_ranks = [(rank // device_mesh_size * device_mesh_size) + i for i in range(device_mesh_size)]
+        self._pp_ranks = [
+            (rank % device_mesh_size) + i * device_mesh_size
+            for i in range(self._stage_num)
+        ]
+        self._local_stage_ranks = [
+            (rank // device_mesh_size * device_mesh_size) + i
+            for i in range(device_mesh_size)
+        ]
 
         # pp_ranks
         self._initialize_pp_process_group()
@@ -60,27 +70,38 @@ class PipelineProcessGroup:
         device = self.device
         world_size = self.get_world_size()
         rank = self.get_global_rank()
-        backend = 'nccl' if device == 'cuda' else 'gloo'
-        dist.init_process_group(backend, world_size=world_size, rank=rank, group_name='main_group')
+        backend = "nccl" if device == "cuda" else "gloo"
+        dist.init_process_group(
+            backend, world_size=world_size, rank=rank, group_name="main_group"
+        )
 
     def _initialize_pp_process_group(self) -> None:
         rank = self.get_global_rank()
         world_size = self.get_world_size()
 
         # build rpc connection
-        options = rpc.TensorPipeRpcBackendOptions(num_worker_threads=self._num_worker_threads)
+        options = rpc.TensorPipeRpcBackendOptions(
+            num_worker_threads=self._num_worker_threads
+        )
 
         for pp_rank in self._pp_ranks:
-            options.set_device_map(f'work{pp_rank}', {rank: pp_rank})
+            options.set_device_map(f"work{pp_rank}", {rank: pp_rank})
 
-        rpc.init_rpc(name=f'work{rank}', rank=rank, world_size=world_size, rpc_backend_options=options)
+        rpc.init_rpc(
+            name=f"work{rank}",
+            rank=rank,
+            world_size=world_size,
+            rpc_backend_options=options,
+        )
 
     def _initialize_tp_dp_process_group(self) -> None:
         rank = self.get_global_rank()
         local_stage_ranks = self.get_local_stage_global_ranks()
         dp_degree = self.get_dp_degree()
         tp_degree = self.get_tp_degree()
-        self._tp_dp_process_group = ProcessGroup(rank, local_stage_ranks, tp_degree, dp_degree)
+        self._tp_dp_process_group = ProcessGroup(
+            rank, local_stage_ranks, tp_degree, dp_degree
+        )
 
     def get_global_rank(self):
         return self._rank
@@ -118,13 +139,17 @@ class PipelineProcessGroup:
     def get_prev_pp_rank(self) -> int:
         prev_pp_rank = self._pp_rank - 1
         if not self.check_pp_rank_valid(prev_pp_rank):
-            assert ValueError(f"current rank's pp_rank: {self._pp_rank} doesn't have a previous stage!")
+            assert ValueError(
+                f"current rank's pp_rank: {self._pp_rank} doesn't have a previous stage!"
+            )
         return prev_pp_rank
 
     def get_next_pp_rank(self) -> int:
         next_pp_rank = self._pp_rank + 1
         if not self.check_pp_rank_valid(next_pp_rank):
-            assert ValueError(f"current rank's pp_rank: {self._pp_rank} doesn't have a next stage!")
+            assert ValueError(
+                f"current rank's pp_rank: {self._pp_rank} doesn't have a next stage!"
+            )
         return next_pp_rank
 
     def get_local_stage_global_ranks(self) -> List[int]:
@@ -147,10 +172,10 @@ class PipelineProcessGroup:
 
     def get_chimera_all_reduce_group(self, pp_rank: int):
         with self.chimera_lock:
-            if not hasattr(self, 'chimera_groups'):
+            if not hasattr(self, "chimera_groups"):
                 world_size = self.get_world_size()
                 stage_num = self.get_stage_num()
-                assert world_size % 2 == 0, 'world_size must be even in chimera!'
+                assert world_size % 2 == 0, "world_size must be even in chimera!"
                 self.chimera_groups = {}
                 for rank in range(world_size // 2):
                     pair = [rank, world_size - 1 - rank]

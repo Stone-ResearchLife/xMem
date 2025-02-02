@@ -34,18 +34,21 @@ class StatefulTensorMgr(object):
         self._warmup = True
 
     def register_stateful_tensor_list(self, tensor_list: List[StatefulTensor]) -> None:
-        assert self._stateful_tensor_list == [], "Can't register stateful tensors for manager twice"
+        assert (
+            self._stateful_tensor_list == []
+        ), "Can't register stateful tensors for manager twice"
         self._stateful_tensor_list = tensor_list
         for t in self._stateful_tensor_list:
             assert isinstance(t, StatefulTensor)
-            t.trans_state = types.MethodType(functools.partial(self._trans_state, t.trans_state), t)
+            t.trans_state = types.MethodType(
+                functools.partial(self._trans_state, t.trans_state), t
+            )
 
     def start_iter(self):
         pass
 
     def finish_iter(self):
-        """This function must be called when each iteration finishes
-        """
+        """This function must be called when each iteration finishes"""
         self._warmup = False
         self._compute_idx = -1
         self._cpu_gpu_move_volume = 0
@@ -53,19 +56,23 @@ class StatefulTensorMgr(object):
         self._evict_time = 0
 
     def adjust_layout(self) -> None:
-        """ Adjust the layout of stateful tensor according to the information provided
+        """Adjust the layout of stateful tensor according to the information provided
         by mem_stats_collector, which should belongs to a Sharded Model.
         """
         # find stateful tensor in state COMPUTE
-        cuda_demand = StatefulTensor.GST_MGR.state_mem['cpu'][TensorState.COMPUTE]
+        cuda_demand = StatefulTensor.GST_MGR.state_mem["cpu"][TensorState.COMPUTE]
         start = time()
-        move_to_cuda_tensor_list, hold_cuda_tensor_list = self._get_layout_info(self._compute_idx, self._warmup)
+        move_to_cuda_tensor_list, hold_cuda_tensor_list = self._get_layout_info(
+            self._compute_idx, self._warmup
+        )
         self._layout_time += time() - start
-        vol, evict_time = self._tensor_placement_policy.evict_tensors(hold_cuda_tensor_list,
-                                                                      cuda_demand=cuda_demand,
-                                                                      warmup=self._warmup,
-                                                                      compute_list=self._compute_list,
-                                                                      compute_idx=self._compute_idx)
+        vol, evict_time = self._tensor_placement_policy.evict_tensors(
+            hold_cuda_tensor_list,
+            cuda_demand=cuda_demand,
+            warmup=self._warmup,
+            compute_list=self._compute_list,
+            compute_idx=self._compute_idx,
+        )
         self._cpu_gpu_move_volume += vol
         self._evict_time += evict_time
         # move COMPUTE tensors to CUDA
@@ -92,10 +99,14 @@ class StatefulTensorMgr(object):
             if tensor.state == TensorState.FREE:
                 continue
 
-            if tensor.device.type == 'cuda':
-                if tensor.state in [TensorState.HOLD, TensorState.HOLD_AFTER_BWD, TensorState.HOLD_AFTER_FWD]:
+            if tensor.device.type == "cuda":
+                if tensor.state in [
+                    TensorState.HOLD,
+                    TensorState.HOLD_AFTER_BWD,
+                    TensorState.HOLD_AFTER_FWD,
+                ]:
                     hold_cuda_tensor_list.append(tensor)
-            elif tensor.device.type == 'cpu':
+            elif tensor.device.type == "cpu":
                 if tensor.state == TensorState.COMPUTE:
                     move_to_cuda_tensor_list.append(tensor)
             else:

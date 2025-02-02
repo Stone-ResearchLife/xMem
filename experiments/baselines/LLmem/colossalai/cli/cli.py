@@ -5,7 +5,7 @@ from .check import check
 from .launcher import run
 
 
-class Arguments():
+class Arguments:
 
     def __init__(self, arg_dict):
         for k, v in arg_dict.items():
@@ -21,5 +21,5 @@ cli.add_command(run)
 cli.add_command(check)
 cli.add_command(benchmark)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

@@ -59,10 +59,12 @@ def calculate_fwd_tmp(n: Node) -> int:
         Returns:
             bool: Whether the node is a ReLU-like node
         """
-        if n.op == 'call_function':
+        if n.op == "call_function":
             return n.target in OUTPUT_SAVED_OPS
-        elif n.op == 'call_module':
-            return type(n.graph.owning_module.get_submodule(n.target)) in OUTPUT_SAVED_MOD
+        elif n.op == "call_module":
+            return (
+                type(n.graph.owning_module.get_submodule(n.target)) in OUTPUT_SAVED_MOD
+            )
         return False
 
     if not is_relu_like_node(n):
@@ -87,8 +89,12 @@ def calculate_fwd_out(n: Node) -> int:
 
     fwd_in = dict()
     for u in n.users:
-        fwd_in.update({x.data_ptr(): x for x in u.meta["fwd_in"] if isinstance(x, torch.Tensor)})
-    fwd_out = {x.data_ptr(): x for x in n.meta["fwd_out"] if isinstance(x, torch.Tensor)}
+        fwd_in.update(
+            {x.data_ptr(): x for x in u.meta["fwd_in"] if isinstance(x, torch.Tensor)}
+        )
+    fwd_out = {
+        x.data_ptr(): x for x in n.meta["fwd_out"] if isinstance(x, torch.Tensor)
+    }
     return activation_size(intersect(fwd_in, fwd_out))
 
 

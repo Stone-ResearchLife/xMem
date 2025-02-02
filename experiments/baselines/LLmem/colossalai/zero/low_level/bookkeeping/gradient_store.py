@@ -57,7 +57,9 @@ class GradientStore(BaseStore):
         else:
             self._averaged_gradients[group_id] = [tensor]
 
-    def add_average_gradient_by_group(self, group_id: int, tensor_idx: int, tensor: Tensor) -> None:
+    def add_average_gradient_by_group(
+        self, group_id: int, tensor_idx: int, tensor: Tensor
+    ) -> None:
         """
         Add an average gradient to the list of averaged gradients of a parameter group
 

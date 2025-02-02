@@ -32,7 +32,10 @@ def compute_size_in_bytes(elem: Union[torch.Tensor, Dict, List, Tuple, int]) -> 
     nbytes = 0
     if isinstance(elem, torch.Tensor):
         if elem.is_quantized:
-            nbytes += elem.numel() * torch._empty_affine_quantized([], dtype=elem.dtype).element_size()
+            nbytes += (
+                elem.numel()
+                * torch._empty_affine_quantized([], dtype=elem.dtype).element_size()
+            )
         else:
             nbytes += elem.numel() * torch.tensor([], dtype=elem.dtype).element_size()
     elif isinstance(elem, dict):
@@ -85,12 +88,16 @@ class MetaInfo:
     node: Node
 
     # directory
-    mod_dir: str = ''
+    mod_dir: str = ""
 
     # ctx[data_ptr] = Tensor
     # mark the storage for ctx.save_for_backward
-    global_ctx: Dict[str, torch.Tensor] = field(default_factory=lambda: {})    # globally shared
-    curr_ctx: Dict[str, torch.Tensor] = field(default_factory=lambda: {})    # global_ctx till this node
+    global_ctx: Dict[str, torch.Tensor] = field(
+        default_factory=lambda: {}
+    )  # globally shared
+    curr_ctx: Dict[str, torch.Tensor] = field(
+        default_factory=lambda: {}
+    )  # global_ctx till this node
 
     # should be updated after each graph manipulation
     # ============================== Update ====================================
@@ -100,7 +107,7 @@ class MetaInfo:
 
     inputs: Tuple[torch.Tensor] = ()
     outputs: Tuple[torch.Tensor] = ()
-    is_alias: Tuple[bool] = ()    # whether the output is an alias of input
+    is_alias: Tuple[bool] = ()  # whether the output is an alias of input
 
     # compute cost
     fwd_flop: Optional[int] = 0
@@ -112,36 +119,42 @@ class MetaInfo:
 
     # should keep the same whenever manipulated
     # ============================= Invariant ==================================
-    activation_checkpoint: Tuple[torch.Tensor] = ()    # (region_0, region_1, ...) support nested codegen
+    activation_checkpoint: Tuple[
+        torch.Tensor
+    ] = ()  # (region_0, region_1, ...) support nested codegen
     to_offload: Optional[bool] = False
-    sharding_spec: str = 'RR'
+    sharding_spec: str = "RR"
 
     def __new__(cls, node: Node, **kwargs):
         orig_init = cls.__init__
 
         # if initialized, return the existing one
         # should disable the __init__ function
-        if node.meta.get('info', None) is not None:
+        if node.meta.get("info", None) is not None:
 
             def _dummy(self, *args, **kwargs):
-                if getattr(self, '_is_init', False):
+                if getattr(self, "_is_init", False):
                     self._is_init = True
                     orig_init(self, *args, **kwargs)
                 cls.__init__ = orig_init
 
             cls.__init__ = _dummy
-            return node.meta['info']
+            return node.meta["info"]
         return super().__new__(cls)
 
     def __post_init__(self):
-        self.node.meta['info'] = self
+        self.node.meta["info"] = self
 
     @property
-    def fwd_time(self, tflops: float = MeshConfig.TFLOPS, bandwidth: float = MeshConfig.BANDWIDTH):
+    def fwd_time(
+        self, tflops: float = MeshConfig.TFLOPS, bandwidth: float = MeshConfig.BANDWIDTH
+    ):
         return self.fwd_flop / tflops + self.fwd_comm / bandwidth
 
     @property
-    def bwd_time(self, tflops: float = MeshConfig.TFLOPS, bandwidth: float = MeshConfig.BANDWIDTH):
+    def bwd_time(
+        self, tflops: float = MeshConfig.TFLOPS, bandwidth: float = MeshConfig.BANDWIDTH
+    ):
         return self.bwd_flop / tflops + self.bwd_comm / bandwidth
 
     @property
@@ -158,7 +171,9 @@ class MetaInfo:
         output_ctx = {
             o.data_ptr(): o
             for o, is_alias in zip(self.outputs, self.is_alias)
-            if not is_alias and isinstance(o, torch.Tensor) and not isinstance(o, torch.nn.Parameter)
+            if not is_alias
+            and isinstance(o, torch.Tensor)
+            and not isinstance(o, torch.nn.Parameter)
         }
         return compute_size_in_bytes(intersect(self.global_ctx, output_ctx))
 
@@ -168,9 +183,13 @@ class MetaInfo:
         output_ctx = {
             o.data_ptr(): o
             for o, is_alias in zip(self.outputs, self.is_alias)
-            if not is_alias and isinstance(o, torch.Tensor) and not isinstance(o, torch.nn.Parameter)
+            if not is_alias
+            and isinstance(o, torch.Tensor)
+            and not isinstance(o, torch.nn.Parameter)
         }
-        return compute_size_in_bytes(union(self.curr_ctx, intersect(self.global_ctx, output_ctx)))
+        return compute_size_in_bytes(
+            union(self.curr_ctx, intersect(self.global_ctx, output_ctx))
+        )
 
     @property
     def temp_size(self):
@@ -178,7 +197,9 @@ class MetaInfo:
         output_ctx = {
             o.data_ptr(): o
             for o, is_alias in zip(self.outputs, self.is_alias)
-            if not is_alias and isinstance(o, torch.Tensor) and not isinstance(o, torch.nn.Parameter)
+            if not is_alias
+            and isinstance(o, torch.Tensor)
+            and not isinstance(o, torch.nn.Parameter)
         }
         return compute_size_in_bytes(subtract(output_ctx, self.global_ctx))
 
@@ -188,24 +209,26 @@ class MetaInfo:
         return compute_size_in_bytes(self.inputs)
 
     def __repr__(self):
-        s = f'Node {self.node.name}'
+        s = f"Node {self.node.name}"
         if self.parameters:
-            s += f'\n\thas parameter of size {_format_memory(self.param_size)}'
+            s += f"\n\thas parameter of size {_format_memory(self.param_size)}"
         if self.buffers:
-            s += f'\n\thas buffer of size {_format_memory(self.buffer_size)}'
+            s += f"\n\thas buffer of size {_format_memory(self.buffer_size)}"
         if self.output_size:
-            s += f'\n\thas output activation of size {_format_memory(self.output_size)}'
+            s += f"\n\thas output activation of size {_format_memory(self.output_size)}"
         # if self.total_size:
         #     s += f'\n\thas total activation of size {_format_memory(self.total_size)}'
         if self.temp_size:
-            s += f'\n\thas temp activation of size {_format_memory(self.temp_size)}'
+            s += f"\n\thas temp activation of size {_format_memory(self.temp_size)}"
         if self.backward_size:
-            s += f'\n\thas backward activation of size {_format_memory(self.backward_size)}'
-        s += f'\n\tfwd_flop = {self.fwd_flop}'\
-            f'\n\tbwd_flop = {self.bwd_flop}'\
-            f'\n\tfwd_comm = {self.fwd_comm}'\
-            f'\n\tbwd_comm = {self.bwd_comm}'\
-            f'\n\tto_recompute = {self.to_recompute}'\
-            f'\n\tto_offload = {self.to_offload}'\
-            f'\n\tsharding_spec = {self.sharding_spec}'
+            s += f"\n\thas backward activation of size {_format_memory(self.backward_size)}"
+        s += (
+            f"\n\tfwd_flop = {self.fwd_flop}"
+            f"\n\tbwd_flop = {self.bwd_flop}"
+            f"\n\tfwd_comm = {self.fwd_comm}"
+            f"\n\tbwd_comm = {self.bwd_comm}"
+            f"\n\tto_recompute = {self.to_recompute}"
+            f"\n\tto_offload = {self.to_offload}"
+            f"\n\tsharding_spec = {self.sharding_spec}"
+        )
         return s

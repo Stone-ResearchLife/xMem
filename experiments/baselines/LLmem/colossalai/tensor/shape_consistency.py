@@ -6,14 +6,26 @@ from typing import Dict, List, Tuple
 import numpy as np
 import torch
 
-from colossalai.auto_parallel.tensor_shard.sharding_strategy import MemoryCost, TrainCycleItem
+from colossalai.auto_parallel.tensor_shard.sharding_strategy import (
+    MemoryCost,
+    TrainCycleItem,
+)
 from colossalai.context.singleton_meta import SingletonMeta
 from colossalai.tensor.sharding_spec import ShardingSpec, ShardingSpecException
-from colossalai.tensor.utils import all_gather_simulator, all_to_all_simulator, mix_gather_simulator, shard_simulator
+from colossalai.tensor.utils import (
+    all_gather_simulator,
+    all_to_all_simulator,
+    mix_gather_simulator,
+    shard_simulator,
+)
 
 from .comm_spec import *
 
-__all__ = ['ShapeConsistencyManager', 'ShapeConsistencyOptions', 'set_shape_consistency_options']
+__all__ = [
+    "ShapeConsistencyManager",
+    "ShapeConsistencyOptions",
+    "set_shape_consistency_options",
+]
 
 
 @dataclass
@@ -21,16 +33,22 @@ class ShapeConsistencyOptions:
     """
     ShapeConsistencyOptions is a dataclass which specifies the preferences for shape consistency.
     """
+
     # TODO: shape consistency option is not implemented yet
     pass
 
 
-def to_global(distributed_tensor: torch.Tensor, sharding_spec: ShardingSpec) -> torch.Tensor:
+def to_global(
+    distributed_tensor: torch.Tensor, sharding_spec: ShardingSpec
+) -> torch.Tensor:
     shape_consistency_manager = ShapeConsistencyManager()
-    global_sharding_spec = ShardingSpec(sharding_spec.device_mesh, sharding_spec.entire_shape, {})
+    global_sharding_spec = ShardingSpec(
+        sharding_spec.device_mesh, sharding_spec.entire_shape, {}
+    )
     with torch.no_grad():
-        global_tensor = shape_consistency_manager.apply_for_autoparallel_runtime(distributed_tensor, sharding_spec,
-                                                                                 global_sharding_spec)
+        global_tensor = shape_consistency_manager.apply_for_autoparallel_runtime(
+            distributed_tensor, sharding_spec, global_sharding_spec
+        )
     return global_tensor
 
 
@@ -69,9 +87,10 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
         assert isinstance(value, bool)
         self._forward_only = value
 
-    def get_all_all_gather_spec(self, source_spec: ShardingSpec,
-                                orig_cost_dict: Dict[str, float]) -> Dict[ShardingSpec, float]:
-        '''
+    def get_all_all_gather_spec(
+        self, source_spec: ShardingSpec, orig_cost_dict: Dict[str, float]
+    ) -> Dict[ShardingSpec, float]:
+        """
         Get all valid sharding specs from source_spec with single all-gather operation, and
         accumulate communication cost on origin cost which will finally be used in auto sharding solver.
         For the all-gather operation, we just care about the S dimension.
@@ -99,7 +118,7 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
             device_mesh_shape: (4, 4): 0, DistSpec:
             shard_sequence: S0,R,R
             device_mesh_shape: (4, 4): 0}
-        '''
+        """
         valid_spec_dict = {}
         comm_pattern = CollectiveCommPattern.GATHER_FWD_SPLIT_BWD
         for target_pair in source_spec.dim_partition_dict.items():
@@ -121,19 +140,22 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                 comm_pattern,
                 sharding_spec=source_spec,
                 gather_dim=gather_dim,
-            # shard_dim will be used during backward
+                # shard_dim will be used during backward
                 shard_dim=gather_dim,
                 logical_process_axis=logical_process_axis,
-                forward_only=self.forward_only)
+                forward_only=self.forward_only,
+            )
 
             # compute the communication cost with CommSpec
             cost_dict = comm_spec.get_comm_cost()
 
             # generate new sharding spec
             try:
-                new_sharding_spec = ShardingSpec(source_spec.device_mesh,
-                                                 source_spec.entire_shape,
-                                                 dim_partition_dict=new_dim_partition_dict)
+                new_sharding_spec = ShardingSpec(
+                    source_spec.device_mesh,
+                    source_spec.entire_shape,
+                    dim_partition_dict=new_dim_partition_dict,
+                )
                 for phase, cost in cost_dict.items():
                     cost_dict[phase] = cost + orig_cost_dict[phase]
                 valid_spec_dict[new_sharding_spec] = (comm_spec, cost_dict)
@@ -141,9 +163,10 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                 pass
         return valid_spec_dict
 
-    def get_all_all_to_all_spec(self, source_spec: ShardingSpec,
-                                orig_cost_dict: Dict[str, float]) -> Dict[ShardingSpec, float]:
-        '''
+    def get_all_all_to_all_spec(
+        self, source_spec: ShardingSpec, orig_cost_dict: Dict[str, float]
+    ) -> Dict[ShardingSpec, float]:
+        """
         Get all valid sharding specs from source_spec with single all-to-all operation, and
         accumulate communication cost on origin cost which will finally be used in auto sharding solver.
         For the all-to-all operation, we just care about the pairs containing S dimension.
@@ -173,35 +196,50 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
             device_mesh_shape: (4, 4): 0, DistSpec:
             shard_sequence: S0,R,S1
             device_mesh_shape: (4, 4): 0}
-        '''
+        """
         valid_spec_dict = {}
         comm_pattern = CollectiveCommPattern.ALL2ALL_FWD_ALL2ALL_BWD
         tensor_dims = len(source_spec.entire_shape)
         for f_index in range(tensor_dims - 1):
             for b_index in range(f_index + 1, tensor_dims):
                 # skip (R, R) cases
-                if f_index not in source_spec.dim_partition_dict and b_index not in source_spec.dim_partition_dict:
+                if (
+                    f_index not in source_spec.dim_partition_dict
+                    and b_index not in source_spec.dim_partition_dict
+                ):
                     continue
                 else:
                     if f_index in source_spec.dim_partition_dict:
                         # skip (S01, R) -> (R, S01) is NOT allowed
                         if len(source_spec.dim_partition_dict[f_index]) >= 2:
                             continue
-                        f_target_pair = (f_index, deepcopy(source_spec.dim_partition_dict[f_index]))
+                        f_target_pair = (
+                            f_index,
+                            deepcopy(source_spec.dim_partition_dict[f_index]),
+                        )
                     else:
                         f_target_pair = (f_index, [])
                     if b_index in source_spec.dim_partition_dict:
                         # skip (R, S01) -> (S01, R) is NOT allowed
                         if len(source_spec.dim_partition_dict[b_index]) >= 2:
                             continue
-                        b_target_pair = (b_index, deepcopy(source_spec.dim_partition_dict[b_index]))
+                        b_target_pair = (
+                            b_index,
+                            deepcopy(source_spec.dim_partition_dict[b_index]),
+                        )
                     else:
                         b_target_pair = (b_index, [])
 
                 # skip (S1, S0) -> S10
-                if f_target_pair[1] and b_target_pair[1] and f_target_pair[1][0] >= b_target_pair[1][0]:
+                if (
+                    f_target_pair[1]
+                    and b_target_pair[1]
+                    and f_target_pair[1][0] >= b_target_pair[1][0]
+                ):
                     continue
-                f_shard_list, b_shard_list = all_to_all_simulator(f_target_pair, b_target_pair)
+                f_shard_list, b_shard_list = all_to_all_simulator(
+                    f_target_pair, b_target_pair
+                )
                 f_index = f_target_pair[0]
                 b_index = b_target_pair[0]
 
@@ -214,12 +252,14 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                     gather_dim = b_index
                     shard_dim = f_index
                     logical_process_axis = b_target_pair[1][-1]
-                comm_spec = CommSpec(comm_pattern,
-                                     sharding_spec=source_spec,
-                                     gather_dim=gather_dim,
-                                     shard_dim=shard_dim,
-                                     logical_process_axis=logical_process_axis,
-                                     forward_only=self.forward_only)
+                comm_spec = CommSpec(
+                    comm_pattern,
+                    sharding_spec=source_spec,
+                    gather_dim=gather_dim,
+                    shard_dim=shard_dim,
+                    logical_process_axis=logical_process_axis,
+                    forward_only=self.forward_only,
+                )
 
                 # compute the communication cost with CommSpec
                 cost_dict = comm_spec.get_comm_cost()
@@ -238,9 +278,11 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
 
                 # generate new sharding spec
                 try:
-                    new_sharding_spec = ShardingSpec(source_spec.device_mesh,
-                                                     source_spec.entire_shape,
-                                                     dim_partition_dict=new_dim_partition_dict)
+                    new_sharding_spec = ShardingSpec(
+                        source_spec.device_mesh,
+                        source_spec.entire_shape,
+                        dim_partition_dict=new_dim_partition_dict,
+                    )
                     for phase, cost in cost_dict.items():
                         cost_dict[phase] = cost + orig_cost_dict[phase]
                     valid_spec_dict[new_sharding_spec] = (comm_spec, cost_dict)
@@ -250,7 +292,7 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
         return valid_spec_dict
 
     def get_all_shard_spec(self, source_spec: ShardingSpec, orig_cost_dict):
-        '''
+        """
         Get all valid sharding specs from source_spec with single shard operation, and
         accumulate communication cost on origin cost which will finally be used in auto sharding solver.
         For the sharding operation, we just care about legal sharding dimensions.
@@ -280,12 +322,14 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
             device_mesh_shape: (4, 4): 0, DistSpec:
             shard_sequence: S0,R,S1
             device_mesh_shape: (4, 4): 0}
-        '''
+        """
         valid_spec_dict = {}
         comm_pattern = CollectiveCommPattern.SPLIT_FWD_GATHER_BWD
 
         # legal sharding dims means the mesh_id is still available to use.
-        legal_sharding_dims = [i for i in range(len(source_spec.device_mesh.mesh_shape))]
+        legal_sharding_dims = [
+            i for i in range(len(source_spec.device_mesh.mesh_shape))
+        ]
         for dim, shard_list in source_spec.dim_partition_dict.items():
             for element in shard_list:
                 legal_sharding_dims.remove(element)
@@ -298,7 +342,9 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
             if index not in source_spec.dim_partition_dict:
                 shard_list_list = shard_simulator((index, []), legal_sharding_dims)
             else:
-                shard_list_list = shard_simulator((index, source_spec.dim_partition_dict[index]), legal_sharding_dims)
+                shard_list_list = shard_simulator(
+                    (index, source_spec.dim_partition_dict[index]), legal_sharding_dims
+                )
             if not shard_list_list:
                 continue
             for shard_list in shard_list_list:
@@ -308,21 +354,25 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                 # generate the CommSpec to record the action of source_sharding_spec->new_sharding_spec
                 shard_dim = index
                 logical_process_axis = shard_list[-1]
-                comm_spec = CommSpec(comm_pattern,
-                                     sharding_spec=source_spec,
-                                     gather_dim=shard_dim,
-                                     shard_dim=shard_dim,
-                                     logical_process_axis=logical_process_axis,
-                                     forward_only=self.forward_only)
+                comm_spec = CommSpec(
+                    comm_pattern,
+                    sharding_spec=source_spec,
+                    gather_dim=shard_dim,
+                    shard_dim=shard_dim,
+                    logical_process_axis=logical_process_axis,
+                    forward_only=self.forward_only,
+                )
 
                 # compute the communication cost with CommSpec
                 cost_dict = comm_spec.get_comm_cost()
 
                 # generate new sharding spec
                 try:
-                    new_sharding_spec = ShardingSpec(source_spec.device_mesh,
-                                                     source_spec.entire_shape,
-                                                     dim_partition_dict=new_dim_partition_dict)
+                    new_sharding_spec = ShardingSpec(
+                        source_spec.device_mesh,
+                        source_spec.entire_shape,
+                        dim_partition_dict=new_dim_partition_dict,
+                    )
                     for phase, cost in cost_dict.items():
                         cost_dict[phase] = cost + orig_cost_dict[phase]
                     valid_spec_dict[new_sharding_spec] = (comm_spec, cost_dict)
@@ -330,51 +380,72 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                     pass
         return valid_spec_dict
 
-    def get_all_mix_gather_spec(self, source_spec: ShardingSpec,
-                                orig_cost_dict: Dict[str, float]) -> Dict[ShardingSpec, float]:
-        '''
+    def get_all_mix_gather_spec(
+        self, source_spec: ShardingSpec, orig_cost_dict: Dict[str, float]
+    ) -> Dict[ShardingSpec, float]:
+        """
         S0S1 -> RR
         S1S0 -> RR
         S01R -> RR
         RS01 -> RR
-        '''
+        """
         valid_spec_dict = {}
         comm_pathern = CollectiveCommPattern.MIXGATHER_FWD_SPLIT_BWD
         tensor_dims = len(source_spec.entire_shape)
         for f_index in range(tensor_dims - 1):
             for b_index in range(f_index + 1, tensor_dims):
-                if (f_index not in source_spec.dim_partition_dict) and (b_index not in source_spec.dim_partition_dict):
+                if (f_index not in source_spec.dim_partition_dict) and (
+                    b_index not in source_spec.dim_partition_dict
+                ):
                     continue
                 else:
                     if f_index in source_spec.dim_partition_dict:
                         # skip (S10, R) -> (R, R)
-                        if len(f_target_pair[1]) == 2 and f_target_pair[1][0] >= f_target_pair[1][1]:
+                        if (
+                            len(f_target_pair[1]) == 2
+                            and f_target_pair[1][0] >= f_target_pair[1][1]
+                        ):
                             continue
-                        f_target_pair = (f_index, deepcopy(source_spec.dim_partition_dict[f_index]))
+                        f_target_pair = (
+                            f_index,
+                            deepcopy(source_spec.dim_partition_dict[f_index]),
+                        )
                     else:
                         f_target_pair = (f_index, [])
                     if b_index in source_spec.dim_partition_dict:
                         # skip (R, S10) -> (R, R)
-                        if len(b_target_pair[1]) == 2 and b_target_pair[1][0] >= b_target_pair[1][1]:
+                        if (
+                            len(b_target_pair[1]) == 2
+                            and b_target_pair[1][0] >= b_target_pair[1][1]
+                        ):
                             continue
-                        b_target_pair = (b_index, deepcopy(source_spec.dim_partition_dict[b_index]))
+                        b_target_pair = (
+                            b_index,
+                            deepcopy(source_spec.dim_partition_dict[b_index]),
+                        )
                     else:
                         b_target_pair = (b_index, [])
 
-                gather_dim, logical_process_axes = mix_gather_simulator(f_target_pair, b_target_pair)
-                comm_spec = CommSpec(comm_pathern,
-                                     sharding_spec=source_spec,
-                                     gather_dim=gather_dim,
-                                     logical_process_axis=logical_process_axes,
-                                     forward_only=self.forward_only,
-                                     mix_gather=True)
+                gather_dim, logical_process_axes = mix_gather_simulator(
+                    f_target_pair, b_target_pair
+                )
+                comm_spec = CommSpec(
+                    comm_pathern,
+                    sharding_spec=source_spec,
+                    gather_dim=gather_dim,
+                    logical_process_axis=logical_process_axes,
+                    forward_only=self.forward_only,
+                    mix_gather=True,
+                )
                 cost_dict = comm_spec.get_comm_cost()
                 new_dim_partition_dict = {}
                 # generate new sharding spec
                 try:
-                    new_sharding_spec = ShardingSpec(source_spec.device_mesh,
-                                                     source_spec.entire_shape,
-                                                     dim_partition_dict=new_dim_partition_dict)
+                    new_sharding_spec = ShardingSpec(
+                        source_spec.device_mesh,
+                        source_spec.entire_shape,
+                        dim_partition_dict=new_dim_partition_dict,
+                    )
                     for phase, cost in cost_dict.items():
                         cost_dict[phase] = cost + orig_cost_dict[phase]
                     valid_spec_dict[new_sharding_spec] = (comm_spec, cost_dict)
@@ -383,8 +454,10 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
 
         return valid_spec_dict
 
-    def get_all_one_step_transform_spec(self, source_spec: ShardingSpec, orig_cost_dict) -> Dict[ShardingSpec, float]:
-        '''
+    def get_all_one_step_transform_spec(
+        self, source_spec: ShardingSpec, orig_cost_dict
+    ) -> Dict[ShardingSpec, float]:
+        """
         Get all valid sharding specs from source_spec with one step transform, and
         accumulate communication cost on origin cost which will finally be used in auto sharding solver.
         Note:
@@ -398,10 +471,14 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
 
         Return:
             valid_spec_dict(Dict[ShardingSpec, float]): all valid sharding specs from source_spec with single all-to-all operation.
-        '''
+        """
         valid_spec_dict = {}
-        valid_spec_dict.update(self.get_all_all_gather_spec(source_spec, orig_cost_dict))
-        valid_spec_dict.update(self.get_all_all_to_all_spec(source_spec, orig_cost_dict))
+        valid_spec_dict.update(
+            self.get_all_all_gather_spec(source_spec, orig_cost_dict)
+        )
+        valid_spec_dict.update(
+            self.get_all_all_to_all_spec(source_spec, orig_cost_dict)
+        )
         valid_spec_dict.update(self.get_all_shard_spec(source_spec, orig_cost_dict))
         return valid_spec_dict
 
@@ -422,7 +499,9 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                 new_shape.append(shape[dim] // len(shard))
             return new_shape
 
-        def gather_analysis(comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int):
+        def gather_analysis(
+            comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int
+        ):
             """analyze all_gather memory footprint
             all_gather will allocate memory for the output tensor, and there will be temp memory for
             all_gather operation, which is twice the size of output tensor
@@ -435,7 +514,10 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
             """
             input_shape = compute_shape(comm_spec.sharding_spec)
             input_numel = np.prod(input_shape)
-            output_numel = input_numel * comm_spec.device_mesh.mesh_shape[comm_spec.logical_process_axis]
+            output_numel = (
+                input_numel
+                * comm_spec.device_mesh.mesh_shape[comm_spec.logical_process_axis]
+            )
             peak_numel = max(peak_numel, alloc_numel + output_numel * 2)
             alloc_numel += output_numel
             if discard_input:
@@ -443,7 +525,9 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
 
             return alloc_numel, peak_numel
 
-        def split_analysis(comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int):
+        def split_analysis(
+            comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int
+        ):
             """analyze split memory footprint
             split will allocate memory for the output tensor if we don't apply shard on the first dimension of
             the input tensor. If we apply shard on the first dimension, the `torch.tensor.contiguous()` will not
@@ -461,7 +545,10 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                 # generate a new tensor
                 input_shape = compute_shape(comm_spec.sharding_spec)
                 input_numel = np.prod(input_shape)
-                output_numel = input_numel // comm_spec.device_mesh.mesh_shape[comm_spec.logical_process_axis]
+                output_numel = (
+                    input_numel
+                    // comm_spec.device_mesh.mesh_shape[comm_spec.logical_process_axis]
+                )
                 alloc_numel += output_numel
                 peak_numel = max(peak_numel, alloc_numel)
                 if discard_input:
@@ -482,13 +569,17 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
 
             return alloc_numel, peak_numel
 
-        def reduce_analysis(comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int):
+        def reduce_analysis(
+            comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int
+        ):
             """
             a dummy function for reduce memory footprint analysis, as the reduce action doesn't allocate extra memory
             """
             return alloc_numel, peak_numel
 
-        def all2all_analysis(comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int):
+        def all2all_analysis(
+            comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int
+        ):
             """analyze all_to_all memory footprint
             all_to_all will allocate memory for the output tensor, and temp memory of all_to_all action
             is twice the size of output tensor if we shard input tensor on the first dimension, otherwise
@@ -514,18 +605,35 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
 
             return alloc_numel, peak_numel
 
-        def identity_analysis(comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int):
+        def identity_analysis(
+            comm_spec: CommSpec, discard_input: bool, alloc_numel: int, peak_numel: int
+        ):
             """
             a dummy function for identity memory footprint analysis, as the identity action doesn't allocate extra memory
             """
             return alloc_numel, peak_numel
 
         pattern_to_func_dict = {
-            CollectiveCommPattern.GATHER_FWD_SPLIT_BWD: [gather_analysis, split_analysis],
-            CollectiveCommPattern.ALL2ALL_FWD_ALL2ALL_BWD: [all2all_analysis, all2all_analysis],
-            CollectiveCommPattern.SPLIT_FWD_GATHER_BWD: [split_analysis, gather_analysis],
-            CollectiveCommPattern.ALLREDUCE_FWD_IDENTITY_BWD: [reduce_analysis, identity_analysis],
-            CollectiveCommPattern.IDENTITY_FWD_ALLREDUCE_BWD: [identity_analysis, reduce_analysis],
+            CollectiveCommPattern.GATHER_FWD_SPLIT_BWD: [
+                gather_analysis,
+                split_analysis,
+            ],
+            CollectiveCommPattern.ALL2ALL_FWD_ALL2ALL_BWD: [
+                all2all_analysis,
+                all2all_analysis,
+            ],
+            CollectiveCommPattern.SPLIT_FWD_GATHER_BWD: [
+                split_analysis,
+                gather_analysis,
+            ],
+            CollectiveCommPattern.ALLREDUCE_FWD_IDENTITY_BWD: [
+                reduce_analysis,
+                identity_analysis,
+            ],
+            CollectiveCommPattern.IDENTITY_FWD_ALLREDUCE_BWD: [
+                identity_analysis,
+                reduce_analysis,
+            ],
             CollectiveCommPattern.MIXGATHER_FWD_SPLIT_BWD: [],
         }
 
@@ -545,28 +653,39 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
         for idx, action_spec_pair in enumerate(zip(fwd_actions, comm_action_sequence)):
             # the first forward comm action will not discard input
             fwd_action, comm_spec = action_spec_pair
-            fwd_alloc_numel, fwd_peak_numel = fwd_action(comm_spec, False, fwd_alloc_numel,
-                                                         fwd_peak_numel) if idx == 0 else fwd_action(
-                                                             comm_spec, True, fwd_alloc_numel, fwd_peak_numel)
+            fwd_alloc_numel, fwd_peak_numel = (
+                fwd_action(comm_spec, False, fwd_alloc_numel, fwd_peak_numel)
+                if idx == 0
+                else fwd_action(comm_spec, True, fwd_alloc_numel, fwd_peak_numel)
+            )
 
         # analyze memory footprint for backward comm actions sequence
         bwd_alloc_numel = 0
         bwd_peak_numel = 0
-        for idx, action_spec_pair in enumerate(zip(reversed(bwd_actions), reversed(comm_action_sequence))):
+        for idx, action_spec_pair in enumerate(
+            zip(reversed(bwd_actions), reversed(comm_action_sequence))
+        ):
             bwd_action, comm_spec = action_spec_pair
-            bwd_alloc_numel, bwd_peak_numel = bwd_action(comm_spec, False, bwd_alloc_numel,
-                                                         bwd_peak_numel) if idx == 0 else bwd_action(
-                                                             comm_spec, True, bwd_alloc_numel, bwd_peak_numel)
+            bwd_alloc_numel, bwd_peak_numel = (
+                bwd_action(comm_spec, False, bwd_alloc_numel, bwd_peak_numel)
+                if idx == 0
+                else bwd_action(comm_spec, True, bwd_alloc_numel, bwd_peak_numel)
+            )
 
-        fwd_mem = MemoryCost(activation=fwd_alloc_numel, temp=fwd_peak_numel - fwd_alloc_numel)
-        bwd_mem = MemoryCost(activation=bwd_alloc_numel, temp=bwd_peak_numel - bwd_alloc_numel)
+        fwd_mem = MemoryCost(
+            activation=fwd_alloc_numel, temp=fwd_peak_numel - fwd_alloc_numel
+        )
+        bwd_mem = MemoryCost(
+            activation=bwd_alloc_numel, temp=bwd_peak_numel - bwd_alloc_numel
+        )
         total_mem = MemoryCost(activation=fwd_alloc_numel + bwd_alloc_numel)
 
         return TrainCycleItem(fwd_mem, bwd_mem, total_mem)
 
-    def shape_consistency(self, source_spec: ShardingSpec,
-                          target_spec: ShardingSpec) -> Tuple[List[ShardingSpec], List[CommSpec], float]:
-        '''
+    def shape_consistency(
+        self, source_spec: ShardingSpec, target_spec: ShardingSpec
+    ) -> Tuple[List[ShardingSpec], List[CommSpec], float]:
+        """
         This method will find a path to transform source_spec to target_spec with
         a greedy algorithm.
         The basic idea is:
@@ -623,18 +742,24 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                                    CommSpec:(comm_pattern:all2all, gather_dim:1, shard_dim:0, logical_process_axis: 0),
                                    CommSpec:(comm_pattern:shard, shard_dim:0, logical_process_axis:1)]
             total_cost: 12294.402000000002
-        '''
+        """
         MAX_TRANSFORM_STEPS = 20
-        total_cost_dict = {'forward': 0, 'backward': 0, 'total': 0}
+        total_cost_dict = {"forward": 0, "backward": 0, "total": 0}
         total_steps = 0
         transform_path = []
         comm_action_sequence = []
-        spec_pairs = (str(source_spec.sharding_sequence), str(target_spec.sharding_sequence))
+        spec_pairs = (
+            str(source_spec.sharding_sequence),
+            str(target_spec.sharding_sequence),
+        )
         self.cached_spec_pairs_transform_path[spec_pairs] = (None, None)
 
         # We do nothing if the sharding spec is all the same.
         if source_spec.sharding_sequence_difference(target_spec) == 0:
-            self.cached_spec_pairs_transform_path[spec_pairs] = (transform_path, comm_action_sequence)
+            self.cached_spec_pairs_transform_path[spec_pairs] = (
+                transform_path,
+                comm_action_sequence,
+            )
             return (transform_path, comm_action_sequence, total_cost_dict)
 
         temp_sharding_spec = source_spec
@@ -642,19 +767,26 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
         transform_path.append(temp_sharding_spec)
         # To avoid dead loop, the loop will break after MAX_TRANSFORM_STEPS transforms
         while total_steps <= MAX_TRANSFORM_STEPS:
-            valid_transform_spec_dict = self.get_all_one_step_transform_spec(temp_sharding_spec, total_cost_dict)
+            valid_transform_spec_dict = self.get_all_one_step_transform_spec(
+                temp_sharding_spec, total_cost_dict
+            )
             best_difference_score = math.inf
 
             for sharding_spec, info_pairs in valid_transform_spec_dict.items():
                 comm_spec, cost_dict = info_pairs
-                spec_difference = sharding_spec.sharding_sequence_difference(target_spec)
+                spec_difference = sharding_spec.sharding_sequence_difference(
+                    target_spec
+                )
 
                 if spec_difference == 0:
                     for phase, cost in total_cost_dict.items():
                         total_cost_dict[phase] = cost + cost_dict[phase]
                     transform_path.append(sharding_spec)
                     comm_action_sequence.append(comm_spec)
-                    self.cached_spec_pairs_transform_path[spec_pairs] = (transform_path, comm_action_sequence)
+                    self.cached_spec_pairs_transform_path[spec_pairs] = (
+                        transform_path,
+                        comm_action_sequence,
+                    )
                     return (transform_path, comm_action_sequence, total_cost_dict)
 
                 if spec_difference < best_difference_score:
@@ -669,10 +801,14 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                 total_cost_dict[phase] = cost + temp_cost_dict[phase]
             total_steps += 1
 
-        raise RuntimeError(f"Could not find a valid transform path with in {MAX_TRANSFORM_STEPS} steps.")
+        raise RuntimeError(
+            f"Could not find a valid transform path with in {MAX_TRANSFORM_STEPS} steps."
+        )
 
-    def apply(self, tensor_with_sharding_spec: torch.Tensor, target_spec: ShardingSpec) -> torch.Tensor:
-        '''
+    def apply(
+        self, tensor_with_sharding_spec: torch.Tensor, target_spec: ShardingSpec
+    ) -> torch.Tensor:
+        """
         Apply target_spec to tensor with source sharding spec, the transform path is generated by the
         shape_consistency method.
 
@@ -729,10 +865,14 @@ class ShapeConsistencyManager(metaclass=SingletonMeta):
                     [1.],
                     [3.],
                     [3.]])
-        '''
-        _, comm_action_sequence, _ = self.shape_consistency(tensor_with_sharding_spec.sharding_spec, target_spec)
+        """
+        _, comm_action_sequence, _ = self.shape_consistency(
+            tensor_with_sharding_spec.sharding_spec, target_spec
+        )
         for comm_spec in comm_action_sequence:
-            tensor_with_sharding_spec = comm_spec.covert_spec_to_action(tensor_with_sharding_spec)
+            tensor_with_sharding_spec = comm_spec.covert_spec_to_action(
+                tensor_with_sharding_spec
+            )
         tensor_with_sharding_spec.sharding_spec = target_spec
         return tensor_with_sharding_spec
 

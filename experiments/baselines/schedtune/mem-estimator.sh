@@ -5,10 +5,10 @@
 #Input: predicted GPU memory (P), Maximum prediction error (E), and GPU
 #Output: Estimated GPU memory or OOM Error
 
-#if ! [[ $# -eq 4 ]] 
+#if ! [[ $# -eq 4 ]]
 #then
 #   echo "Usage: $0 <PREDICTED-MEM> <MAX-ERROR> <GPU> <optional flag: v>"
-#   echo 
+#   echo
 #   echo
 #   echo "Example: $0 <pred-mem> <max-error> <avail-mem> 1 v"
 #   echo "Example: $0 <pred-mem> <max-error> <avail-mem> 3"
@@ -31,7 +31,7 @@ then
    #if we need to check if it can even fit alone
    if [[ $4 == "v" ]]
    then
-      if (( $(echo "$estimate > 7982" | bc -l) )) 
+      if (( $(echo "$estimate > 7982" | bc -l) ))
       then
          echo "INVALID"
       else

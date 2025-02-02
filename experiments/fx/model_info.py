@@ -17,23 +17,22 @@ class ModelInfo:
     def layer_stack(self) -> List[List[Tuple[str, torch.nn.Module]]]:
         return self._layer_stack
 
-    def id_to_layerstack_map(self) -> Dict[int, Dict[str, List[Tuple[str, torch.nn.Module]]]]:
+    def id_to_layerstack_map(
+        self,
+    ) -> Dict[int, Dict[str, List[Tuple[str, torch.nn.Module]]]]:
         _id_map = {}
         for _layer_stack in self._layer_stack:
             _id = id(_layer_stack[-1][1])
             _stack_names = [_layer[0] for _layer in _layer_stack]
-            _id_map[_id] = {
-                "id": "->".join(_stack_names),
-                "stack": _layer_stack
-            }
+            _id_map[_id] = {"id": "->".join(_stack_names), "stack": _layer_stack}
         return _id_map
 
     def _dfs(
-            self,
-            node: torch.nn.Module,
-            current_path: list,
-            all_paths: list,
-            layer_index=None
+        self,
+        node: torch.nn.Module,
+        current_path: list,
+        all_paths: list,
+        layer_index=None,
     ):
         if layer_index is None:
             layer_index = {}
@@ -50,7 +49,7 @@ class ModelInfo:
         if len(_modules) == 0:
             all_paths.append(list(current_path))
         else:
-            for sub_module  in _modules:
+            for sub_module in _modules:
                 self._dfs(sub_module, current_path, all_paths, layer_index)
         # pop up the last index of the current path, and go back to the parent node
         # Example:

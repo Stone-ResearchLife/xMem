@@ -12,10 +12,22 @@ from .apex_amp import convert_to_apex_amp
 from .naive_amp import convert_to_naive_amp
 from .torch_amp import convert_to_torch_amp
 
-__all__ = ['convert_to_amp', 'convert_to_naive_amp', 'convert_to_apex_amp', 'convert_to_torch_amp', 'AMP_TYPE']
+__all__ = [
+    "convert_to_amp",
+    "convert_to_naive_amp",
+    "convert_to_apex_amp",
+    "convert_to_torch_amp",
+    "AMP_TYPE",
+]
 
 
-def convert_to_amp(model: nn.Module, optimizer: Optimizer, criterion: _Loss, mode: AMP_TYPE, amp_config: Config = None):
+def convert_to_amp(
+    model: nn.Module,
+    optimizer: Optimizer,
+    criterion: _Loss,
+    mode: AMP_TYPE,
+    amp_config: Config = None,
+):
     """A helper function to wrap training components with Torch AMP modules.
 
     Args:
@@ -38,14 +50,17 @@ def convert_to_amp(model: nn.Module, optimizer: Optimizer, criterion: _Loss, mod
         For ``torch_amp``, please check
         `torch_amp config <https://github.com/pytorch/pytorch/blob/master/torch/cuda/amp/grad_scaler.py#L97>`_.
     """
-    assert isinstance(mode, AMP_TYPE), \
-        f'expected the argument mode be AMP_TYPE, but got {type(mode)}'
+    assert isinstance(
+        mode, AMP_TYPE
+    ), f"expected the argument mode be AMP_TYPE, but got {type(mode)}"
 
     if amp_config is None:
         amp_config = Config()
 
     if mode == AMP_TYPE.TORCH:
-        model, optimizer, criterion = convert_to_torch_amp(model, optimizer, criterion, amp_config)
+        model, optimizer, criterion = convert_to_torch_amp(
+            model, optimizer, criterion, amp_config
+        )
     elif mode == AMP_TYPE.APEX:
         model, optimizer = convert_to_apex_amp(model, optimizer, amp_config)
     elif mode == AMP_TYPE.NAIVE:

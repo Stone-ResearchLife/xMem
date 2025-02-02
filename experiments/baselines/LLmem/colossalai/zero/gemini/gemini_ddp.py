@@ -27,11 +27,11 @@ from .utils import get_temp_total_chunk_on_cuda
 try:
     from torch.nn.modules.module import _EXTRA_STATE_KEY_SUFFIX, _IncompatibleKeys
 except ImportError:
-    _EXTRA_STATE_KEY_SUFFIX = '_extra_state'
+    _EXTRA_STATE_KEY_SUFFIX = "_extra_state"
 
 __all__ = [
-    'ZeroDDP',
-    'GeminiDDP',
+    "ZeroDDP",
+    "GeminiDDP",
 ]
 
 
@@ -54,14 +54,16 @@ class ZeroDDP(ColoDDP):
         mixed_precision (torch.dtype): If set to torch.float16, the model will be trained in fp16. Otherwise, the model will be trained in bf16. Defaults to torch.float16.
     """
 
-    def __init__(self,
-                 module: torch.nn.Module,
-                 gemini_manager: GeminiManager,
-                 pin_memory: bool = False,
-                 force_outputs_fp32: bool = False,
-                 strict_ddp_mode: bool = False,
-                 scatter_after_inference: bool = True,
-                 mixed_precision: torch.dtype = torch.float16) -> None:
+    def __init__(
+        self,
+        module: torch.nn.Module,
+        gemini_manager: GeminiManager,
+        pin_memory: bool = False,
+        force_outputs_fp32: bool = False,
+        strict_ddp_mode: bool = False,
+        scatter_after_inference: bool = True,
+        mixed_precision: torch.dtype = torch.float16,
+    ) -> None:
         assert mixed_precision in (torch.float16, torch.bfloat16)
         self.gemini_manager = gemini_manager
         self.chunk_manager: ChunkManager = gemini_manager.chunk_manager
@@ -88,26 +90,30 @@ class ZeroDDP(ColoDDP):
             for p in module.parameters():
                 param_order.append(p)
 
-        self._init_chunks(param_order=param_order,
-                          strict_ddp_mode=strict_ddp_mode,
-                          cpu_offload=self.gemini_manager.policy_name != 'cuda',
-                          pin_memory=pin_memory)
+        self._init_chunks(
+            param_order=param_order,
+            strict_ddp_mode=strict_ddp_mode,
+            cpu_offload=self.gemini_manager.policy_name != "cuda",
+            pin_memory=pin_memory,
+        )
 
         for name, param in module.named_parameters():
             self.param2name[param] = name
         for m_name, m_var in module.named_modules():
             for p_name, p_var in m_var.named_parameters(recurse=False):
-                param_name = m_name + '.' + p_name if m_name else p_name
+                param_name = m_name + "." + p_name if m_name else p_name
                 self.name2param[param_name] = p_var
         super().__init__(module, process_group=ColoProcessGroup())
         self._non_persistent_buffers_set = self._get_non_persistent_buffers_set(module)
         self._cast_buffers()
 
-    def _get_non_persistent_buffers_set(self,
-                                        module,
-                                        memo: Optional[Set[nn.Module]] = None,
-                                        prefix: str = '',
-                                        remove_duplicate: bool = True):
+    def _get_non_persistent_buffers_set(
+        self,
+        module,
+        memo: Optional[Set[nn.Module]] = None,
+        prefix: str = "",
+        remove_duplicate: bool = True,
+    ):
         r"""
         Args:
             memo: a memo to store the set of modules already added to the result
@@ -123,19 +129,25 @@ class ZeroDDP(ColoDDP):
             if remove_duplicate:
                 memo.add(module)
             self_non_persistent_set = set(
-                map(lambda key: prefix + ('.' if prefix else '') + key, module._non_persistent_buffers_set))
+                map(
+                    lambda key: prefix + ("." if prefix else "") + key,
+                    module._non_persistent_buffers_set,
+                )
+            )
             for name, sub_module in module._modules.items():
                 if sub_module is None:
                     continue
-                submodule_prefix = prefix + ('.' if prefix else '') + name
-                child_non_persistent_set = self._get_non_persistent_buffers_set(sub_module, memo, submodule_prefix,
-                                                                                remove_duplicate)
-                self_non_persistent_set = set.union(self_non_persistent_set, child_non_persistent_set)
+                submodule_prefix = prefix + ("." if prefix else "") + name
+                child_non_persistent_set = self._get_non_persistent_buffers_set(
+                    sub_module, memo, submodule_prefix, remove_duplicate
+                )
+                self_non_persistent_set = set.union(
+                    self_non_persistent_set, child_non_persistent_set
+                )
         return self_non_persistent_set
 
     def _post_forward(self):
-        """This function is only triggered for inference.
-        """
+        """This function is only triggered for inference."""
         access_list = list(self.chunk_manager.accessed_chunks)
         # we need to scatter all accessed chunks and move them to their original places
         for chunk in access_list:
@@ -152,10 +164,14 @@ class ZeroDDP(ColoDDP):
         # check whether we are in a inference mode
         grad_flag = torch.is_grad_enabled()
         if not grad_flag:
-            assert not self.gemini_manager.need_warmup or not self.gemini_manager.is_warmup(
+            assert (
+                not self.gemini_manager.need_warmup
+                or not self.gemini_manager.is_warmup()
             ), "You should run a completed iteration as your warmup iter"
 
-        args, kwargs = _cast_float(args, self.mixed_precision), _cast_float(kwargs, self.mixed_precision)
+        args, kwargs = _cast_float(args, self.mixed_precision), _cast_float(
+            kwargs, self.mixed_precision
+        )
         self.module.zero_grad(set_to_none=True)
         if not grad_flag:
             outputs = self._inference_forward(*args, **kwargs)
@@ -169,8 +185,7 @@ class ZeroDDP(ColoDDP):
         return outputs
 
     def _inference_forward(self, *args, **kwargs):
-        """This function is only triggered for inference.
-        """
+        """This function is only triggered for inference."""
         fwd_ctx = ColoParamOpHookManager.use_hooks(self.param_op_hook)
         if not self.scatter_after_inference:
             # gather all chunks
@@ -206,23 +221,29 @@ class ZeroDDP(ColoDDP):
                 if not is_ddp_ignored(param) and not getattr(param, "_gemini_reduced"):
                     error_params.append(self.param2name[param])
             error_str = "\n\t".join(error_params)
-            raise RuntimeError("ZERO DDP error: the synchronization of gradients doesn't exit properly.",
-                               "The most possible reason is that the model is not compatible with ZeroDDP.\n",
-                               f"{error_str}")
+            raise RuntimeError(
+                "ZERO DDP error: the synchronization of gradients doesn't exit properly.",
+                "The most possible reason is that the model is not compatible with ZeroDDP.\n",
+                f"{error_str}",
+            )
         self._setup_grads_ptr()
         self._logger.debug(
-            f'comp cuda demand time: {self.gemini_manager._comp_cuda_demand_time}, layout time: {self.gemini_manager._layout_time}, evict time: {self.gemini_manager._evict_time}, CPU->CUDA vol: {self.gemini_manager._h2d_volume}B, CUDA->CPU vol: {self.gemini_manager._d2h_volume}'
+            f"comp cuda demand time: {self.gemini_manager._comp_cuda_demand_time}, layout time: {self.gemini_manager._layout_time}, evict time: {self.gemini_manager._evict_time}, CPU->CUDA vol: {self.gemini_manager._h2d_volume}B, CUDA->CPU vol: {self.gemini_manager._d2h_volume}"
         )
         self.gemini_manager.post_iter()
 
     def backward(self, loss: torch.Tensor):
         self._pre_backward()
-        with self.param_op_hook.switch_to_backward(), ColoParamOpHookManager.use_hooks(self.param_op_hook):
+        with self.param_op_hook.switch_to_backward(), ColoParamOpHookManager.use_hooks(
+            self.param_op_hook
+        ):
             loss.backward()
         self._post_backward()
 
     def backward_by_grad(self, tensor, grad):
-        with self.param_op_hook.switch_to_backward(), ColoParamOpHookManager.use_hooks(self.param_op_hook):
+        with self.param_op_hook.switch_to_backward(), ColoParamOpHookManager.use_hooks(
+            self.param_op_hook
+        ):
             torch.autograd.backward(tensor, grad)
         self._post_backward()
 
@@ -232,8 +253,10 @@ class ZeroDDP(ColoDDP):
         with torch._C.DisableTorchFunction():
             chunk = self.chunk_manager.get_chunk(p)
             if chunk.tensors_info[p].state != TensorState.HOLD_AFTER_BWD:
-                raise RuntimeError(f"Parameter `{self.param2name[p]}` failed at the gradient reduction. "
-                                   "Some unsupported torch function is operated upon this parameter.")
+                raise RuntimeError(
+                    f"Parameter `{self.param2name[p]}` failed at the gradient reduction. "
+                    "Some unsupported torch function is operated upon this parameter."
+                )
             self.chunk_manager.trans_tensor_state(p, TensorState.READY_FOR_REDUCE)
             chunk.copy_tensor_to_chunk_slice(p, grad)
             reduced = self.chunk_manager.reduce_chunk(chunk)
@@ -247,7 +270,9 @@ class ZeroDDP(ColoDDP):
                 # record l2 norm for gradient clipping
                 if chunk.l2_norm_flag:
                     chunk.set_l2_norm()
-                self.chunk_manager.move_chunk(chunk, self.grads_device[p], force_copy=True)
+                self.chunk_manager.move_chunk(
+                    chunk, self.grads_device[p], force_copy=True
+                )
         return empty_grad
 
     def zero_grad(self, set_to_none: bool = False) -> None:
@@ -257,12 +282,14 @@ class ZeroDDP(ColoDDP):
         for tensor in chunk.get_tensors():
             self.grads_device[tensor] = device
 
-    def state_dict(self,
-                   destination=None,
-                   prefix='',
-                   keep_vars=False,
-                   only_rank_0: bool = True,
-                   dtype: torch.dtype = torch.float16):
+    def state_dict(
+        self,
+        destination=None,
+        prefix="",
+        keep_vars=False,
+        only_rank_0: bool = True,
+        dtype: torch.dtype = torch.float16,
+    ):
         """Returns a dictionary containing a whole state of the module.
 
         Both parameters and persistent buffers (e.g. running averages) are included.
@@ -280,7 +307,9 @@ class ZeroDDP(ColoDDP):
         if destination is None:
             destination = OrderedDict()
             destination._metadata = OrderedDict()
-        destination._metadata[prefix[:-1]] = local_metadata = dict(version=self._version)
+        destination._metadata[prefix[:-1]] = local_metadata = dict(
+            version=self._version
+        )
         self._save_to_state_dict(destination, prefix, keep_vars, only_rank_0, dtype)
 
         for hook in self._state_dict_hooks.values():
@@ -289,7 +318,9 @@ class ZeroDDP(ColoDDP):
                 destination = hook_result
         return destination
 
-    def _get_chunk_to_save_data(self, chunk: Chunk, only_rank_0: bool, dtype: torch.dtype = torch.float16) -> Dict:
+    def _get_chunk_to_save_data(
+        self, chunk: Chunk, only_rank_0: bool, dtype: torch.dtype = torch.float16
+    ) -> Dict:
         """
         get gathered chunk content.
 
@@ -309,7 +340,11 @@ class ZeroDDP(ColoDDP):
             record_tensor = torch.empty([0])
             record_flag = (not only_rank_0) | (dist.get_rank(chunk.torch_pg) == 0)
             if record_flag:
-                record_tensor = temp_chunk[tensor_info.offset:tensor_info.end].view(tensor.shape).cpu()
+                record_tensor = (
+                    temp_chunk[tensor_info.offset : tensor_info.end]
+                    .view(tensor.shape)
+                    .cpu()
+                )
 
             assert tensor not in chunk_to_save_data
             chunk_to_save_data[tensor] = record_tensor
@@ -317,8 +352,12 @@ class ZeroDDP(ColoDDP):
         del temp_chunk
         return chunk_to_save_data
 
-    def _get_param_to_save_data(self, param_list: List[torch.nn.Parameter], only_rank_0: bool,
-                                dtype: torch.dtype) -> Dict:
+    def _get_param_to_save_data(
+        self,
+        param_list: List[torch.nn.Parameter],
+        only_rank_0: bool,
+        dtype: torch.dtype,
+    ) -> Dict:
         """
         get param content from chunks.
 
@@ -333,10 +372,14 @@ class ZeroDDP(ColoDDP):
         param_to_save_data = dict()
         chunk_list = self.chunk_manager.get_chunks(param_list)
         for chunk in chunk_list:
-            param_to_save_data.update(self._get_chunk_to_save_data(chunk, only_rank_0, dtype))
+            param_to_save_data.update(
+                self._get_chunk_to_save_data(chunk, only_rank_0, dtype)
+            )
         return param_to_save_data
 
-    def _save_to_state_dict(self, destination, prefix, keep_vars, only_rank_0=True, dtype=torch.float16):
+    def _save_to_state_dict(
+        self, destination, prefix, keep_vars, only_rank_0=True, dtype=torch.float16
+    ):
         r"""Saves module state to `destination` dictionary, containing a state
         of the module, but not its descendants. This is called on every
         submodule in :meth:`~torch.nn.Module.state_dict`.
@@ -349,16 +392,22 @@ class ZeroDDP(ColoDDP):
             prefix (str): the prefix for parameters and buffers used in this
                 module
         """
-        assert keep_vars is False, "`state_dict` with parameter, `keep_vars=True`, is not supported now."
+        assert (
+            keep_vars is False
+        ), "`state_dict` with parameter, `keep_vars=True`, is not supported now."
 
         # get copies of fp32 parameters in CPU
         # as memory of fp16_params may be reused by grad, it's not reliable, we should use fp32_params and convert to fp16
-        param_to_save_data = self._get_param_to_save_data(self.fp32_params, only_rank_0, dtype)
+        param_to_save_data = self._get_param_to_save_data(
+            self.fp32_params, only_rank_0, dtype
+        )
         # get the mapping between copies and fp16 parameters
         p_mapping = dict()
         for p, fp32_p in zip(self.fp16_params, self.fp32_params):
             name = self.param2name[p]
-            assert fp32_p in param_to_save_data, "Parameter '{}' is neglected in the chunk list".format(name)
+            assert (
+                fp32_p in param_to_save_data
+            ), "Parameter '{}' is neglected in the chunk list".format(name)
             record_parameter = param_to_save_data[fp32_p]
             p_mapping[p] = record_parameter
         for name, param in self.name2param.items():
@@ -377,11 +426,15 @@ class ZeroDDP(ColoDDP):
                 destination[prefix + name] = buf if keep_vars else buf.detach()
         # save extra states
         extra_state_key = prefix + _EXTRA_STATE_KEY_SUFFIX
-        if getattr(self.__class__, "get_extra_state",
-                   torch.nn.Module.get_extra_state) is not torch.nn.Module.get_extra_state:
+        if (
+            getattr(self.__class__, "get_extra_state", torch.nn.Module.get_extra_state)
+            is not torch.nn.Module.get_extra_state
+        ):
             destination[extra_state_key] = self.get_extra_state()
 
-    def load_state_dict(self, state_dict: 'OrderedDict[str, torch.Tensor]', strict: bool = True):
+    def load_state_dict(
+        self, state_dict: "OrderedDict[str, torch.Tensor]", strict: bool = True
+    ):
         r"""Copies parameters and buffers from :attr:`state_dict` into
         this module and its descendants. If :attr:`strict` is ``True``, then
         the keys of :attr:`state_dict` must exactly match the keys returned
@@ -409,32 +462,58 @@ class ZeroDDP(ColoDDP):
         error_msgs: List[str] = []
 
         # copy state_dict so _load_from_state_dict can modify it
-        metadata = getattr(state_dict, '_metadata', None)
+        metadata = getattr(state_dict, "_metadata", None)
         state_dict = state_dict.copy()
         if metadata is not None:
             # mypy isn't aware that "_metadata" exists in state_dict
-            state_dict._metadata = metadata    # type: ignore[attr-defined]
+            state_dict._metadata = metadata  # type: ignore[attr-defined]
 
-        prefix = ''
+        prefix = ""
         local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
-        self._load_from_state_dict(state_dict, prefix, local_metadata, True, missing_keys, unexpected_keys, error_msgs)
+        self._load_from_state_dict(
+            state_dict,
+            prefix,
+            local_metadata,
+            True,
+            missing_keys,
+            unexpected_keys,
+            error_msgs,
+        )
 
         if strict:
             if len(unexpected_keys) > 0:
                 error_msgs.insert(
-                    0, 'Unexpected key(s) in state_dict: {}. '.format(', '.join(
-                        '"{}"'.format(k) for k in unexpected_keys)))
+                    0,
+                    "Unexpected key(s) in state_dict: {}. ".format(
+                        ", ".join('"{}"'.format(k) for k in unexpected_keys)
+                    ),
+                )
             if len(missing_keys) > 0:
                 error_msgs.insert(
-                    0, 'Missing key(s) in state_dict: {}. '.format(', '.join('"{}"'.format(k) for k in missing_keys)))
+                    0,
+                    "Missing key(s) in state_dict: {}. ".format(
+                        ", ".join('"{}"'.format(k) for k in missing_keys)
+                    ),
+                )
 
         if len(error_msgs) > 0:
-            raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
-                self.__class__.__name__, "\n\t".join(error_msgs)))
+            raise RuntimeError(
+                "Error(s) in loading state_dict for {}:\n\t{}".format(
+                    self.__class__.__name__, "\n\t".join(error_msgs)
+                )
+            )
         return _IncompatibleKeys(missing_keys, unexpected_keys)
 
-    def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys,
-                              error_msgs):
+    def _load_from_state_dict(
+        self,
+        state_dict,
+        prefix,
+        local_metadata,
+        strict,
+        missing_keys,
+        unexpected_keys,
+        error_msgs,
+    ):
         r"""Copies parameters and buffers from :attr:`state_dict` into only
         this module, but not its descendants. This is called on every submodule
         in :meth:`~torch.nn.Module.load_state_dict`. Metadata saved for this
@@ -467,10 +546,24 @@ class ZeroDDP(ColoDDP):
                 :meth:`~torch.nn.Module.load_state_dict`
         """
         for hook in self._load_state_dict_pre_hooks.values():
-            hook(state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs)
+            hook(
+                state_dict,
+                prefix,
+                local_metadata,
+                strict,
+                missing_keys,
+                unexpected_keys,
+                error_msgs,
+            )
 
-        persistent_buffers = {k: v for k, v in self.named_buffers() if k not in self._non_persistent_buffers_set}
-        local_name_params = itertools.chain(self.named_parameters(), persistent_buffers.items())
+        persistent_buffers = {
+            k: v
+            for k, v in self.named_buffers()
+            if k not in self._non_persistent_buffers_set
+        }
+        local_name_params = itertools.chain(
+            self.named_parameters(), persistent_buffers.items()
+        )
         local_state = {k: v for k, v in local_name_params if v is not None}
 
         def load(param_name, dest_tensor, copy_func):
@@ -482,19 +575,25 @@ class ZeroDDP(ColoDDP):
                     input_param = input_param[0]
                 if input_param.shape != dest_tensor.shape:
                     # local shape should match the one in checkpoint
-                    error_msgs.append('size mismatch for {}: copying a param with shape {} from checkpoint, '
-                                      'the shape in current model is {}.'.format(state_key, input_param.shape,
-                                                                                 dest_tensor.shape))
+                    error_msgs.append(
+                        "size mismatch for {}: copying a param with shape {} from checkpoint, "
+                        "the shape in current model is {}.".format(
+                            state_key, input_param.shape, dest_tensor.shape
+                        )
+                    )
                     return
                 try:
                     with torch.no_grad():
                         copy_func(input_param)
                 except Exception as ex:
-                    error_msgs.append('While copying the parameter named "{}", '
-                                      'whose dimensions in the model are {} and '
-                                      'whose dimensions in the checkpoint are {}, '
-                                      'an exception occurred : {}.'.format(state_key, dest_tensor.size(),
-                                                                           input_param.size(), ex.args))
+                    error_msgs.append(
+                        'While copying the parameter named "{}", '
+                        "whose dimensions in the model are {} and "
+                        "whose dimensions in the checkpoint are {}, "
+                        "an exception occurred : {}.".format(
+                            state_key, dest_tensor.size(), input_param.size(), ex.args
+                        )
+                    )
             elif strict:
                 missing_keys.append(state_key)
 
@@ -518,15 +617,19 @@ class ZeroDDP(ColoDDP):
 
             for tensor, tensor_info in chunk.tensors_info.items():
                 parameter_name = fp32_to_name[tensor]
-                parameter_slice = temp_chunk[tensor_info.offset:tensor_info.end]
-                load(parameter_name, tensor, partial(load_fp32_parameter, parameter_slice))
+                parameter_slice = temp_chunk[tensor_info.offset : tensor_info.end]
+                load(
+                    parameter_name,
+                    tensor,
+                    partial(load_fp32_parameter, parameter_slice),
+                )
 
             if chunk.is_gathered:
                 chunk.cuda_global_chunk.copy_(temp_chunk)
             elif chunk.cuda_shard is not None:
-                chunk.cuda_shard.copy_(temp_chunk[chunk.shard_begin:chunk.shard_end])
+                chunk.cuda_shard.copy_(temp_chunk[chunk.shard_begin : chunk.shard_end])
             else:
-                chunk.cpu_shard.copy_(temp_chunk[chunk.shard_begin:chunk.shard_end])
+                chunk.cpu_shard.copy_(temp_chunk[chunk.shard_begin : chunk.shard_end])
 
             del temp_chunk
 
@@ -540,8 +643,10 @@ class ZeroDDP(ColoDDP):
                 load(name, buf, buf.copy_)
 
         extra_state_key = prefix + _EXTRA_STATE_KEY_SUFFIX
-        if getattr(self.__class__, "set_extra_state",
-                   torch.nn.Module.set_extra_state) is not torch.nn.Module.set_extra_state:
+        if (
+            getattr(self.__class__, "set_extra_state", torch.nn.Module.set_extra_state)
+            is not torch.nn.Module.set_extra_state
+        ):
             if extra_state_key in state_dict:
                 self.set_extra_state(state_dict[extra_state_key])
             elif strict:
@@ -552,11 +657,13 @@ class ZeroDDP(ColoDDP):
         if strict:
             for key in state_dict.keys():
                 if key.startswith(prefix) and key != extra_state_key:
-                    input_name = key[len(prefix):]
+                    input_name = key[len(prefix) :]
                     if input_name not in local_state:
                         unexpected_keys.append(key)
 
-    def _init_chunks(self, param_order, strict_ddp_mode: bool, cpu_offload: bool, pin_memory: bool):
+    def _init_chunks(
+        self, param_order, strict_ddp_mode: bool, cpu_offload: bool, pin_memory: bool
+    ):
         ddp_pg = ColoProcessGroup()
         for p in param_order.generate():
             self._preprocess_param(p)
@@ -574,7 +681,9 @@ class ZeroDDP(ColoDDP):
 
             # move ignored parameters to CUDA
             if is_ddp_ignored(p):
-                p.data = p.data.to(device=get_current_device(), dtype=self.mixed_precision)
+                p.data = p.data.to(
+                    device=get_current_device(), dtype=self.mixed_precision
+                )
                 continue
 
             # create a fp32 parameter
@@ -585,16 +694,20 @@ class ZeroDDP(ColoDDP):
 
             # register the fp16 parameter and fp32 parameter in the chunk manager
             dp_world_size = p.process_group.dp_world_size()
-            self.chunk_manager.register_tensor(tensor=p,
-                                               group_type='fp16_param',
-                                               config_key=dp_world_size,
-                                               cpu_offload=cpu_offload,
-                                               pin_memory=pin_memory)
-            self.chunk_manager.register_tensor(tensor=fp32_p,
-                                               group_type='fp32_param',
-                                               config_key=dp_world_size,
-                                               cpu_offload=cpu_offload,
-                                               pin_memory=pin_memory)
+            self.chunk_manager.register_tensor(
+                tensor=p,
+                group_type="fp16_param",
+                config_key=dp_world_size,
+                cpu_offload=cpu_offload,
+                pin_memory=pin_memory,
+            )
+            self.chunk_manager.register_tensor(
+                tensor=fp32_p,
+                group_type="fp32_param",
+                config_key=dp_world_size,
+                cpu_offload=cpu_offload,
+                pin_memory=pin_memory,
+            )
 
             self.fp16_params.append(p)
             self.fp32_params.append(fp32_p)
@@ -619,7 +732,9 @@ class ZeroDDP(ColoDDP):
             if torch.is_floating_point(buffer):
                 buffer.data = buffer.to(self.mixed_precision)
 
-    def _preprocess_param(self, p: Union[nn.Parameter, ColoParameter, 'LazyTensor']) -> None:
+    def _preprocess_param(
+        self, p: Union[nn.Parameter, ColoParameter, "LazyTensor"]
+    ) -> None:
         """Convert parameter to ColoParameter in-place.
         Args:
             p (Union[nn.Parameter, ColoParameter, LazyTensor]): parameter to be converted
@@ -634,12 +749,14 @@ class ZeroDDP(ColoDDP):
         p.__class__ = ColoParameter
         p.__init__(p, requires_grad=requires_grad)
 
-    def state_dict_shard(self,
-                         prefix: str = '',
-                         keep_vars: bool = False,
-                         max_shard_size: int = 1024,
-                         only_rank_0: bool = True,
-                         dtype: torch.dtype = torch.float16) -> Iterator[Tuple[OrderedDict, int]]:
+    def state_dict_shard(
+        self,
+        prefix: str = "",
+        keep_vars: bool = False,
+        max_shard_size: int = 1024,
+        only_rank_0: bool = True,
+        dtype: torch.dtype = torch.float16,
+    ) -> Iterator[Tuple[OrderedDict, int]]:
         """Returns dictionaries containing a whole state of the module one by one. The max size of dictionary shard is specified by ``max_shard_size``.
 
         Both parameters and persistent buffers (e.g. running averages) are included.
@@ -676,7 +793,9 @@ class ZeroDDP(ColoDDP):
                     fp32_param = fp16_to_fp32[param]
                     if fp32_param not in gathered_param_buffer:
                         chunk = self.chunk_manager.get_chunk(fp32_param)
-                        gathered_param_buffer.update(self._get_chunk_to_save_data(chunk, only_rank_0, dtype))
+                        gathered_param_buffer.update(
+                            self._get_chunk_to_save_data(chunk, only_rank_0, dtype)
+                        )
                     gathered_param = gathered_param_buffer.pop(fp32_param)
 
                 block, block_size = sharder.append(prefix + name, gathered_param)
@@ -695,8 +814,10 @@ class ZeroDDP(ColoDDP):
                     yield block, block_size
         # save extra states
         extra_state_key = prefix + _EXTRA_STATE_KEY_SUFFIX
-        if getattr(self.__class__, "get_extra_state",
-                   torch.nn.Module.get_extra_state) is not torch.nn.Module.get_extra_state:
+        if (
+            getattr(self.__class__, "get_extra_state", torch.nn.Module.get_extra_state)
+            is not torch.nn.Module.get_extra_state
+        ):
             extra_state = self.get_extra_state()
             block, block_size = sharder.append(extra_state_key, extra_state)
             if block is not None:
@@ -712,7 +833,9 @@ class _StateDictSharder:
         self.current_block = OrderedDict()
         self.current_block_size = 0
 
-    def append(self, name: str, tensor: torch.Tensor) -> Tuple[Optional[OrderedDict], int]:
+    def append(
+        self, name: str, tensor: torch.Tensor
+    ) -> Tuple[Optional[OrderedDict], int]:
         tensor_size = calculate_tensor_size(tensor)
         ret_block = None
         ret_block_size = 0
@@ -728,20 +851,22 @@ class _StateDictSharder:
 
 class GeminiDDP(ZeroDDP):
 
-    def __init__(self,
-                 module: torch.nn.Module,
-                 device: torch.device,
-                 placement_policy: str = "cpu",
-                 pin_memory: bool = False,
-                 force_outputs_fp32: bool = False,
-                 strict_ddp_mode: bool = False,
-                 scatter_after_inference: bool = True,
-                 search_range_mb: int = 32,
-                 hidden_dim: Optional[int] = None,
-                 min_chunk_size_mb: float = 32,
-                 memstats: Optional[MemStats] = None,
-                 mixed_precision: torch.dtype = torch.float16,
-                 verbose: bool = False) -> None:
+    def __init__(
+        self,
+        module: torch.nn.Module,
+        device: torch.device,
+        placement_policy: str = "cpu",
+        pin_memory: bool = False,
+        force_outputs_fp32: bool = False,
+        strict_ddp_mode: bool = False,
+        scatter_after_inference: bool = True,
+        search_range_mb: int = 32,
+        hidden_dim: Optional[int] = None,
+        min_chunk_size_mb: float = 32,
+        memstats: Optional[MemStats] = None,
+        mixed_precision: torch.dtype = torch.float16,
+        verbose: bool = False,
+    ) -> None:
         """
         A torch.Module wrapper using ZeRO-DP and Gemini.
         ZeRO is for parallel. Gemini is for memory management.
@@ -773,18 +898,22 @@ class GeminiDDP(ZeroDDP):
         if search_range_mb is None:
             search_range_mb = 32
 
-        chunk_manager = init_chunk_manager(model=module,
-                                           init_device=device,
-                                           hidden_dim=hidden_dim,
-                                           search_range_mb=search_range_mb,
-                                           min_chunk_size_mb=min_chunk_size_mb,
-                                           strict_ddp_flag=strict_ddp_mode,
-                                           verbose=verbose)
+        chunk_manager = init_chunk_manager(
+            model=module,
+            init_device=device,
+            hidden_dim=hidden_dim,
+            search_range_mb=search_range_mb,
+            min_chunk_size_mb=min_chunk_size_mb,
+            strict_ddp_flag=strict_ddp_mode,
+            verbose=verbose,
+        )
         gemini_manager = GeminiManager(placement_policy, chunk_manager, memstats)
-        super().__init__(module,
-                         gemini_manager,
-                         pin_memory,
-                         force_outputs_fp32,
-                         strict_ddp_mode,
-                         scatter_after_inference,
-                         mixed_precision=mixed_precision)
+        super().__init__(
+            module,
+            gemini_manager,
+            pin_memory,
+            force_outputs_fp32,
+            strict_ddp_mode,
+            scatter_after_inference,
+            mixed_precision=mixed_precision,
+        )

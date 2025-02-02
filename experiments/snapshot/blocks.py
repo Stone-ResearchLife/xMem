@@ -31,23 +31,23 @@ class SnapshotTraceBlock:
             str: Action type of the block
 
         """
-        return self._data['action']
+        return self._data["action"]
 
     @property
     def address(self) -> str:
-        return str(self._data['addr'])
+        return str(self._data["addr"])
 
     @property
     def bytes(self) -> int:
-        return self._data['size']
+        return self._data["size"]
 
     @property
     def time(self) -> int:
-        return self._data['time_us']
+        return self._data["time_us"]
 
     @property
     def frames(self) -> List[Dict]:
-        return self._data['frames']
+        return self._data["frames"]
 
 
 class MemoryBlock(AbstractMemoryBlock):
@@ -84,7 +84,6 @@ class MemoryBlock(AbstractMemoryBlock):
         self._end = value
 
 
-
 class ActivityMemory(MemoryBlock):
     def __init__(self, block: SnapshotTraceBlock):
         super().__init__(block)
@@ -96,30 +95,30 @@ class ActivityMemory(MemoryBlock):
         return self.get_ops_stack()[0]
 
     def __repr__(self):
-        return (f"{self.ops_name}({self._cublas_used}|{self.is_freed}|{self.address}): bytes: {self.bytes}, start: {self.alloc_time}, stop: {self.free_time}")
+        return f"{self.ops_name}({self._cublas_used}|{self.is_freed}|{self.address}): bytes: {self.bytes}, start: {self.alloc_time}, stop: {self.free_time}"
 
     def get_ops_stack(self):
         if self._ops is None:
             ops = []
             for frame in reversed(self._start.frames):
                 patterns = [
-                    'at::_ops::[a-zA-Z0-9_]*::call',
-                    'torch::autograd::generated::[a-zA-Z0-9_]*[0-9]{1,2}::apply'
+                    "at::_ops::[a-zA-Z0-9_]*::call",
+                    "torch::autograd::generated::[a-zA-Z0-9_]*[0-9]{1,2}::apply",
                 ]
                 for pattern in patterns:
-                    if re.match(pattern, frame['name']):
-                        _search = re.search(pattern, frame['name'])
+                    if re.match(pattern, frame["name"]):
+                        _search = re.search(pattern, frame["name"])
                         layer_name = str(_search.group()).split("::")[-2]
                         ops.append(layer_name)
-                if 'Blas.cpp' == frame['filename']:
+                if "Blas.cpp" == frame["filename"]:
                     self._cublas_used = True
             self._ops = ops
         return self._ops
+
 
 class SegmentMemory(MemoryBlock):
     def __init__(self, block: SnapshotTraceBlock):
         super().__init__(block)
 
     def __repr__(self):
-        return (f"Segment Block({self.is_freed}|{self.address}): {self.bytes}, start: {self.alloc_time}, stop: {self.free_time}")
-
+        return f"Segment Block({self.is_freed}|{self.address}): {self.bytes}, start: {self.alloc_time}, stop: {self.free_time}"

@@ -21,7 +21,7 @@ def _get_my_nowrap_functions() -> Set[Callable]:
         Tensor._base.__get__,
         Tensor.grad.__get__,
         Tensor._grad.__get__,
-        Tensor.data.__get__,    # make .data returns torch.Tensor rather than ColoTensor
+        Tensor.data.__get__,  # make .data returns torch.Tensor rather than ColoTensor
     }
 
 
@@ -53,7 +53,7 @@ def _get_spec_from_args(args, kwargs) -> ColoTensorSpec:
 
 
 class ColoTensor(torch.Tensor):
-    """ Data Structure for Tensor in Colossal-AI. It is a subclass of torch.Tensor.
+    """Data Structure for Tensor in Colossal-AI. It is a subclass of torch.Tensor.
 
     The Colotensor can be initialized with a PyTorch tensor in the following ways.
 
@@ -70,10 +70,11 @@ class ColoTensor(torch.Tensor):
         data (torch.Tensor): a torch tensor used as the payload the colotensor.
         spec (ColoTensorSpec, optional): the tensor spec of initialization. Defaults to ColoTensorSpec(ReplicaSpec()).
     """
-    torch_major = int(torch.__version__.split('.')[0])
-    torch_minor = int(torch.__version__.split('.')[1])
 
-    def __new__(cls, data: torch.Tensor, spec: ColoTensorSpec) -> 'ColoTensor':
+    torch_major = int(torch.__version__.split(".")[0])
+    torch_minor = int(torch.__version__.split(".")[1])
+
+    def __new__(cls, data: torch.Tensor, spec: ColoTensorSpec) -> "ColoTensor":
         """
         The signature of the __new__ has to be consistent with the torch.Tensor.
 
@@ -88,7 +89,9 @@ class ColoTensor(torch.Tensor):
             data = torch.empty(0)
         return torch.Tensor._make_subclass(cls, data, data.requires_grad)
 
-    def __init__(self, data: torch.Tensor, spec: Optional[ColoTensorSpec] = None) -> None:
+    def __init__(
+        self, data: torch.Tensor, spec: Optional[ColoTensorSpec] = None
+    ) -> None:
         # If not set spec, use a DP process group and replicate dist spec
         if spec is None:
             self.has_initialized = False
@@ -112,7 +115,7 @@ class ColoTensor(torch.Tensor):
     def is_model_data(self) -> bool:
         return self._type == TensorType.MODEL
 
-    def get_process_group(self) -> 'ProcessGroup':
+    def get_process_group(self) -> "ProcessGroup":
         return self.process_group
 
     def set_process_group(self, pg: ProcessGroup):
@@ -128,10 +131,13 @@ class ColoTensor(torch.Tensor):
         # if the new pg is the same as the old pg, just returns
         if self.process_group == pg:
             return
-        assert self.process_group.tp_world_size() == 1 or self.process_group.dp_world_size() == 1, \
-            "Can not set_process_group on a ColoTensor whose process_group is both tp > 1 and world group > 1"
-        assert self.dist_spec.placement.value == 'r', \
-            "Can not set_process_group on a ColoTensor whose dist spec is not Replica"
+        assert (
+            self.process_group.tp_world_size() == 1
+            or self.process_group.dp_world_size() == 1
+        ), "Can not set_process_group on a ColoTensor whose process_group is both tp > 1 and world group > 1"
+        assert (
+            self.dist_spec.placement.value == "r"
+        ), "Can not set_process_group on a ColoTensor whose dist spec is not Replica"
 
         self.process_group = pg
 
@@ -184,9 +190,12 @@ class ColoTensor(torch.Tensor):
             # we have to capture the `backward` function
             # and make sure that it does not in `torch._C.DisableTorchFunction()` context
             if func is torch.Tensor.backward:
-                assert len(args) == 1    # only has 1 parameter
+                assert len(args) == 1  # only has 1 parameter
                 backward_tensor = torch.Tensor(args[0])
-                tensor_kwargs = {k: torch.Tensor(v) if torch.is_tensor(v) else v for k, v in kwargs.items()}
+                tensor_kwargs = {
+                    k: torch.Tensor(v) if torch.is_tensor(v) else v
+                    for k, v in kwargs.items()
+                }
                 return backward_tensor.backward(**tensor_kwargs)
 
         with torch._C.DisableTorchFunction():
@@ -213,12 +222,18 @@ class ColoTensor(torch.Tensor):
         Args:
             dist_spec (_DistSpec): the target dist. spec.
         """
-        assert self.grad_fn is None, "Current tensor has grad_fn and it can't get converted"
+        assert (
+            self.grad_fn is None
+        ), "Current tensor has grad_fn and it can't get converted"
         with DistSpecManager.no_grad():
-            self.data = DistSpecManager.handle_trans_spec(self.data, self.dist_spec, dist_spec, self.process_group)
+            self.data = DistSpecManager.handle_trans_spec(
+                self.data, self.dist_spec, dist_spec, self.process_group
+            )
         self.dist_spec = dist_spec
 
-    def redistribute(self, dist_spec: _DistSpec, pg: Optional[ProcessGroup] = None) -> 'ColoTensor':
+    def redistribute(
+        self, dist_spec: _DistSpec, pg: Optional[ProcessGroup] = None
+    ) -> "ColoTensor":
         """redistribute
         Redistribute the tensor among processes. The rule is like this:
 
@@ -244,8 +259,12 @@ class ColoTensor(torch.Tensor):
             handled = self
             pg = self.process_group
 
-        ret = DistSpecManager.handle_trans_spec(handled, handled.dist_spec, dist_spec, pg)
-        return ColoTensor.from_torch_tensor(ret, ColoTensorSpec(pg=pg, dist_attr=dist_spec))
+        ret = DistSpecManager.handle_trans_spec(
+            handled, handled.dist_spec, dist_spec, pg
+        )
+        return ColoTensor.from_torch_tensor(
+            ret, ColoTensorSpec(pg=pg, dist_attr=dist_spec)
+        )
 
     def to_replicate_(self):
         """to_replicate_
@@ -254,7 +273,7 @@ class ColoTensor(torch.Tensor):
         """
         self._redistribute(dist_spec=ReplicaSpec())
 
-    def to_replicate(self) -> 'ColoTensor':
+    def to_replicate(self) -> "ColoTensor":
         """to_replicate
 
         converting dist spec of the tensor to ReplicaSpec()
@@ -262,7 +281,9 @@ class ColoTensor(torch.Tensor):
         return self.redistribute(ReplicaSpec())
 
     @staticmethod
-    def from_torch_tensor(tensor: torch.Tensor, spec: Optional[ColoTensorSpec] = None) -> 'ColoTensor':
+    def from_torch_tensor(
+        tensor: torch.Tensor, spec: Optional[ColoTensorSpec] = None
+    ) -> "ColoTensor":
         """from_torch_tensor
 
         A static method builds a `ColoTensor` from a PyTorch Tensor.
@@ -284,7 +305,14 @@ class ColoTensor(torch.Tensor):
         else:
             with torch._C.DisableTorchFunction():
                 data = self.data.clone()
-            tensor = ColoTensor(data, spec=copy(ColoTensorSpec(self.process_group, self.dist_spec, self.compute_spec)))
+            tensor = ColoTensor(
+                data,
+                spec=copy(
+                    ColoTensorSpec(
+                        self.process_group, self.dist_spec, self.compute_spec
+                    )
+                ),
+            )
             memo[id(self)] = tensor
             return tensor
 
@@ -319,25 +347,34 @@ class ColoTensor(torch.Tensor):
             return size_list[args[0]]
 
     def numel_global(self):
-        """Returns the number of elements in the tensor when it's replicated.
-        """
+        """Returns the number of elements in the tensor when it's replicated."""
         return reduce(operator.mul, self.size_global(), 1)
 
     # Some API for dist spec check
 
     def is_replicate(self):
-        return self.dist_spec.placement == DistPlacementPattern.REPLICATE \
-               or (len(self.dist_spec.num_partitions) == 1
-                   and self.dist_spec.num_partitions[0] == 1) \
-               or (self.process_group.tp_world_size() == 1)
+        return (
+            self.dist_spec.placement == DistPlacementPattern.REPLICATE
+            or (
+                len(self.dist_spec.num_partitions) == 1
+                and self.dist_spec.num_partitions[0] == 1
+            )
+            or (self.process_group.tp_world_size() == 1)
+        )
 
     def is_shard_1dcol(self):
-        return self.dist_spec.placement == DistPlacementPattern.SHARD \
-               and len(self.dist_spec.dims) == 1 and self.dist_spec.dims[0] == -1
+        return (
+            self.dist_spec.placement == DistPlacementPattern.SHARD
+            and len(self.dist_spec.dims) == 1
+            and self.dist_spec.dims[0] == -1
+        )
 
     def is_shard_1drow(self):
-        return self.dist_spec.placement == DistPlacementPattern.SHARD \
-               and len(self.dist_spec.dims) == 1 and self.dist_spec.dims[0] == 0
+        return (
+            self.dist_spec.placement == DistPlacementPattern.SHARD
+            and len(self.dist_spec.dims) == 1
+            and self.dist_spec.dims[0] == 0
+        )
 
     def is_sharded(self):
         return self.dist_spec.placement == DistPlacementPattern.SHARD

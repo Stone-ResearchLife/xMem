@@ -5,7 +5,6 @@
 Welcome to the large-scale deep learning optimization techniques of [Colossal-AI](https://github.com/hpcaitech/ColossalAI),
 which has been accepted as official tutorials by top conference [SC](https://sc22.supercomputing.org/), [AAAI](https://aaai.org/Conferences/AAAI-23/), [PPoPP](https://ppopp23.sigplan.org/), [CVPR](https://cvpr2023.thecvf.com/), [ISC](https://www.isc-hpc.com/), etc.
 
-
 [Colossal-AI](https://github.com/hpcaitech/ColossalAI), a unified deep learning system for the big model era, integrates
 many advanced technologies such as multi-dimensional tensor parallelism, sequence parallelism, heterogeneous memory management,
 large-scale optimization, adaptive task scheduling, etc. By using Colossal-AI, we could help users to efficiently and
@@ -19,7 +18,6 @@ quickly deploy large AI model training and inference, reducing large AI model tr
 [**Forum**](https://github.com/hpcaitech/ColossalAI/discussions) |
 [**Slack**](https://join.slack.com/t/colossalaiworkspace/shared_invite/zt-z7b26eeb-CBp7jouvu~r0~lcFzX832w)
 
-
 ## Table of Content
 
 Large transformer models display promising performance on a wide spectrum of AI applications.
@@ -31,26 +29,27 @@ are less communication and memory hungry. Notably, they are not mutually exclusi
 be optimized jointly to further speed up training.
 
 1. Model Accuracy
-    - Gradient Descent Optimization
-      - Gradient Descent Variants
-      - Momentum
-      - Adaptive Gradient
-    - Large Batch Training Optimization
-      - LARS
-      - LAMB
-      - Generalization Gap
-    - Second-Order Optimization
-      - Hessian-Free
-      - K-FAC
-      - Shampoo
+
+   - Gradient Descent Optimization
+     - Gradient Descent Variants
+     - Momentum
+     - Adaptive Gradient
+   - Large Batch Training Optimization
+     - LARS
+     - LAMB
+     - Generalization Gap
+   - Second-Order Optimization
+     - Hessian-Free
+     - K-FAC
+     - Shampoo
 
 2. Model Accuracy
-    - Communication Efficiency
-      - Reduce Volumn of Comm.
-      - Reduce Frequency of Comm.
-    - Memory Efficiency
-      - Mix-Precision Training
-      - Memory-Efficient Methods, e.g. ZeRO, Gemini, etc.
+   - Communication Efficiency
+     - Reduce Volumn of Comm.
+     - Reduce Frequency of Comm.
+   - Memory Efficiency
+     - Mix-Precision Training
+     - Memory-Efficient Methods, e.g. ZeRO, Gemini, etc.
 
 Some of the above are still under development. **If you wish to make a contribution to this repository, please read the `Contributing` section below.**
 
@@ -77,6 +76,5 @@ If you wish to add an optimizer for a specific application, please follow the st
 2. Prepare the corresponding example files in the [Examples](https://github.com/hpcaitech/ColossalAI-Examples) repository to prove effectiveness of the new optimizer
 3. Prepare a detailed readme on environment setup, dataset preparation, code execution, etc. in your example folder
 4. Update the table of content (last section above) in this readme file
-
 
 If your PR is accepted, we may invite you to put up a tutorial or blog in [ColossalAI Documentation](https://colossalai.org/).

@@ -18,7 +18,7 @@ from colossalai.zero import zero_model_wrapper, zero_optim_wrapper
 from .dp_plugin_base import DPPluginBase
 from .torch_ddp_plugin import TorchDDPCheckpointIO
 
-__all__ = ['LowLevelZeroPlugin']
+__all__ = ["LowLevelZeroPlugin"]
 
 
 def _convert_floating_point(x, dtype: torch.dtype = torch.float16):
@@ -27,25 +27,31 @@ def _convert_floating_point(x, dtype: torch.dtype = torch.float16):
     return x
 
 
-SUPPORTED_PRECISION = ['fp16', 'bf16', 'fp32']
+SUPPORTED_PRECISION = ["fp16", "bf16", "fp32"]
 
 
 class LowLevelZeroCheckpointIO(TorchDDPCheckpointIO):
 
-    def save_unsharded_optimizer(self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool):
+    def save_unsharded_optimizer(
+        self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool
+    ):
         """
         Save optimizer to checkpoint but only on master process.
         """
         # TODO(ver217): optimizer state dict is sharded, and cannot get full state dict now
         warnings.warn(
-            'LowLevelZeroPlugin does not support save full optimizer checkpoint now. Save it on every process.')
-        checkpoint = f'{checkpoint}.rank{self.coordinator.rank}'
-        GeneralCheckpointIO.save_unsharded_optimizer(self, optimizer, checkpoint, gather_dtensor)
+            "LowLevelZeroPlugin does not support save full optimizer checkpoint now. Save it on every process."
+        )
+        checkpoint = f"{checkpoint}.rank{self.coordinator.rank}"
+        GeneralCheckpointIO.save_unsharded_optimizer(
+            self, optimizer, checkpoint, gather_dtensor
+        )
 
     def load_optimizer(self, optimizer: Optimizer, checkpoint: str):
         warnings.warn(
-            'LowLevelZeroPlugin can only load optimizer checkpoint saved by itself with the same number of processes.')
-        checkpoint = f'{checkpoint}.rank{self.coordinator.rank}'
+            "LowLevelZeroPlugin can only load optimizer checkpoint saved by itself with the same number of processes."
+        )
+        checkpoint = f"{checkpoint}.rank{self.coordinator.rank}"
         super().load_optimizer(optimizer, checkpoint)
 
 
@@ -54,9 +60,9 @@ class LowLevelZeroModel(ModelWrapper):
     def __init__(self, module: nn.Module, stage: int, precision: str) -> None:
         super().__init__(module)
         self.dtype = None
-        if precision == 'fp16':
+        if precision == "fp16":
             self.dtype = torch.float16
-        elif precision == 'bf16':
+        elif precision == "bf16":
             self.dtype = torch.bfloat16
         module = zero_model_wrapper(module, zero_stage=stage)
         if self.dtype is not None:
@@ -76,32 +82,40 @@ class LowLevelZeroModel(ModelWrapper):
 
 class LowLevelZeroOptimizer(OptimizerWrapper):
 
-    def __init__(self,
-                 module: nn.Module,
-                 optimizer: Optimizer,
-                 zero_optim_config: dict,
-                 optim_kwargs: dict,
-                 verbose: bool = False) -> None:
-        optimizer = zero_optim_wrapper(module,
-                                       optimizer,
-                                       optim_config=zero_optim_config,
-                                       **optim_kwargs,
-                                       verbose=verbose)
+    def __init__(
+        self,
+        module: nn.Module,
+        optimizer: Optimizer,
+        zero_optim_config: dict,
+        optim_kwargs: dict,
+        verbose: bool = False,
+    ) -> None:
+        optimizer = zero_optim_wrapper(
+            module,
+            optimizer,
+            optim_config=zero_optim_config,
+            **optim_kwargs,
+            verbose=verbose,
+        )
         super().__init__(optimizer)
 
     def backward(self, loss: Tensor, *args, **kwargs):
         self.optim.backward(loss)
 
-    def clip_grad_by_norm(self,
-                          max_norm: Union[float, int],
-                          norm_type: Union[float, int] = 2,
-                          error_if_nonfinite: bool = False,
-                          *args,
-                          **kwargs) -> Tensor:
-        warnings.warn(f'LowLevelZero controls grad clipping by itself, so you should not use clip_grad_by_norm')
+    def clip_grad_by_norm(
+        self,
+        max_norm: Union[float, int],
+        norm_type: Union[float, int] = 2,
+        error_if_nonfinite: bool = False,
+        *args,
+        **kwargs,
+    ) -> Tensor:
+        warnings.warn(
+            f"LowLevelZero controls grad clipping by itself, so you should not use clip_grad_by_norm"
+        )
 
     def clip_grad_by_value(self, clip_value: float, *args, **kwargs) -> None:
-        raise NotImplementedError('LowLevelZero does not support clip_grad_by_value')
+        raise NotImplementedError("LowLevelZero does not support clip_grad_by_value")
 
 
 class LowLevelZeroPlugin(DPPluginBase):
@@ -142,7 +156,7 @@ class LowLevelZeroPlugin(DPPluginBase):
     def __init__(
         self,
         stage: int = 1,
-        precision: str = 'fp16',
+        precision: str = "fp16",
         initial_scale: float = 2**32,
         min_scale: float = 1,
         growth_factor: float = 2,
@@ -159,24 +173,30 @@ class LowLevelZeroPlugin(DPPluginBase):
         verbose: bool = False,
     ) -> None:
         super().__init__()
-        assert stage in (1, 2), f'LowLevelZeroPlugin only supports stage 1/2 training'
-        assert precision in SUPPORTED_PRECISION, f'LowLevelZeroPlugin only supports {SUPPORTED_PRECISION} training'
+        assert stage in (1, 2), f"LowLevelZeroPlugin only supports stage 1/2 training"
+        assert (
+            precision in SUPPORTED_PRECISION
+        ), f"LowLevelZeroPlugin only supports {SUPPORTED_PRECISION} training"
 
         self.stage = stage
         self.precision = precision
-        self.zero_optim_config = dict(reduce_bucket_size=reduce_bucket_size_in_m * 1024 * 1024,
-                                      communication_dtype=communication_dtype,
-                                      overlap_communication=overlap_communication,
-                                      cpu_offload=cpu_offload)
-        self.optim_kwargs = dict(initial_scale=initial_scale,
-                                 growth_factor=growth_factor,
-                                 backoff_factor=backoff_factor,
-                                 growth_interval=growth_interval,
-                                 hysteresis=hysteresis,
-                                 min_scale=min_scale,
-                                 max_scale=max_scale,
-                                 max_norm=max_norm,
-                                 norm_type=norm_type)
+        self.zero_optim_config = dict(
+            reduce_bucket_size=reduce_bucket_size_in_m * 1024 * 1024,
+            communication_dtype=communication_dtype,
+            overlap_communication=overlap_communication,
+            cpu_offload=cpu_offload,
+        )
+        self.optim_kwargs = dict(
+            initial_scale=initial_scale,
+            growth_factor=growth_factor,
+            backoff_factor=backoff_factor,
+            growth_interval=growth_interval,
+            hysteresis=hysteresis,
+            min_scale=min_scale,
+            max_scale=max_scale,
+            max_norm=max_norm,
+            norm_type=norm_type,
+        )
         self.verbose = verbose
 
     def support_no_sync(self) -> bool:
@@ -192,7 +212,7 @@ class LowLevelZeroPlugin(DPPluginBase):
         return True
 
     def supported_devices(self) -> List[str]:
-        return ['cuda']
+        return ["cuda"]
 
     def configure(
         self,
@@ -207,8 +227,13 @@ class LowLevelZeroPlugin(DPPluginBase):
             model = LowLevelZeroModel(model, self.stage, self.precision)
 
         if not isinstance(optimizer, OptimizerWrapper):
-            optimizer = LowLevelZeroOptimizer(model.unwrap(), optimizer, self.zero_optim_config, self.optim_kwargs,
-                                              self.verbose)
+            optimizer = LowLevelZeroOptimizer(
+                model.unwrap(),
+                optimizer,
+                self.zero_optim_config,
+                self.optim_kwargs,
+                self.verbose,
+            )
 
         return model, optimizer, criterion, dataloader, lr_scheduler
 

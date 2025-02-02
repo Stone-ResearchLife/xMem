@@ -41,50 +41,60 @@ def _elementwise_flops_compute(input, other):
 @meta_profiler_function.register(torch.sub)
 @meta_profiler_function.register(torch.mul)
 @meta_profiler_function.register(torch.floor_divide)
-@meta_profiler_function.register('add')    # for built-in op +
-@meta_profiler_function.register('iadd')    # for built-in op +=
-@meta_profiler_function.register('eq')    # for built-in op =
-@meta_profiler_function.register('sub')    # for built-in op -
-@meta_profiler_function.register('isub')    # for built-in op -=
-@meta_profiler_function.register('mul')    # for built-in op *
-@meta_profiler_function.register('imul')    # for built-in op *=
-@meta_profiler_function.register('floordiv')    # for built-in op //
-@meta_profiler_function.register('ifloordiv')    # for built-in op //=
-def torch_add_like_ops(input: Any, other: Any, *, out: Optional[torch.Tensor] = None) -> Tuple[int, int]:
+@meta_profiler_function.register("add")  # for built-in op +
+@meta_profiler_function.register("iadd")  # for built-in op +=
+@meta_profiler_function.register("eq")  # for built-in op =
+@meta_profiler_function.register("sub")  # for built-in op -
+@meta_profiler_function.register("isub")  # for built-in op -=
+@meta_profiler_function.register("mul")  # for built-in op *
+@meta_profiler_function.register("imul")  # for built-in op *=
+@meta_profiler_function.register("floordiv")  # for built-in op //
+@meta_profiler_function.register("ifloordiv")  # for built-in op //=
+def torch_add_like_ops(
+    input: Any, other: Any, *, out: Optional[torch.Tensor] = None
+) -> Tuple[int, int]:
     return _elementwise_flops_compute(input, other)
 
 
 @meta_profiler_function.register(torch.abs)
-def torch_elementwise_op(input: torch.Tensor, *, out: Optional[torch.Tensor] = None) -> Tuple[int, int]:
+def torch_elementwise_op(
+    input: torch.Tensor, *, out: Optional[torch.Tensor] = None
+) -> Tuple[int, int]:
     flops = input.numel()
     macs = 0
     return flops, macs
 
 
 @meta_profiler_function.register(torch.matmul)
-@meta_profiler_function.register('matmul')    # for built-in op @
+@meta_profiler_function.register("matmul")  # for built-in op @
 @meta_profiler_function.register(torch.Tensor.matmul)
-def torch_matmul(input: torch.Tensor, other: torch.Tensor, *, out: Optional[torch.Tensor] = None) -> Tuple[int, int]:
+def torch_matmul(
+    input: torch.Tensor, other: torch.Tensor, *, out: Optional[torch.Tensor] = None
+) -> Tuple[int, int]:
     macs = reduce(operator.mul, input.shape) * other.shape[-1]
     flops = 2 * macs
     return flops, macs
 
 
 @meta_profiler_function.register(torch.bmm)
-def torch_bmm(input: torch.Tensor, other: torch.Tensor, *, out: Optional[torch.Tensor] = None) -> Tuple[int, int]:
+def torch_bmm(
+    input: torch.Tensor, other: torch.Tensor, *, out: Optional[torch.Tensor] = None
+) -> Tuple[int, int]:
     macs = reduce(operator.mul, input.shape) * other.shape[-1]
     flops = 2 * macs
     return flops, macs
 
 
 @meta_profiler_function.register(torch.var_mean)
-def torch_var_mean(input: torch.Tensor,
-                   dim: Union[int, Tuple[int, ...]],
-                   unbiased: Optional[bool] = True,
-                   keepdim: Optional[bool] = False,
-                   *,
-                   out: Optional[torch.Tensor] = None) -> Tuple[int, int]:
-    assert out is None, 'saving to out is not supported yet'
+def torch_var_mean(
+    input: torch.Tensor,
+    dim: Union[int, Tuple[int, ...]],
+    unbiased: Optional[bool] = True,
+    keepdim: Optional[bool] = False,
+    *,
+    out: Optional[torch.Tensor] = None
+) -> Tuple[int, int]:
+    assert out is None, "saving to out is not supported yet"
     flops = input.numel() * 3
     macs = 0
     return flops, macs

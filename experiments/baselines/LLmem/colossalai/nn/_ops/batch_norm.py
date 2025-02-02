@@ -28,6 +28,10 @@ def colo_batch_norm(
     input = input.redistribute(ReplicaSpec())
     bias = bias.redistribute(ReplicaSpec())
 
-    output = F.batch_norm(input, running_mean, running_var, weight, bias, training, momentum, eps)
-    output = ColoTensor.from_torch_tensor(tensor=output, spec=ColoTensorSpec(pg=weight.get_process_group()))
+    output = F.batch_norm(
+        input, running_mean, running_var, weight, bias, training, momentum, eps
+    )
+    output = ColoTensor.from_torch_tensor(
+        tensor=output, spec=ColoTensorSpec(pg=weight.get_process_group())
+    )
     return output

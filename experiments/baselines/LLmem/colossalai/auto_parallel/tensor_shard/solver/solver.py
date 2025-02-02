@@ -21,24 +21,26 @@ try:
     import pulp
     from pulp import LpMinimize, LpProblem, LpStatus, LpVariable, lpDot, lpSum
 except:
-    warnings.warn(f'please install the pulp')
+    warnings.warn(f"please install the pulp")
 
-__all___ = ['Solver']
+__all___ = ["Solver"]
 
 
 class Solver:
 
-    def __init__(self,
-                 graph: Graph,
-                 strategies_constructor: StrategiesConstructor,
-                 cost_graph: CostGraph,
-                 graph_analyser: GraphAnalyser = None,
-                 memory_budget: float = -1.0,
-                 solution_numbers: int = 1,
-                 forward_only: bool = False,
-                 memory_increasing_coefficient: float = 1.3,
-                 verbose=False):
-        '''
+    def __init__(
+        self,
+        graph: Graph,
+        strategies_constructor: StrategiesConstructor,
+        cost_graph: CostGraph,
+        graph_analyser: GraphAnalyser = None,
+        memory_budget: float = -1.0,
+        solution_numbers: int = 1,
+        forward_only: bool = False,
+        memory_increasing_coefficient: float = 1.3,
+        verbose=False,
+    ):
+        """
         Solver class will integrate information provided by the components and use ILP solver to find a possible optimal strategies combination for target computing graph.
         Argument:
             graph: The computing graph to be optimized.
@@ -48,13 +50,15 @@ class Solver:
             memory_budget: Memory constraint for the solution.
             solution_numbers: If solution_numbers is larger than one, solver will us a serious of solutions based on different memory budget.
             memory_increasing_coefficient: If solution_numbers is larger than one, we will use this coefficient to generate new memory budget.
-        '''
+        """
         self.graph = graph
         self.strategies_constructor = strategies_constructor
         self.cost_graph = cost_graph
         self.graph_analyser = graph_analyser
         self.leaf_strategies = self.strategies_constructor.leaf_strategies
-        self.nodes = [strategies_vector.node for strategies_vector in self.leaf_strategies]
+        self.nodes = [
+            strategies_vector.node for strategies_vector in self.leaf_strategies
+        ]
         self.strategy_map = self.strategies_constructor.strategy_map
         self.memory_budget = memory_budget
         self.solution_numbers = solution_numbers
@@ -75,19 +79,24 @@ class Solver:
         self.verbose = verbose
 
     def _recover_merged_node_strategy(self):
-        '''
+        """
         During cost graph constructing, some nodes, such as unary element-wise node or ReshapeOp, were merged into the previous node.
         Therefore, the index of those strategies are copied from the previous node. This method is used to recover the strategy index of those merged
         node.
-        '''
+        """
         for node_index, node in enumerate(self.nodes):
             if node.strategies_vector.check_merge():
                 # the merged node has only one input, and its strategies follow the input sharding strategy
                 input_strategies_vector = node.args[0].strategies_vector
                 input_best_strategy_index = self.last_s_val[node_index - 1]
-                input_sharding_spec = input_strategies_vector[input_best_strategy_index].output_sharding_spec
+                input_sharding_spec = input_strategies_vector[
+                    input_best_strategy_index
+                ].output_sharding_spec
                 for strategy_index, strategy in enumerate(node.strategies_vector):
-                    if strategy.input_shardings[0].sharding_sequence == input_sharding_spec.sharding_sequence:
+                    if (
+                        strategy.input_shardings[0].sharding_sequence
+                        == input_sharding_spec.sharding_sequence
+                    ):
                         self.last_s_val[node_index] = strategy_index
                         break
 
@@ -98,9 +107,9 @@ class Solver:
         return node_index_dict
 
     def _prepare_data_for_solver(self):
-        '''
+        """
         Extract information from components for solver.
-        '''
+        """
         node_nums = len(self.leaf_strategies)
         memory_budget = self.memory_budget
 
@@ -170,7 +179,9 @@ class Solver:
                     memory_cost = memory_cost_item.total
 
                 # extract the memory cost in float from MemoryCost item and sum them up
-                memory_cost = memory_cost.parameter + memory_cost.activation + memory_cost.buffer
+                memory_cost = (
+                    memory_cost.parameter + memory_cost.activation + memory_cost.buffer
+                )
                 compute_costs.append(compute_cost)
                 # node in extra_node_costs means it has some extra communication
                 # cost from node merging, so we need to add those extra communication
@@ -190,30 +201,54 @@ class Solver:
         # omit initial value for nodes
         s_init_np = None
 
-        return node_nums, memory_budget, strategies_len, following_nodes, edge_pairs, alias_set, liveness_set, compute_costs, communication_costs, memory_costs, resharding_costs, alias_convert_costs, s_init_np, self.verbose
+        return (
+            node_nums,
+            memory_budget,
+            strategies_len,
+            following_nodes,
+            edge_pairs,
+            alias_set,
+            liveness_set,
+            compute_costs,
+            communication_costs,
+            memory_costs,
+            resharding_costs,
+            alias_convert_costs,
+            s_init_np,
+            self.verbose,
+        )
 
-    def _call_solver_serialized_args(self,
-                                     node_nums,
-                                     memory_budget,
-                                     strategies_len,
-                                     following_nodes,
-                                     edge_pairs,
-                                     alias_set,
-                                     liveness_set,
-                                     compute_costs,
-                                     communication_costs,
-                                     memory_costs,
-                                     resharding_costs,
-                                     alias_convert_costs,
-                                     s_init_np=None,
-                                     verbose=True):
+    def _call_solver_serialized_args(
+        self,
+        node_nums,
+        memory_budget,
+        strategies_len,
+        following_nodes,
+        edge_pairs,
+        alias_set,
+        liveness_set,
+        compute_costs,
+        communication_costs,
+        memory_costs,
+        resharding_costs,
+        alias_convert_costs,
+        s_init_np=None,
+        verbose=True,
+    ):
         """
         Call the solver with serialized arguments.
         """
 
         tic = time.time()
 
-        for x in [strategies_len, edge_pairs, compute_costs, communication_costs, memory_costs, resharding_costs]:
+        for x in [
+            strategies_len,
+            edge_pairs,
+            compute_costs,
+            communication_costs,
+            memory_costs,
+            resharding_costs,
+        ]:
             assert isinstance(x, np.ndarray)
         assert len(strategies_len) == node_nums, "strategies_len"
 
@@ -235,18 +270,18 @@ class Solver:
         s_follow = following_nodes
         s_alias = alias_set
 
-        E = edge_pairs.reshape((-1, 2))    # noqa
+        E = edge_pairs.reshape((-1, 2))  # noqa
         r = []
         pt = 0
         edge_set = set()
-        for (i, j) in E:
+        for i, j in E:
             prod_length = strategies_len[i] * strategies_len[j]
 
             if (i, j) in edge_set:
                 raise ValueError(f"Duplicated edges: {(i, j)}")
 
             edge_set.add((i, j))
-            r.append(resharding_costs[pt:pt + prod_length])
+            r.append(resharding_costs[pt : pt + prod_length])
             pt += prod_length
         assert pt == len(resharding_costs)
 
@@ -277,9 +312,9 @@ class Solver:
         pt = 0
         for i in range(node_nums):
             length = strategies_len[i]
-            c.append(compute_costs[pt:pt + length])
-            d.append(communication_costs[pt:pt + length])
-            m.append(memory_costs[pt:pt + length])
+            c.append(compute_costs[pt : pt + length])
+            d.append(communication_costs[pt : pt + length])
+            m.append(memory_costs[pt : pt + length])
             pt += length
         assert pt == len(compute_costs), f"{pt} == {len(compute_costs)}"
         assert pt == len(communication_costs), f"{pt} == {len(communication_costs)}"
@@ -300,7 +335,11 @@ class Solver:
                 else:
                     if i not in s_alias:
                         num_nodes += 1
-                        s.append(LpVariable.matrix(f"s[{i}]", (range(strategies_len[i]),), cat="Binary"))
+                        s.append(
+                            LpVariable.matrix(
+                                f"s[{i}]", (range(strategies_len[i]),), cat="Binary"
+                            )
+                        )
                     else:
                         s.append(s[s_alias[i]])
             else:
@@ -319,17 +358,25 @@ class Solver:
         e = []
         num_edges = 0
         map_edge_to_idx = {}
-        for (idx, (i, j)) in enumerate(E):
+        for idx, (i, j) in enumerate(E):
             if len(s[i]) == 1:
                 e.append(s[j])
             elif len(s[j]) == 1:
                 e.append(s[i])
             else:
-                if i in s_alias and j in s_alias and (s_alias[i], s_alias[j]) in map_edge_to_idx:
+                if (
+                    i in s_alias
+                    and j in s_alias
+                    and (s_alias[i], s_alias[j]) in map_edge_to_idx
+                ):
                     e.append(e[map_edge_to_idx[(s_alias[i], s_alias[j])]])
                 else:
                     num_edges += 1
-                    e.append(LpVariable.matrix(f"e[{i},{j}]", (range(len(s[i]) * len(s[j])),), cat="Binary"))
+                    e.append(
+                        LpVariable.matrix(
+                            f"e[{i},{j}]", (range(len(s[i]) * len(s[j])),), cat="Binary"
+                        )
+                    )
             assert len(e[idx]) == len(r[idx])
             map_edge_to_idx[(i, j)] = idx
         for element in s:
@@ -340,7 +387,7 @@ class Solver:
         ######################################
         if s_init_np is not None:
             s_init = s_init_np.reshape((-1, 3))
-            for (idx, value, fix) in s_init:
+            for idx, value, fix in s_init:
                 for i in range(len(s[idx])):
                     s[idx][i].setInitialValue(i == value)
                     if fix:
@@ -388,12 +435,15 @@ class Solver:
                 if node not in self.node_index_dict:
                     continue
                 node_index = self.node_index_dict[node]
-                mem += lpSum(s[node_index][j] * m[node_index][j] for j in range(len(s[node_index])))
+                mem += lpSum(
+                    s[node_index][j] * m[node_index][j]
+                    for j in range(len(s[node_index]))
+                )
                 prob += mem <= memory_budget
 
         # (d). specified by `cat="Binary"`
 
-        for (idx, (i, j)) in enumerate(E):
+        for idx, (i, j) in enumerate(E):
             if strategies_len[i] == 1 or strategies_len[j] == 1:
                 continue
 
@@ -402,13 +452,13 @@ class Solver:
 
             # (f)
             for row in range(len(s[i])):
-                C = len(s[j])    # noqa
+                C = len(s[j])  # noqa
                 prob += lpSum(e[idx][row * C + col] for col in range(0, C)) <= s[i][row]
 
             # (g)
             for col in range(len(s[j])):
-                R = len(s[i])    # noqa
-                C = len(s[j])    # noqa
+                R = len(s[i])  # noqa
+                C = len(s[j])  # noqa
                 prob += lpSum(e[idx][row * C + col] for row in range(0, R)) <= s[j][col]
 
         # (h)
@@ -434,9 +484,12 @@ class Solver:
         msg = verbose
         time_limit = 600
         assert "COIN_CMD" in pulp.listSolvers(
-            onlyAvailable=True), ("Please install ILP solvers by 'sudo apt install coinor-cbc'")
+            onlyAvailable=True
+        ), "Please install ILP solvers by 'sudo apt install coinor-cbc'"
 
-        solver = pulp.COIN_CMD(mip=True, msg=msg, timeLimit=time_limit, threads=multiprocessing.cpu_count())
+        solver = pulp.COIN_CMD(
+            mip=True, msg=msg, timeLimit=time_limit, threads=multiprocessing.cpu_count()
+        )
         # solver = pulp.GLPK_CMD(mip=True, msg=msg, timeLimit=time_limit)
         prob.solve(solver)
 
@@ -444,13 +497,17 @@ class Solver:
         objective = pulp.value(prob.objective)
         objective = float(objective) if objective is not None else -1.0
         if verbose:
-            print(f"ILP Status: {LpStatus[status]}\tObjective: {objective}\t"
-                  f"Time: {time.time() - tic}")
+            print(
+                f"ILP Status: {LpStatus[status]}\tObjective: {objective}\t"
+                f"Time: {time.time() - tic}"
+            )
             print(f"#nodes: {num_nodes},  #edges: {num_edges}")
 
         if prob.status in [pulp.LpStatusInfeasible]:
-            raise RuntimeError("Cannot run the function under the given memory budget. "
-                               "Please increase the memory budget.")
+            raise RuntimeError(
+                "Cannot run the function under the given memory budget. "
+                "Please increase the memory budget."
+            )
 
         # Get and check results
         s_val = np.full((node_nums,), -1, dtype=np.int32)
@@ -458,7 +515,7 @@ class Solver:
             s_val[i] = get_non_zero_index(s[i])
 
         e_val = np.full((len(E),), -1, dtype=np.int32)
-        for (idx, (i, j)) in enumerate(E):
+        for idx, (i, j) in enumerate(E):
             e_val[idx] = get_non_zero_index(e[idx])
             i_spec_index = e_val[idx] // len(s[j])
             j_spec_index = e_val[idx] % len(s[j])
@@ -489,7 +546,8 @@ class Solver:
 
         origin_memory_budget = self.memory_budget
         memory_budget_list = [
-            origin_memory_budget * self.memory_increasing_coefficient**i for i in range(self.solution_numbers)
+            origin_memory_budget * self.memory_increasing_coefficient**i
+            for i in range(self.solution_numbers)
         ]
         ret_list = []
         for memory_budget in memory_budget_list:

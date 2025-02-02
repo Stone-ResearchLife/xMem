@@ -7,9 +7,9 @@ from .accuracy_3d import Accuracy3D
 from colossalai.nn.layer.utils import get_tensor_parallel_mode
 
 _parallel_accuracy = {
-    '2d': Accuracy2D,
-    '2.5d': Accuracy2p5D,
-    '3d': Accuracy3D,
+    "2d": Accuracy2D,
+    "2.5d": Accuracy2p5D,
+    "3d": Accuracy3D,
 }
 
 

@@ -11,5 +11,5 @@ __all__ = [
     "CGroupMonitor",
     "HostGPUs",
     "EthernetMonitor",
-    "MonitorThreading"
+    "MonitorThreading",
 ]

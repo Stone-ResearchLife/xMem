@@ -18,11 +18,7 @@ class HostMetricsFeatures(Enum):
 
 
 class _HostMetrics:
-    def __init__(
-            self,
-            interval_ms: int = 10,
-            features: List[Enum] = None
-    ):
+    def __init__(self, interval_ms: int = 10, features: List[Enum] = None):
         self.interval_ms = interval_ms
         self.records = []
         self.count = 0
@@ -30,7 +26,7 @@ class _HostMetrics:
         if features is None:
             features = []
         for feature in features:
-            module = importlib.import_module('perf_estimator.trainer.plugins.monitor')
+            module = importlib.import_module("perf_estimator.trainer.plugins.monitor")
             _class = getattr(module, feature.value)
             _initialized_class = _class()
             _is_pass = _initialized_class.self_check()
@@ -42,11 +38,13 @@ class _HostMetrics:
         _p_metrics = {}
         for _name, _feature in self.features.items():
             _p_metrics[_name] = _feature.record()
-        time.sleep(self.interval_ms/1000)
+        time.sleep(self.interval_ms / 1000)
         for _name, _feature in self.features.items():
-            _result = _feature.summary(_p_metrics[_name], _feature.record(), interval_ms=self.interval_ms)
+            _result = _feature.summary(
+                _p_metrics[_name], _feature.record(), interval_ms=self.interval_ms
+            )
             _metrics[_name] = _result
-        _metrics['timestamp'] = round(time.time_ns()/1e6, 2)
+        _metrics["timestamp"] = round(time.time_ns() / 1e6, 2)
         self.records.append(_metrics)
         self.count += 1
 
@@ -55,14 +53,17 @@ class _HostMetrics:
         _data = {
             "interval": self.interval_ms,  # unit: ms
             "num": self.count,
-            "makespan": round((_records[-1]["timestamp"] - _records[0]["timestamp"]), 2),  # unit: ms
-            "records": _records
+            "makespan": round(
+                (_records[-1]["timestamp"] - _records[0]["timestamp"]), 2
+            ),  # unit: ms
+            "records": _records,
         }
         return _data
 
     def save(self, file_path: Path):
         import json
-        with open(file_path, 'w') as f:
+
+        with open(file_path, "w") as f:
             json.dump(self.to_json(), f, indent=4)
 
 
@@ -81,20 +82,24 @@ class MonitorThreading:
     def run(self, **kwargs):
         self.thread = threading.Thread(target=self._monitor_runner, kwargs=kwargs)
         self.thread.start()
-        logger.info(f"Start monitoring thread: {self.name}, thread id: {self.thread.ident}")
+        logger.info(
+            f"Start monitoring thread: {self.name}, thread id: {self.thread.ident}"
+        )
 
     def stop(self):
         if self.thread is not None:
-            logger.info(f"Stop monitoring thread: {self.name}, thread id: {self.thread.ident}")
+            logger.info(
+                f"Stop monitoring thread: {self.name}, thread id: {self.thread.ident}"
+            )
             self.stop_flat.set()
 
     def _monitor_runner(
-            self,
-            interval_ms: int,
-            cpu_enable: bool = True,
-            gpu_enable: bool = True,
-            network_enable: bool = True,
-            output_dir: Path = None
+        self,
+        interval_ms: int,
+        cpu_enable: bool = True,
+        gpu_enable: bool = True,
+        network_enable: bool = True,
+        output_dir: Path = None,
     ):
         _features = []
         if cpu_enable:
@@ -106,8 +111,8 @@ class MonitorThreading:
         _monitor = _HostMetrics(interval_ms=interval_ms, features=_features)
         while not self.stop_flat.is_set():
             _monitor.record()
-        logger.info(f"Stop monitoring thread: {self.name}, thread id: {self.thread.ident}")
+        logger.info(
+            f"Stop monitoring thread: {self.name}, thread id: {self.thread.ident}"
+        )
         file_name = f"host_metrics-{int(time.time())}.json"
         _monitor.save(output_dir.joinpath(file_name))
-
-

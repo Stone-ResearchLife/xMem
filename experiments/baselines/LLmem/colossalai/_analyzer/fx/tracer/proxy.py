@@ -32,15 +32,19 @@ class ColoProxy(Proxy):
     def __torch_function__(cls, orig_method, types, args=(), kwargs=None):
         kwargs = {} if kwargs is None else kwargs
         if orig_method in cls._func_dispatch:
-            impl = cls._func_dispatch.pop(orig_method)    # avoid recursion
+            impl = cls._func_dispatch.pop(orig_method)  # avoid recursion
             proxy = impl(*args, **kwargs)
             cls._func_dispatch[orig_method] = impl
             return proxy
         else:
-            proxy = cls.from_torch_proxy(super().__torch_function__(orig_method, types, args, kwargs))
+            proxy = cls.from_torch_proxy(
+                super().__torch_function__(orig_method, types, args, kwargs)
+            )
             unwrap_fn = lambda p: p.meta_data if isinstance(p, ColoProxy) else p
             if proxy.meta_data is None:
-                proxy.meta_data = orig_method(*tree_map(unwrap_fn, args), **tree_map(unwrap_fn, kwargs))
+                proxy.meta_data = orig_method(
+                    *tree_map(unwrap_fn, args), **tree_map(unwrap_fn, kwargs)
+                )
             return proxy
 
     @classmethod
@@ -60,7 +64,9 @@ class ColoProxy(Proxy):
         try:
             return int(self.meta_data)
         except:
-            return torch.zeros(self.meta_data.shape, dtype=torch.bool).numpy().__index__()
+            return (
+                torch.zeros(self.meta_data.shape, dtype=torch.bool).numpy().__index__()
+            )
 
     def __float__(self):
         return float(self.meta_data)
@@ -72,7 +78,9 @@ class ColoProxy(Proxy):
         return ColoAttribute(self, k, getattr(self._meta_data, k, None))
 
     def __setitem__(self, key, value):
-        proxy = self.tracer.create_proxy('call_function', operator.setitem, (self, key, value), {})
+        proxy = self.tracer.create_proxy(
+            "call_function", operator.setitem, (self, key, value), {}
+        )
         proxy.meta_data = self._meta_data
         return proxy
 
@@ -102,11 +110,15 @@ class ColoAttribute(ColoProxy):
         # the node for attributes is added lazily, since most will just be method calls
         # which do not rely on the getitem call
         if self._node is None:
-            self._node = self.tracer.create_proxy('call_function', getattr, (self.root, self.attr), {}).node
+            self._node = self.tracer.create_proxy(
+                "call_function", getattr, (self.root, self.attr), {}
+            ).node
         return self._node
 
     def __call__(self, *args, **kwargs):
-        return self.tracer.create_proxy('call_method', self.attr, (self.root,) + args, kwargs)
+        return self.tracer.create_proxy(
+            "call_method", self.attr, (self.root,) + args, kwargs
+        )
 
     def __repr__(self):
         return f"ColoAttribute({self.node.name}, attr={self.attr})"

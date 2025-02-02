@@ -9,7 +9,13 @@ from torch import Tensor
 from torch.nn import Parameter
 
 from colossalai.communication import all_reduce, broadcast
-from colossalai.constants import INPUT_GROUP_3D, INPUT_X_WEIGHT_3D, OUTPUT_GROUP_3D, OUTPUT_X_WEIGHT_3D, WEIGHT_GROUP_3D
+from colossalai.constants import (
+    INPUT_GROUP_3D,
+    INPUT_X_WEIGHT_3D,
+    OUTPUT_GROUP_3D,
+    OUTPUT_X_WEIGHT_3D,
+    WEIGHT_GROUP_3D,
+)
 from colossalai.context import ParallelMode, seed
 from colossalai.core import global_context as gpc
 from colossalai.global_variables import tensor_parallel_env as env
@@ -34,7 +40,12 @@ from ._operation import (
     split_tensor_3d,
     vocab_parallel_classifier_3d,
 )
-from ._utils import get_depth_from_env, get_parallel_mode_from_env, register_async_grad_hook, swap_in_out_group
+from ._utils import (
+    get_depth_from_env,
+    get_parallel_mode_from_env,
+    register_async_grad_hook,
+    swap_in_out_group,
+)
 
 
 @LAYERS.register_module
@@ -52,22 +63,36 @@ class LayerNorm3D(ParallelLayer):
         dtype (:class:`torch.dtype`, optional): The dtype of parameters, defaults to None.
     """
 
-    def __init__(self, normalized_shape: int, eps: float = 1e-12, bias=True, dtype=None):
+    def __init__(
+        self, normalized_shape: int, eps: float = 1e-12, bias=True, dtype=None
+    ):
 
         super().__init__()
         self.input_parallel_mode = get_parallel_mode_from_env(INPUT_GROUP_3D)
         self.weight_parallel_mode = get_parallel_mode_from_env(WEIGHT_GROUP_3D)
         self.output_parallel_mode = get_parallel_mode_from_env(OUTPUT_GROUP_3D)
-        self.input_x_weight_parallel_mode = get_parallel_mode_from_env(INPUT_X_WEIGHT_3D)
+        self.input_x_weight_parallel_mode = get_parallel_mode_from_env(
+            INPUT_X_WEIGHT_3D
+        )
         self.depth = get_depth_from_env()
         self.normalized_shape = normalized_shape
         self.normalized_shape_per_partition = divide(normalized_shape, self.depth)
 
         self.weight = Parameter(
-            torch.ones(self.normalized_shape_per_partition, device=get_current_device(), dtype=dtype))
+            torch.ones(
+                self.normalized_shape_per_partition,
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
         if bias:
             self.bias = Parameter(
-                torch.zeros(self.normalized_shape_per_partition, device=get_current_device(), dtype=dtype))
+                torch.zeros(
+                    self.normalized_shape_per_partition,
+                    device=get_current_device(),
+                    dtype=dtype,
+                )
+            )
         else:
             self.bias = None
         self.variance_epsilon = eps
@@ -88,8 +113,8 @@ class LayerNorm3D(ParallelLayer):
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             weight = state_dict.pop(weight_key, None)
@@ -101,15 +126,14 @@ class LayerNorm3D(ParallelLayer):
                 local_state[bias_key] = bias
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0
-                },
+                dims={weight_key: 0, bias_key: 0},
                 partition_states={
                     weight_key: True,
                     bias_key: True,
@@ -124,26 +148,22 @@ class LayerNorm3D(ParallelLayer):
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         local_state = OrderedDict({weight_key: self.weight})
         if self.bias is not None:
             local_state[bias_key] = self.bias
 
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: True
-                },
+                dims={weight_key: 0, bias_key: 0},
+                partition_states={weight_key: True, bias_key: True},
                 keep_vars=keep_vars,
             )
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
@@ -179,21 +199,25 @@ class Linear3D(ParallelLayer):
     `init <https://github.com/hpcaitech/ColossalAI/blob/main/colossalai/nn/init.py>`_.
     """
 
-    def __init__(self,
-                 in_features: int,
-                 out_features: int,
-                 bias: bool = True,
-                 dtype: torch.dtype = None,
-                 skip_bias_add: bool = False,
-                 weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
-                 bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1)):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        dtype: torch.dtype = None,
+        skip_bias_add: bool = False,
+        weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
+        bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1),
+    ):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.input_parallel_mode = get_parallel_mode_from_env(INPUT_GROUP_3D)
         self.weight_parallel_mode = get_parallel_mode_from_env(WEIGHT_GROUP_3D)
         self.output_parallel_mode = get_parallel_mode_from_env(OUTPUT_GROUP_3D)
-        self.output_x_weight_parallel_mode = get_parallel_mode_from_env(OUTPUT_X_WEIGHT_3D)
+        self.output_x_weight_parallel_mode = get_parallel_mode_from_env(
+            OUTPUT_X_WEIGHT_3D
+        )
         self.depth = get_depth_from_env()
         self.skip_bias_add = skip_bias_add
         self.in_features_per_partition = divide(in_features, self.depth**2)
@@ -201,13 +225,21 @@ class Linear3D(ParallelLayer):
         self.bias_features_per_partition = divide(out_features, self.depth)
 
         self.weight = Parameter(
-            torch.empty(self.in_features_per_partition,
-                        self.out_features_per_partition,
-                        device=get_current_device(),
-                        dtype=dtype))
+            torch.empty(
+                self.in_features_per_partition,
+                self.out_features_per_partition,
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
         if bias:
             self.bias = Parameter(
-                torch.zeros(self.bias_features_per_partition, device=get_current_device(), dtype=dtype))
+                torch.zeros(
+                    self.bias_features_per_partition,
+                    device=get_current_device(),
+                    dtype=dtype,
+                )
+            )
         else:
             self.bias = None
 
@@ -233,15 +265,17 @@ class Linear3D(ParallelLayer):
 
             if self.bias is not None:
                 bias_initializer(self.bias, fan_in=fan_in)
-                broadcast(self.bias,
-                          gpc.get_ranks_in_group(self.output_x_weight_parallel_mode)[0],
-                          self.output_x_weight_parallel_mode)
+                broadcast(
+                    self.bias,
+                    gpc.get_ranks_in_group(self.output_x_weight_parallel_mode)[0],
+                    self.output_x_weight_parallel_mode,
+                )
                 self.bias.register_hook(self._sync_grad_hook)
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             weight = state_dict.pop(weight_key, None)
@@ -254,53 +288,37 @@ class Linear3D(ParallelLayer):
                     local_state[bias_key] = bias
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: False
-                },
+                dims={weight_key: 0, bias_key: 0},
+                partition_states={weight_key: True, bias_key: False},
             )
         # partition in input groups
         if gpc.get_local_rank(self.weight_parallel_mode) == 0:
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.input_parallel_mode,
-                dims={
-                    weight_key: -1,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: True
-                },
+                dims={weight_key: -1, bias_key: 0},
+                partition_states={weight_key: True, bias_key: True},
             )
         # partition in weight groups
         local_state = partition_tensor_parallel_state_dict(
             local_state,
             self.weight_parallel_mode,
-            dims={
-                weight_key: 0,
-                bias_key: 0
-            },
-            partition_states={
-                weight_key: True,
-                bias_key: False
-            },
+            dims={weight_key: 0, bias_key: 0},
+            partition_states={weight_key: True, bias_key: False},
         )
 
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         local_state = OrderedDict({weight_key: self.weight})
         if self.bias is not None:
             local_state[bias_key] = self.bias
@@ -309,14 +327,8 @@ class Linear3D(ParallelLayer):
         local_state = gather_tensor_parallel_state_dict(
             local_state,
             self.weight_parallel_mode,
-            dims={
-                weight_key: 0,
-                bias_key: 0
-            },
-            partition_states={
-                weight_key: True,
-                bias_key: False
-            },
+            dims={weight_key: 0, bias_key: 0},
+            partition_states={weight_key: True, bias_key: False},
             keep_vars=keep_vars,
         )
         # gather in input groups
@@ -324,30 +336,20 @@ class Linear3D(ParallelLayer):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.input_parallel_mode,
-                dims={
-                    weight_key: -1,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: True
-                },
+                dims={weight_key: -1, bias_key: 0},
+                partition_states={weight_key: True, bias_key: True},
                 keep_vars=keep_vars,
             )
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: False
-                },
+                dims={weight_key: 0, bias_key: 0},
+                partition_states={weight_key: True, bias_key: False},
                 keep_vars=keep_vars,
             )
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
@@ -390,14 +392,16 @@ class Classifier3D(ParallelLayer):
     `init <https://github.com/hpcaitech/ColossalAI/blob/main/colossalai/nn/init.py>`_.
     """
 
-    def __init__(self,
-                 in_features: int,
-                 num_classes: int,
-                 weight: Parameter = None,
-                 bias: bool = True,
-                 dtype: torch.dtype = None,
-                 weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
-                 bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1)):
+    def __init__(
+        self,
+        in_features: int,
+        num_classes: int,
+        weight: Parameter = None,
+        bias: bool = True,
+        dtype: torch.dtype = None,
+        weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
+        bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1),
+    ):
         super().__init__()
         self.in_features = in_features
         self.num_classes = num_classes
@@ -412,10 +416,18 @@ class Classifier3D(ParallelLayer):
             self.has_weight = False
         else:
             self.weight = Parameter(
-                torch.empty(self.num_classes, self.in_features_per_partition, device=get_current_device(), dtype=dtype))
+                torch.empty(
+                    self.num_classes,
+                    self.in_features_per_partition,
+                    device=get_current_device(),
+                    dtype=dtype,
+                )
+            )
             self.has_weight = True
         if bias:
-            self.bias = Parameter(torch.zeros(self.num_classes, device=get_current_device(), dtype=dtype))
+            self.bias = Parameter(
+                torch.zeros(self.num_classes, device=get_current_device(), dtype=dtype)
+            )
         else:
             self.bias = None
 
@@ -432,19 +444,27 @@ class Classifier3D(ParallelLayer):
 
             if self.has_weight:
                 weight_initializer(self.weight, fan_in=fan_in, fan_out=fan_out)
-                broadcast(self.weight, gpc.get_ranks_in_group(self.weight_parallel_mode)[0], self.weight_parallel_mode)
+                broadcast(
+                    self.weight,
+                    gpc.get_ranks_in_group(self.weight_parallel_mode)[0],
+                    self.weight_parallel_mode,
+                )
 
             register_async_grad_hook(self.weight)
 
             if self.bias is not None:
                 bias_initializer(self.bias, fan_in=fan_in)
-                broadcast(self.bias, gpc.get_ranks_in_group(ParallelMode.TENSOR)[0], ParallelMode.TENSOR)
+                broadcast(
+                    self.bias,
+                    gpc.get_ranks_in_group(ParallelMode.TENSOR)[0],
+                    ParallelMode.TENSOR,
+                )
                 register_async_grad_hook(self.bias)
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             if self.has_weight:
@@ -458,19 +478,15 @@ class Classifier3D(ParallelLayer):
                     local_state[bias_key] = bias
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: -1,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: False
-                },
+                dims={weight_key: -1, bias_key: 0},
+                partition_states={weight_key: True, bias_key: False},
             )
         # broadcast in input groups
         if gpc.get_local_rank(self.weight_parallel_mode) == 0:
@@ -481,8 +497,8 @@ class Classifier3D(ParallelLayer):
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         local_state = OrderedDict()
         if self.has_weight:
             local_state[weight_key] = self.weight
@@ -490,19 +506,15 @@ class Classifier3D(ParallelLayer):
             local_state[bias_key] = self.bias
 
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: -1,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: False
-                },
+                dims={weight_key: -1, bias_key: 0},
+                partition_states={weight_key: True, bias_key: False},
                 keep_vars=keep_vars,
             )
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
@@ -538,21 +550,25 @@ class VocabParallelClassifier3D(ParallelLayer):
     `init <https://github.com/hpcaitech/ColossalAI/blob/main/colossalai/nn/init.py>`_.
     """
 
-    def __init__(self,
-                 in_features: int,
-                 num_classes: int,
-                 weight: Parameter = None,
-                 bias: bool = True,
-                 dtype: torch.dtype = None,
-                 weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
-                 bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1)):
+    def __init__(
+        self,
+        in_features: int,
+        num_classes: int,
+        weight: Parameter = None,
+        bias: bool = True,
+        dtype: torch.dtype = None,
+        weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
+        bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1),
+    ):
         super().__init__()
         self.in_features = in_features
         self.num_classes = num_classes
         self.input_parallel_mode = get_parallel_mode_from_env(INPUT_GROUP_3D)
         self.weight_parallel_mode = get_parallel_mode_from_env(WEIGHT_GROUP_3D)
         self.output_parallel_mode = get_parallel_mode_from_env(OUTPUT_GROUP_3D)
-        self.output_x_weight_parallel_mode = get_parallel_mode_from_env(OUTPUT_X_WEIGHT_3D)
+        self.output_x_weight_parallel_mode = get_parallel_mode_from_env(
+            OUTPUT_X_WEIGHT_3D
+        )
         self.depth = get_depth_from_env()
         self.in_features_per_partition = divide(in_features, self.depth)
         self.out_features_per_partition = divide(num_classes, self.depth**2)
@@ -563,14 +579,22 @@ class VocabParallelClassifier3D(ParallelLayer):
             self.has_weight = False
         else:
             self.weight = Parameter(
-                torch.empty(self.out_features_per_partition,
-                            self.in_features_per_partition,
-                            device=get_current_device(),
-                            dtype=dtype))
+                torch.empty(
+                    self.out_features_per_partition,
+                    self.in_features_per_partition,
+                    device=get_current_device(),
+                    dtype=dtype,
+                )
+            )
             self.has_weight = True
         if bias:
             self.bias = Parameter(
-                torch.zeros(self.bias_features_per_partition, device=get_current_device(), dtype=dtype))
+                torch.zeros(
+                    self.bias_features_per_partition,
+                    device=get_current_device(),
+                    dtype=dtype,
+                )
+            )
         else:
             self.bias = None
 
@@ -596,15 +620,17 @@ class VocabParallelClassifier3D(ParallelLayer):
 
             if self.bias is not None:
                 bias_initializer(self.bias, fan_in=fan_in)
-                broadcast(self.bias,
-                          gpc.get_ranks_in_group(self.output_x_weight_parallel_mode)[0],
-                          self.output_x_weight_parallel_mode)
+                broadcast(
+                    self.bias,
+                    gpc.get_ranks_in_group(self.output_x_weight_parallel_mode)[0],
+                    self.output_x_weight_parallel_mode,
+                )
                 register_async_grad_hook(self.bias)
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             if self.has_weight:
@@ -618,53 +644,37 @@ class VocabParallelClassifier3D(ParallelLayer):
                     local_state[bias_key] = bias
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: -1,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: False
-                },
+                dims={weight_key: -1, bias_key: 0},
+                partition_states={weight_key: True, bias_key: False},
             )
         # partition in input groups
         if gpc.get_local_rank(self.weight_parallel_mode) == 0:
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.input_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: True
-                },
+                dims={weight_key: 0, bias_key: 0},
+                partition_states={weight_key: True, bias_key: True},
             )
         # partition in weight groups
         local_state = partition_tensor_parallel_state_dict(
             local_state,
             self.weight_parallel_mode,
-            dims={
-                weight_key: 0,
-                bias_key: 0
-            },
-            partition_states={
-                weight_key: True,
-                bias_key: False
-            },
+            dims={weight_key: 0, bias_key: 0},
+            partition_states={weight_key: True, bias_key: False},
         )
 
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
         local_state = OrderedDict({weight_key: self.weight})
         if self.bias is not None:
             local_state[bias_key] = self.bias
@@ -673,14 +683,8 @@ class VocabParallelClassifier3D(ParallelLayer):
         local_state = gather_tensor_parallel_state_dict(
             local_state,
             self.weight_parallel_mode,
-            dims={
-                weight_key: 0,
-                bias_key: 0
-            },
-            partition_states={
-                weight_key: True,
-                bias_key: False
-            },
+            dims={weight_key: 0, bias_key: 0},
+            partition_states={weight_key: True, bias_key: False},
             keep_vars=keep_vars,
         )
         # gather in input groups
@@ -688,30 +692,20 @@ class VocabParallelClassifier3D(ParallelLayer):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.input_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: True
-                },
+                dims={weight_key: 0, bias_key: 0},
+                partition_states={weight_key: True, bias_key: True},
                 keep_vars=keep_vars,
             )
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: -1,
-                    bias_key: 0
-                },
-                partition_states={
-                    weight_key: True,
-                    bias_key: False
-                },
+                dims={weight_key: -1, bias_key: 0},
+                partition_states={weight_key: True, bias_key: False},
                 keep_vars=keep_vars,
             )
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
@@ -750,22 +744,26 @@ class PatchEmbedding3D(ParallelLayer):
     `init <https://github.com/hpcaitech/ColossalAI/blob/main/colossalai/nn/init.py>`_.
     """
 
-    def __init__(self,
-                 img_size: int,
-                 patch_size: int,
-                 in_chans: int,
-                 embed_size: int,
-                 flatten: bool = True,
-                 dtype: torch.dtype = None,
-                 weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
-                 bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1),
-                 position_embed_initializer: Callable = init.zeros_()):
+    def __init__(
+        self,
+        img_size: int,
+        patch_size: int,
+        in_chans: int,
+        embed_size: int,
+        flatten: bool = True,
+        dtype: torch.dtype = None,
+        weight_initializer: Callable = init.kaiming_uniform_(a=math.sqrt(5)),
+        bias_initializer: Callable = init.xavier_uniform_(a=1, scale=1),
+        position_embed_initializer: Callable = init.zeros_(),
+    ):
         super().__init__()
         self.depth = get_depth_from_env()
         self.input_parallel_mode = get_parallel_mode_from_env(INPUT_GROUP_3D)
         self.weight_parallel_mode = get_parallel_mode_from_env(WEIGHT_GROUP_3D)
         self.output_parallel_mode = get_parallel_mode_from_env(OUTPUT_GROUP_3D)
-        self.input_x_weight_parallel_mode = get_parallel_mode_from_env(INPUT_X_WEIGHT_3D)
+        self.input_x_weight_parallel_mode = get_parallel_mode_from_env(
+            INPUT_X_WEIGHT_3D
+        )
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
         self.img_size = img_size
@@ -777,17 +775,36 @@ class PatchEmbedding3D(ParallelLayer):
         self.flatten = flatten
 
         self.weight = nn.Parameter(
-            torch.empty((embed_size_per_partition, in_chans, *self.patch_size),
-                        device=get_current_device(),
-                        dtype=dtype))
-        self.bias = nn.Parameter(torch.empty(embed_size_per_partition, device=get_current_device(), dtype=dtype))
+            torch.empty(
+                (embed_size_per_partition, in_chans, *self.patch_size),
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
+        self.bias = nn.Parameter(
+            torch.empty(
+                embed_size_per_partition, device=get_current_device(), dtype=dtype
+            )
+        )
 
         self.cls_token = nn.Parameter(
-            torch.zeros((1, 1, embed_size_per_partition), device=get_current_device(), dtype=dtype))
+            torch.zeros(
+                (1, 1, embed_size_per_partition),
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
         self.pos_embed = nn.Parameter(
-            torch.zeros((1, self.num_patches + 1, embed_size_per_partition), device=get_current_device(), dtype=dtype))
+            torch.zeros(
+                (1, self.num_patches + 1, embed_size_per_partition),
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
 
-        self.reset_parameters(weight_initializer, bias_initializer, position_embed_initializer)
+        self.reset_parameters(
+            weight_initializer, bias_initializer, position_embed_initializer
+        )
         self._set_tensor_parallel_attributes()
 
     def _set_tensor_parallel_attributes(self) -> None:
@@ -800,7 +817,9 @@ class PatchEmbedding3D(ParallelLayer):
         grad = all_reduce(grad.clone(), self.input_x_weight_parallel_mode)
         return grad
 
-    def reset_parameters(self, weight_initializer, bias_initializer, position_embed_initializer) -> None:
+    def reset_parameters(
+        self, weight_initializer, bias_initializer, position_embed_initializer
+    ) -> None:
         with seed(ParallelMode.TENSOR):
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
             fan_out = self.embed_size
@@ -820,10 +839,10 @@ class PatchEmbedding3D(ParallelLayer):
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
-        cls_token_key = prefix + 'cls_token'
-        pos_embed_key = prefix + 'pos_embed'
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
+        cls_token_key = prefix + "cls_token"
+        pos_embed_key = prefix + "pos_embed"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             weight = state_dict.pop(weight_key, None)
@@ -843,22 +862,19 @@ class PatchEmbedding3D(ParallelLayer):
                 local_state[pos_embed_key] = pos_embed
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0,
-                    cls_token_key: -1,
-                    pos_embed_key: -1
-                },
+                dims={weight_key: 0, bias_key: 0, cls_token_key: -1, pos_embed_key: -1},
                 partition_states={
                     weight_key: True,
                     bias_key: True,
                     cls_token_key: True,
-                    pos_embed_key: True
+                    pos_embed_key: True,
                 },
             )
         # broadcast in input groups
@@ -870,34 +886,33 @@ class PatchEmbedding3D(ParallelLayer):
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
-        bias_key = prefix + 'bias'
-        cls_token_key = prefix + 'cls_token'
-        pos_embed_key = prefix + 'pos_embed'
-        local_state = OrderedDict({
-            weight_key: self.weight,
-            bias_key: self.bias,
-            cls_token_key: self.cls_token,
-            pos_embed_key: self.pos_embed
-        })
+        weight_key = prefix + "weight"
+        bias_key = prefix + "bias"
+        cls_token_key = prefix + "cls_token"
+        pos_embed_key = prefix + "pos_embed"
+        local_state = OrderedDict(
+            {
+                weight_key: self.weight,
+                bias_key: self.bias,
+                cls_token_key: self.cls_token,
+                pos_embed_key: self.pos_embed,
+            }
+        )
 
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
-                dims={
-                    weight_key: 0,
-                    bias_key: 0,
-                    cls_token_key: -1,
-                    pos_embed_key: -1
-                },
+                dims={weight_key: 0, bias_key: 0, cls_token_key: -1, pos_embed_key: -1},
                 partition_states={
                     weight_key: True,
                     bias_key: True,
                     cls_token_key: True,
-                    pos_embed_key: True
+                    pos_embed_key: True,
                 },
                 keep_vars=keep_vars,
             )
@@ -905,12 +920,14 @@ class PatchEmbedding3D(ParallelLayer):
             destination.update(local_state)
 
     def forward(self, input_: Tensor) -> Tensor:
-        input_ = split_batch_3d(input_,
-                                input_parallel_mode=self.input_parallel_mode,
-                                weight_parallel_mode=self.weight_parallel_mode)
+        input_ = split_batch_3d(
+            input_,
+            input_parallel_mode=self.input_parallel_mode,
+            weight_parallel_mode=self.weight_parallel_mode,
+        )
         output = F.conv2d(input_, self.weight, self.bias, stride=self.patch_size)
         if self.flatten:
-            output = output.flatten(2).transpose(1, 2)    # BCHW -> BNC
+            output = output.flatten(2).transpose(1, 2)  # BCHW -> BNC
 
         cls_token = self.cls_token.expand(output.shape[0], -1, -1)
         output = torch.cat((cls_token, output), dim=1)
@@ -950,20 +967,24 @@ class Embedding3D(ParallelLayer):
     `init <https://github.com/hpcaitech/ColossalAI/blob/main/colossalai/nn/init.py>`_
     """
 
-    def __init__(self,
-                 num_embeddings: int,
-                 embedding_dim: int,
-                 padding_idx: int = None,
-                 dtype: torch.dtype = None,
-                 weight_initializer: Callable = init.normal_(),
-                 *args,
-                 **kwargs):
+    def __init__(
+        self,
+        num_embeddings: int,
+        embedding_dim: int,
+        padding_idx: int = None,
+        dtype: torch.dtype = None,
+        weight_initializer: Callable = init.normal_(),
+        *args,
+        **kwargs
+    ):
         super().__init__()
         self.depth = get_depth_from_env()
         self.input_parallel_mode = get_parallel_mode_from_env(INPUT_GROUP_3D)
         self.weight_parallel_mode = get_parallel_mode_from_env(WEIGHT_GROUP_3D)
         self.output_parallel_mode = get_parallel_mode_from_env(OUTPUT_GROUP_3D)
-        self.input_x_weight_parallel_mode = get_parallel_mode_from_env(INPUT_X_WEIGHT_3D)
+        self.input_x_weight_parallel_mode = get_parallel_mode_from_env(
+            INPUT_X_WEIGHT_3D
+        )
 
         self.num_embeddings = num_embeddings
         self.embed_dim = embedding_dim
@@ -973,7 +994,12 @@ class Embedding3D(ParallelLayer):
         self.embed_kwargs = kwargs
 
         self.weight = nn.Parameter(
-            torch.empty((num_embeddings, embed_dim_per_partition), device=get_current_device(), dtype=dtype))
+            torch.empty(
+                (num_embeddings, embed_dim_per_partition),
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
 
         self.reset_parameters(weight_initializer)
         self._set_tensor_parallel_attributes()
@@ -990,8 +1016,11 @@ class Embedding3D(ParallelLayer):
             fan_in, fan_out = self.num_embeddings, self.embed_dim
             weight_initializer(self.weight, fan_in=fan_in, fan_out=fan_out)
             self._fill_padding_idx_with_zero()
-        broadcast(self.weight,
-                  gpc.get_ranks_in_group(self.input_x_weight_parallel_mode)[0], self.input_x_weight_parallel_mode)
+        broadcast(
+            self.weight,
+            gpc.get_ranks_in_group(self.input_x_weight_parallel_mode)[0],
+            self.input_x_weight_parallel_mode,
+        )
         self.weight.register_hook(self._sync_grad_hook)
 
     def _fill_padding_idx_with_zero(self) -> None:
@@ -1001,7 +1030,7 @@ class Embedding3D(ParallelLayer):
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
+        weight_key = prefix + "weight"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             weight = state_dict.pop(weight_key, None)
@@ -1009,8 +1038,10 @@ class Embedding3D(ParallelLayer):
                 local_state[weight_key] = weight
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
@@ -1026,12 +1057,14 @@ class Embedding3D(ParallelLayer):
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
+        weight_key = prefix + "weight"
         local_state = OrderedDict({weight_key: self.weight})
 
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
@@ -1043,10 +1076,14 @@ class Embedding3D(ParallelLayer):
             destination.update(local_state)
 
     def forward(self, input_: Tensor) -> Tensor:
-        input_ = split_batch_3d(input_,
-                                input_parallel_mode=self.input_parallel_mode,
-                                weight_parallel_mode=self.weight_parallel_mode)
-        output = F.embedding(input_, self.weight, self.padding_idx, *self.embed_args, **self.embed_kwargs)
+        input_ = split_batch_3d(
+            input_,
+            input_parallel_mode=self.input_parallel_mode,
+            weight_parallel_mode=self.weight_parallel_mode,
+        )
+        output = F.embedding(
+            input_, self.weight, self.padding_idx, *self.embed_args, **self.embed_kwargs
+        )
 
         return output
 
@@ -1082,14 +1119,16 @@ class VocabParallelEmbedding3D(ParallelLayer):
     `init <https://github.com/hpcaitech/ColossalAI/blob/main/colossalai/nn/init.py>`_.
     """
 
-    def __init__(self,
-                 num_embeddings: int,
-                 embedding_dim: int,
-                 padding_idx: int = None,
-                 dtype: torch.dtype = None,
-                 weight_initializer: Callable = init.normal_(),
-                 *args,
-                 **kwargs):
+    def __init__(
+        self,
+        num_embeddings: int,
+        embedding_dim: int,
+        padding_idx: int = None,
+        dtype: torch.dtype = None,
+        weight_initializer: Callable = init.normal_(),
+        *args,
+        **kwargs
+    ):
         super().__init__()
         self.num_embeddings = num_embeddings
         self.embed_dim = embedding_dim
@@ -1104,13 +1143,20 @@ class VocabParallelEmbedding3D(ParallelLayer):
         self.num_embeddings_per_partition = divide(self.num_embeddings, self.depth**2)
         self.embed_dim_per_partition = divide(self.embed_dim, self.depth)
         vocab_parallel_rank = gpc.get_local_rank(self.input_parallel_mode)
-        self.vocab_start_index = vocab_parallel_rank * self.num_embeddings_per_partition * self.depth
-        self.vocab_end_index = self.vocab_start_index + self.num_embeddings_per_partition * self.depth
+        self.vocab_start_index = (
+            vocab_parallel_rank * self.num_embeddings_per_partition * self.depth
+        )
+        self.vocab_end_index = (
+            self.vocab_start_index + self.num_embeddings_per_partition * self.depth
+        )
 
         self.weight = Parameter(
-            torch.empty((self.num_embeddings_per_partition, self.embed_dim_per_partition),
-                        device=get_current_device(),
-                        dtype=dtype))
+            torch.empty(
+                (self.num_embeddings_per_partition, self.embed_dim_per_partition),
+                device=get_current_device(),
+                dtype=dtype,
+            )
+        )
 
         self.reset_parameters(weight_initializer)
         self._set_tensor_parallel_attributes()
@@ -1126,14 +1172,17 @@ class VocabParallelEmbedding3D(ParallelLayer):
             self._fill_padding_idx_with_zero()
 
     def _fill_padding_idx_with_zero(self) -> None:
-        if self.padding_idx is not None and \
-                self.padding_idx >= self.vocab_start_index and self.padding_idx < self.vocab_end_index:
+        if (
+            self.padding_idx is not None
+            and self.padding_idx >= self.vocab_start_index
+            and self.padding_idx < self.vocab_end_index
+        ):
             with torch.no_grad():
                 self.weight[self.padding_idx - self.vocab_start_index].fill_(0)
 
     def _load_from_global_state_dict(self, state_dict, prefix, *args, **kwargs):
         local_state = OrderedDict()
-        weight_key = prefix + 'weight'
+        weight_key = prefix + "weight"
         if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
             # weight
             weight = state_dict.pop(weight_key, None)
@@ -1141,8 +1190,10 @@ class VocabParallelEmbedding3D(ParallelLayer):
                 local_state[weight_key] = weight
 
         # partition in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = partition_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
@@ -1168,7 +1219,7 @@ class VocabParallelEmbedding3D(ParallelLayer):
         super()._load_from_global_state_dict(local_state, prefix, *args, **kwargs)
 
     def _save_to_global_state_dict(self, destination, prefix, keep_vars):
-        weight_key = prefix + 'weight'
+        weight_key = prefix + "weight"
         local_state = OrderedDict({weight_key: self.weight})
 
         # gather in weight groups
@@ -1189,8 +1240,10 @@ class VocabParallelEmbedding3D(ParallelLayer):
                 keep_vars=keep_vars,
             )
         # gather in output groups
-        if gpc.get_local_rank(self.input_parallel_mode) == 0 and \
-                gpc.get_local_rank(self.weight_parallel_mode) == 0:
+        if (
+            gpc.get_local_rank(self.input_parallel_mode) == 0
+            and gpc.get_local_rank(self.weight_parallel_mode) == 0
+        ):
             local_state = gather_tensor_parallel_state_dict(
                 local_state,
                 self.output_parallel_mode,
@@ -1204,15 +1257,23 @@ class VocabParallelEmbedding3D(ParallelLayer):
     def forward(self, input_: Tensor) -> Tensor:
         input_ = split_tensor_3d(input_, 0, self.weight_parallel_mode)
 
-        input_mask = (input_ < self.vocab_start_index) | (input_ >= self.vocab_end_index)
+        input_mask = (input_ < self.vocab_start_index) | (
+            input_ >= self.vocab_end_index
+        )
         masked_input = input_.clone() - self.vocab_start_index
         masked_input[input_mask] = 0
 
         weight = all_gather_tensor_3d(self.weight, 0, self.weight_parallel_mode)
 
-        output_parallel = F.embedding(masked_input, weight, self.padding_idx, *self.embed_args, **self.embed_kwargs)
+        output_parallel = F.embedding(
+            masked_input,
+            weight,
+            self.padding_idx,
+            *self.embed_args,
+            **self.embed_kwargs
+        )
 
-        output_parallel[input_mask, :] = 0.
+        output_parallel[input_mask, :] = 0.0
         output = reduce_scatter_tensor_3d(output_parallel, 0, self.input_parallel_mode)
 
         return output

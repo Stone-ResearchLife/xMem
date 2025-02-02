@@ -25,29 +25,38 @@ class StatefulTensor(object):
 
     https://arxiv.org/abs/2108.05818
     """
+
     # Global Stateful Tensor Manager
     GST_MGR = GeminiMemoryManager(TensorState)
 
-    def __init__(self, maybe_tensor: Optional[torch.Tensor], state: Optional[TensorState] = TensorState.HOLD) -> None:
+    def __init__(
+        self,
+        maybe_tensor: Optional[torch.Tensor],
+        state: Optional[TensorState] = TensorState.HOLD,
+    ) -> None:
         self._state = state
         self._payload = None
-        self._payload_size = 0    # byte size of current payload
+        self._payload_size = 0  # byte size of current payload
 
         StatefulTensor.GST_MGR.register_new_instance()
 
         if self._state == TensorState.FREE:
             # when the state is free, payload should be None
-            assert maybe_tensor is None, f"payload has to None if state is {self._state}"
+            assert (
+                maybe_tensor is None
+            ), f"payload has to None if state is {self._state}"
         else:
             # otherwise, payload should not be None
-            assert maybe_tensor is not None, f"payload can't be None if state is {self._state}"
+            assert (
+                maybe_tensor is not None
+            ), f"payload can't be None if state is {self._state}"
             self._payload = maybe_tensor
             self._payload_size = sizeof_tensor(maybe_tensor)
             self.__trans_state_update(TensorState.FREE, state)
 
     def data_ptr(self):
         if self._payload is None:
-            return 0    # if a tensor has no storage, 0 should be returned
+            return 0  # if a tensor has no storage, 0 should be returned
         return self._payload.data_ptr()
 
     def set_null(self) -> None:
@@ -66,7 +75,9 @@ class StatefulTensor(object):
     def trans_state(self, state: TensorState) -> None:
         if self.state == TensorState.FREE:
             # free stateful tensor can't change state
-            assert state == TensorState.FREE, "Free stateful tensor can't change to other states"
+            assert (
+                state == TensorState.FREE
+            ), "Free stateful tensor can't change to other states"
             return
 
         self.__trans_state_update(self.state, state)
@@ -80,7 +91,7 @@ class StatefulTensor(object):
         assert self.state is not TensorState.FREE, "Can't move free stateful tensor"
 
         if not isinstance(device, torch.device):
-            to_device = torch.device('cuda', device)
+            to_device = torch.device("cuda", device)
         else:
             to_device = device
 
@@ -98,7 +109,9 @@ class StatefulTensor(object):
 
     def payload_reset(self, tensor) -> None:
 
-        assert tensor is not None, "Can't reset None for stateful tensors, please use set_null() instead"
+        assert (
+            tensor is not None
+        ), "Can't reset None for stateful tensors, please use set_null() instead"
 
         if self.payload is not None:
             # release old payload
@@ -168,8 +181,7 @@ class StatefulTensor(object):
         self._payload_size = 0
 
     def __trans_state_update(self, from_state: TensorState, to_state: TensorState):
-        """Update global manager when changing the state of a tensor
-        """
+        """Update global manager when changing the state of a tensor"""
         manager = StatefulTensor.GST_MGR
         size = self.payload_size
         device_type = self.device.type
@@ -189,8 +201,7 @@ class StatefulTensor(object):
             manager.total_mem[device_type] -= size
 
     def __trans_device_update(self, from_type: str, to_type: str):
-        """Update global manager when changing the device of a tensor
-        """
+        """Update global manager when changing the device of a tensor"""
         manager = StatefulTensor.GST_MGR
         size = self.payload_size
         state = self.state

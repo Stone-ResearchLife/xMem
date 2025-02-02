@@ -5,7 +5,7 @@ from torch.fx import GraphModule, Node
 
 from .._compatibility import compatibility, is_compatible_with_meta
 
-__all__ = ['activation_size', 'parameter_size', 'is_inplace']
+__all__ = ["activation_size", "parameter_size", "is_inplace"]
 
 
 @compatibility(is_backward_compatible=True)
@@ -21,7 +21,10 @@ def activation_size(out: Union[torch.Tensor, Dict, List, Tuple, int]) -> int:
     act_size = 0
     if isinstance(out, torch.Tensor):
         if out.is_quantized:
-            act_size += out.numel() * torch._empty_affine_quantized([], dtype=out.dtype).element_size()
+            act_size += (
+                out.numel()
+                * torch._empty_affine_quantized([], dtype=out.dtype).element_size()
+            )
         else:
             act_size += out.numel() * torch.tensor([], dtype=out.dtype).element_size()
     elif isinstance(out, dict):
@@ -63,9 +66,12 @@ def is_inplace(n: Node):
         inplace = n.kwargs.get("inplace", False)
         if is_compatible_with_meta():
             from .constants import ALIAS_ATEN
+
             if n.target in ALIAS_ATEN:
                 inplace = True
     elif n.op == "call_module":
-        inplace = getattr(n.graph.owning_module.get_submodule(n.target), "inplace", False)
+        inplace = getattr(
+            n.graph.owning_module.get_submodule(n.target), "inplace", False
+        )
 
     return inplace

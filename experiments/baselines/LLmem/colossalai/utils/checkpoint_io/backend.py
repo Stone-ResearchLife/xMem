@@ -6,7 +6,7 @@ from typing import Dict, List, Type
 from .reader import CheckpointReader, DiskCheckpointReader
 from .writer import CheckpointWriter, DiskCheckpointWriter
 
-_backends: Dict[str, Type['CheckpointIOBackend']] = {}
+_backends: Dict[str, Type["CheckpointIOBackend"]] = {}
 
 
 def register(name: str):
@@ -19,7 +19,7 @@ def register(name: str):
     return wrapper
 
 
-def get_backend(name: str) -> 'CheckpointIOBackend':
+def get_backend(name: str) -> "CheckpointIOBackend":
     assert name in _backends, f'Unsupported backend "{name}"'
     return _backends[name]()
 
@@ -31,11 +31,13 @@ class CheckpointIOBackend(ABC):
         self.temps: List[str] = []
 
     @abstractmethod
-    def get_writer(self,
-                   base_name: str,
-                   overwrite: bool = False,
-                   rank: int = 0,
-                   world_size: int = 1) -> CheckpointWriter:
+    def get_writer(
+        self,
+        base_name: str,
+        overwrite: bool = False,
+        rank: int = 0,
+        world_size: int = 1,
+    ) -> CheckpointWriter:
         pass
 
     @abstractmethod
@@ -51,15 +53,19 @@ class CheckpointIOBackend(ABC):
         pass
 
 
-@register('disk')
+@register("disk")
 class CheckpointDiskIO(CheckpointIOBackend):
 
-    def get_writer(self,
-                   base_name: str,
-                   overwrite: bool = False,
-                   rank: int = 0,
-                   world_size: int = 1) -> CheckpointWriter:
-        return DiskCheckpointWriter(base_name, overwrite, rank=rank, world_size=world_size)
+    def get_writer(
+        self,
+        base_name: str,
+        overwrite: bool = False,
+        rank: int = 0,
+        world_size: int = 1,
+    ) -> CheckpointWriter:
+        return DiskCheckpointWriter(
+            base_name, overwrite, rank=rank, world_size=world_size
+        )
 
     def get_reader(self, base_name: str) -> CheckpointReader:
         return DiskCheckpointReader(base_name)

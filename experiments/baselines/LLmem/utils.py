@@ -46,7 +46,11 @@ def openai_completion(
     max_batches=sys.maxsize,
     return_text=False,
     **decoding_kwargs,
-) -> Union[Union[StrOrOpenAIObject], Sequence[StrOrOpenAIObject], Sequence[Sequence[StrOrOpenAIObject]],]:
+) -> Union[
+    Union[StrOrOpenAIObject],
+    Sequence[StrOrOpenAIObject],
+    Sequence[Sequence[StrOrOpenAIObject]],
+]:
     """Decode with OpenAI API.
 
     Args:
@@ -103,7 +107,9 @@ def openai_completion(
                     **batch_decoding_args.__dict__,
                     **decoding_kwargs,
                 )
-                completion_batch = openai.Completion.create(prompt=prompt_batch, **shared_kwargs)
+                completion_batch = openai.Completion.create(
+                    prompt=prompt_batch, **shared_kwargs
+                )
                 choices = completion_batch.choices
 
                 for choice in choices:
@@ -113,8 +119,12 @@ def openai_completion(
             except openai.error.OpenAIError as e:
                 logging.warning(f"OpenAIError: {e}.")
                 if "Please reduce your prompt" in str(e):
-                    batch_decoding_args.max_tokens = int(batch_decoding_args.max_tokens * 0.8)
-                    logging.warning(f"Reducing target length to {batch_decoding_args.max_tokens}, Retrying...")
+                    batch_decoding_args.max_tokens = int(
+                        batch_decoding_args.max_tokens * 0.8
+                    )
+                    logging.warning(
+                        f"Reducing target length to {batch_decoding_args.max_tokens}, Retrying..."
+                    )
                 else:
                     logging.warning("Hit request rate limit; retrying...")
                     time.sleep(sleep_time)  # Annoying rate limit on requests.
@@ -123,7 +133,10 @@ def openai_completion(
         completions = [completion.text for completion in completions]
     if decoding_args.n > 1:
         # make completions a nested list, where each entry is a consecutive decoding_args.n of original entries.
-        completions = [completions[i : i + decoding_args.n] for i in range(0, len(completions), decoding_args.n)]
+        completions = [
+            completions[i : i + decoding_args.n]
+            for i in range(0, len(completions), decoding_args.n)
+        ]
     if is_single_prompt:
         # Return non-tuple if only 1 input and 1 generation.
         (completions,) = completions

@@ -19,7 +19,7 @@ def calculate_fwd_in(n: Node) -> bool:
     Returns:
         save_fwd_in (bool): the result of `save_fwd_in`
     """
-    return n.meta['save_fwd_in']
+    return n.meta["save_fwd_in"]
 
 
 @compatibility(is_backward_compatible=True)
@@ -45,4 +45,4 @@ def calculate_fwd_out(n: Node) -> int:
     Returns:
         fwd_out (int): the result of `fwd_out`
     """
-    return n.meta['fwd_mem_out']
+    return n.meta["fwd_mem_out"]

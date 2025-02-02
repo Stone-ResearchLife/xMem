@@ -9,11 +9,13 @@ class EnhancedGraphNode:
     def __init__(self, op: torch.fx.Node):
         self._op: torch.fx.Node = op
         self._layer_module: Optional[torch.nn.Module] = None
-        self._input : Optional[List[EnhancedGraphNode]] = None
+        self._input: Optional[List[EnhancedGraphNode]] = None
         self._output: Optional[torch.Tensor] = None
         self._weight: Optional[torch.nn.parameter.Parameter] = None
         self._bias: Optional[torch.nn.parameter.Parameter] = None
-        self._stack: Optional[Dict[str, Union[str, List[Tuple[str, torch.nn.Module]]]]] = None
+        self._stack: Optional[
+            Dict[str, Union[str, List[Tuple[str, torch.nn.Module]]]]
+        ] = None
         self._gradients = []
 
     @property
@@ -73,7 +75,7 @@ class EnhancedGraphNode:
     def gradient_function(self):
         if self.output is not None and self.output.grad_fn is not None:
             _name = self.output.grad_fn.__class__.__name__
-            if "relu" in _name.lower() and 'relu' not in self.real_layer_name.lower():
+            if "relu" in _name.lower() and "relu" not in self.real_layer_name.lower():
                 return self.output.grad_fn.next_functions[0][0]
             return self.output.grad_fn
         return None
@@ -104,7 +106,7 @@ class EnhancedGraphNode:
         return self._op.all_input_nodes
 
     @property
-    def inputs(self) -> Optional[List['EnhancedGraphNode']]:
+    def inputs(self) -> Optional[List["EnhancedGraphNode"]]:
         return self._input if self._input is not None else []
 
     @property
@@ -121,7 +123,7 @@ class EnhancedGraphNode:
 
     @property
     def is_inplace(self):
-        return hasattr(self.module, 'inplace')
+        return hasattr(self.module, "inplace")
 
     @is_inplace.setter
     def is_inplace(self, value):
@@ -135,13 +137,13 @@ class EnhancedGraphNode:
     def stack_modules(self) -> Optional[List[Tuple[str, torch.nn.Module]]]:
         return self._stack.get("stack", None) if self._stack is not None else None
 
-    def add_input(self, tensor: 'EnhancedGraphNode'):
+    def add_input(self, tensor: "EnhancedGraphNode"):
         assert isinstance(tensor, EnhancedGraphNode)
         if self._input is None:
             self._input = []
         self._input.append(tensor)
 
-    def remove_input(self, tensor: 'EnhancedGraphNode'):
+    def remove_input(self, tensor: "EnhancedGraphNode"):
         assert isinstance(tensor, EnhancedGraphNode)
         self._input.remove(tensor)
 
@@ -175,12 +177,9 @@ class EnhancedGraphNode:
                 current_path=[],
                 parameter_grads=parameter_grads,
                 operator_grads=operator_grads,
-                operator_names=_inputs_dict
+                operator_names=_inputs_dict,
             )
-            backward_outputs = {
-                "output": operator_grads,
-                "parameters": parameter_grads
-            }
+            backward_outputs = {"output": operator_grads, "parameters": parameter_grads}
             return backward_outputs
         return None
 
@@ -197,7 +196,15 @@ class EnhancedGraphNode:
             grads = list(set(gards))
             saved_tensors = []
             for grad in grads:
-                saved_gard_tensors = [getattr(grad, grad_fn_attr) for grad_fn_attr in dir(grad) if grad_fn_attr.startswith('_saved_') and isinstance(getattr(grad, grad_fn_attr), Union[torch.Tensor, torch.nn.Parameter])]
+                saved_gard_tensors = [
+                    getattr(grad, grad_fn_attr)
+                    for grad_fn_attr in dir(grad)
+                    if grad_fn_attr.startswith("_saved_")
+                    and isinstance(
+                        getattr(grad, grad_fn_attr),
+                        Union[torch.Tensor, torch.nn.Parameter],
+                    )
+                ]
                 saved_tensors.extend(saved_gard_tensors)
             # Remove duplicate tensors. Especially for the case of Loss
             unique_tensors = []
@@ -226,7 +233,7 @@ class EnhancedGraphNode:
             "name": self.name,
             "backward_name": self.backward_name,
             "stack": self.stack_string,
-            "input":  [_tensor.output.shape for _tensor in _input],
+            "input": [_tensor.output.shape for _tensor in _input],
             "output": self.output.shape if self.output is not None else None,
             "weight": self.weight.shape if self._weight is not None else None,
             "bias": self.bias.shape if self._bias is not None else None,
@@ -262,37 +269,19 @@ class EnhancedGraphNode:
             },
             "forward": {
                 "name": self.name,
-                "input": {
-                    "value": forward_input,
-                    "call_index": []
-                },
+                "input": {"value": forward_input, "call_index": []},
                 "output": {
                     "value": forward_output,
                     "call_index": [],
                 },
-                "parameters": {
-                    "value": [weight, bias],
-                    "call_index": []
-                },
-                "ephemeral": {
-                    "value": [],
-                    "call_index": []
-                },
+                "parameters": {"value": [weight, bias], "call_index": []},
+                "ephemeral": {"value": [], "call_index": []},
             },
             "backward": {
                 "name": self.backward_name,
-                "output": {
-                    "value": _grad_output,
-                    "call_index": []
-                },
-                "parameters": {
-                    "value": _grad_parameters,
-                    "call_index": []
-                },
-                "ephemeral": {
-                    "value": [],
-                    "call_index": []
-                }
+                "output": {"value": _grad_output, "call_index": []},
+                "parameters": {"value": _grad_parameters, "call_index": []},
+                "ephemeral": {"value": [], "call_index": []},
             },
         }
 
@@ -309,9 +298,18 @@ class EnhancedGraphNode:
         _output = self.output.shape if self.output is not None else None
         _weight = self.weight.shape if self.weight is not None else None
         _bias = self.bias.shape if self.bias is not None else None
-        return f"{_name}({self.op_type}): output={_output}, weight={_weight}, bias={_bias}"
+        return (
+            f"{_name}({self.op_type}): output={_output}, weight={_weight}, bias={_bias}"
+        )
 
-    def _dfs(self, node, current_path: list, parameter_grads: list, operator_grads: list, operator_names: dict):
+    def _dfs(
+        self,
+        node,
+        current_path: list,
+        parameter_grads: list,
+        operator_grads: list,
+        operator_names: dict,
+    ):
         if node is None:
             return
 
@@ -320,12 +318,14 @@ class EnhancedGraphNode:
         current_path.append(_key)
         if _op_name in operator_names.keys():
             operator_grads.append(list(current_path))
-        elif not hasattr(node, 'next_functions') or len(list(node.next_functions)) == 0:
+        elif not hasattr(node, "next_functions") or len(list(node.next_functions)) == 0:
             parameter_grads.append(list(current_path))
         else:
             next_functions = [func[0] for func in list(node.next_functions)]
             for child in next_functions:
-                self._dfs(child, current_path, parameter_grads, operator_grads, operator_names)
+                self._dfs(
+                    child, current_path, parameter_grads, operator_grads, operator_names
+                )
         # pop up the last index of the current path, and go back to the parent node
         # Example:
         # current_path = [1, 2, 3]
@@ -335,11 +335,11 @@ class EnhancedGraphNode:
 
 class _AnalysisInterpreter(torch.fx.Interpreter):
     def __init__(
-            self,
-            module: torch.nn.Module,
-            garbage_collect_values: bool = True,
-            graph: Optional[torch.fx.Graph] = None,
-            id2layer: Optional[Dict[int, Any]] = None
+        self,
+        module: torch.nn.Module,
+        garbage_collect_values: bool = True,
+        graph: Optional[torch.fx.Graph] = None,
+        id2layer: Optional[Dict[int, Any]] = None,
     ):
         super().__init__(module, garbage_collect_values, graph)
         self._enhance_nodes: OrderedDict[str, EnhancedGraphNode] = OrderedDict()
@@ -368,11 +368,15 @@ class _AnalysisInterpreter(torch.fx.Interpreter):
             _input_name = input_node.name
             if _input_name in op_names.keys():
                 _input_node = op_names[_input_name]
-                if _input_node.op_type in ["call_module", "call_function", "placeholder", "call_method"]:
+                if _input_node.op_type in [
+                    "call_module",
+                    "call_function",
+                    "placeholder",
+                    "call_method",
+                ]:
                     node.add_input(_input_node)
 
-
-    def call_module(self, target : 'Target', args, kwargs : Dict[str, Any]) -> Any:
+    def call_module(self, target: "Target", args, kwargs: Dict[str, Any]) -> Any:
         _module = self.fetch_attr(target)
         if isinstance(_module, torch.nn.Module):
             self._current_node.module = _module
@@ -399,12 +403,12 @@ class _AnalysisInterpreter(torch.fx.Interpreter):
 
 class FXAnalyser:
     def __init__(
-            self, model: Union[torch.nn.Module],
-            data_x: torch.Tensor,
-            data_y: Optional[torch.Tensor] = None,
-            is_transformer: bool = False,
-            loss: Optional[torch.nn.Module] = None,
-
+        self,
+        model: Union[torch.nn.Module],
+        data_x: torch.Tensor,
+        data_y: Optional[torch.Tensor] = None,
+        is_transformer: bool = False,
+        loss: Optional[torch.nn.Module] = None,
     ):
         self._is_transformer = is_transformer
         self._model: Union[torch.nn.Module] = model
@@ -442,7 +446,9 @@ class FXAnalyser:
         """
         return self._layer_info
 
-    def _build_layer_call_stack(self) -> Dict[int, Dict[str, List[Tuple[str, torch.nn.Module]]]]:
+    def _build_layer_call_stack(
+        self,
+    ) -> Dict[int, Dict[str, List[Tuple[str, torch.nn.Module]]]]:
         _model_info = ModelInfo(self._model)
         return _model_info.id_to_layerstack_map()
 
@@ -452,7 +458,9 @@ class FXAnalyser:
         if self._loss is not None and self._label_tensor is not None:
             self._insert_loss_function(_traced_model)
             _traced_model.recompile()
-        _interpreter = _AnalysisInterpreter(_traced_model, id2layer=self._build_layer_call_stack())
+        _interpreter = _AnalysisInterpreter(
+            _traced_model, id2layer=self._build_layer_call_stack()
+        )
         if self._loss is not None and self._label_tensor is not None:
             _interpreter.run(self._input_tensor, self._label_tensor)
         else:
@@ -465,7 +473,7 @@ class FXAnalyser:
         model.add_module(loss_name, self._loss)
         graph = model.graph
         with graph.inserting_after(next(iter(graph.nodes))):  # 在图的最前面插入占位符
-            target_placeholder = graph.create_node('placeholder', target='y', name='y')
+            target_placeholder = graph.create_node("placeholder", target="y", name="y")
         for node in graph.nodes:
             if node.op == "output":
                 original_output_node = node.args[0]
@@ -474,13 +482,13 @@ class FXAnalyser:
                         "call_module",
                         target=loss_name,
                         args=(original_output_node, target_placeholder),
-                        name="loss"
+                        name="loss",
                     )
                 node.args = (loss_node,)
                 break
 
     def layer_summary(self, dnnmem_format: bool = False) -> List[Dict[str, Any]]:
-        """ Returns the layer summary of the model
+        """Returns the layer summary of the model
 
         Examples:
             [
@@ -508,4 +516,3 @@ class FXAnalyser:
                 info = value.to_json()
             layer_dict.append(info)
         return layer_dict
-

@@ -8,7 +8,7 @@ from colossalai.fx.profiler import calculate_fwd_in, calculate_fwd_tmp
 
 from .ckpt_solver_base import CheckpointSolverBase
 
-__all__ = ['CheckpointSolverChen']
+__all__ = ["CheckpointSolverChen"]
 
 
 class CheckpointSolverChen(CheckpointSolverBase):
@@ -40,14 +40,14 @@ class CheckpointSolverChen(CheckpointSolverBase):
         Returns:
             graph (Graph): The optimized graph, should be a copy of the original graph.
         """
-        checkpointable_op = ['call_module', 'call_method', 'call_function', 'get_attr']
+        checkpointable_op = ["call_module", "call_method", "call_function", "get_attr"]
         ckpt = self.grid_search()
         for i, seg in enumerate(ckpt):
             for idx in range(*seg):
                 nodes = self.node_list[idx]
                 for n in nodes:
                     if n.op in checkpointable_op:
-                        n.meta['activation_checkpoint'] = i
+                        n.meta["activation_checkpoint"] = i
         return deepcopy(self.graph)
 
     def run_chen_greedy(self, b: int = 0) -> Tuple[Set, int]:
@@ -77,7 +77,9 @@ class CheckpointSolverChen(CheckpointSolverBase):
         Grid search over [√2/2 b, √2 b] for ``ckpt_opt`` over ``num_grids`` as in appendix A.
         """
         _, b_approx = self.run_chen_greedy(0)
-        b_min, b_max = math.floor(b_approx / math.sqrt(2)), math.ceil(b_approx * math.sqrt(2))
+        b_min, b_max = math.floor(b_approx / math.sqrt(2)), math.ceil(
+            b_approx * math.sqrt(2)
+        )
         b_opt = math.inf
         for b in range(b_min, b_max, (b_max - b_min) // self.num_grids):
             ckpt_intv, b_approx = self.run_chen_greedy(b)

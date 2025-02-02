@@ -20,7 +20,7 @@ class FusedLayerNormAffineFunction1D(torch.autograd.Function):
             If a single integer is used, it is treated as a singleton list, and this module will
             normalize over the last dimension which is expected to be of that specific size.
         eps: a value added to the denominator for numerical stability
-  """
+    """
 
     @staticmethod
     def forward(ctx, input, weight, bias, normalized_shape, eps):
@@ -29,8 +29,9 @@ class FusedLayerNormAffineFunction1D(torch.autograd.Function):
         input_ = input.contiguous()
         weight_ = weight.contiguous()
         bias_ = bias.contiguous()
-        output, mean, invvar = fused_mix_prec_layer_norm_cuda.forward_affine(input_, ctx.normalized_shape, weight_,
-                                                                             bias_, ctx.eps)
+        output, mean, invvar = fused_mix_prec_layer_norm_cuda.forward_affine(
+            input_, ctx.normalized_shape, weight_, bias_, ctx.eps
+        )
         ctx.save_for_backward(input_, weight_, bias_, mean, invvar)
         return output
 
@@ -38,11 +39,18 @@ class FusedLayerNormAffineFunction1D(torch.autograd.Function):
     def backward(ctx, grad_output):
         input_, weight_, bias_, mean, invvar = ctx.saved_tensors
         grad_input = grad_weight = grad_bias = None
-        grad_input, grad_weight, grad_bias \
-          = fused_mix_prec_layer_norm_cuda.backward_affine(
-            grad_output.contiguous(), mean, invvar,
-            input_, ctx.normalized_shape,
-            weight_, bias_, ctx.eps)
+        grad_input, grad_weight, grad_bias = (
+            fused_mix_prec_layer_norm_cuda.backward_affine(
+                grad_output.contiguous(),
+                mean,
+                invvar,
+                input_,
+                ctx.normalized_shape,
+                weight_,
+                bias_,
+                ctx.eps,
+            )
+        )
 
         return grad_input, grad_weight, grad_bias, None, None
 
@@ -73,12 +81,18 @@ class LinearWithAsyncCommunication(torch.autograd.Function):
         grad_input = grad_output.matmul(weight)
 
         # Convert the tensor shapes to 2D for execution compatibility
-        grad_output = grad_output.view(grad_output.shape[0] * grad_output.shape[1], grad_output.shape[2])
-        total_input = total_input.view(total_input.shape[0] * total_input.shape[1], total_input.shape[2])
+        grad_output = grad_output.view(
+            grad_output.shape[0] * grad_output.shape[1], grad_output.shape[2]
+        )
+        total_input = total_input.view(
+            total_input.shape[0] * total_input.shape[1], total_input.shape[2]
+        )
 
         if ctx.async_grad_allreduce:
             # Asynchronous all-reduce
-            handle = dist.all_reduce(grad_input, group=gpc.get_group(ctx.parallel_mode), async_op=True)
+            handle = dist.all_reduce(
+                grad_input, group=gpc.get_group(ctx.parallel_mode), async_op=True
+            )
             # Delay the start of weight gradient computation shortly (3us) to have
             # all-reduce scheduled first and have GPU resources allocated
             _ = torch.empty(1, device=grad_output.device) + 1
@@ -93,4 +107,6 @@ class LinearWithAsyncCommunication(torch.autograd.Function):
 
 
 def linear_with_async_comm(input_, weight, bias, parallel_mode, async_grad_allreduce):
-    return LinearWithAsyncCommunication.apply(input_, weight, bias, parallel_mode, async_grad_allreduce)
+    return LinearWithAsyncCommunication.apply(
+        input_, weight, bias, parallel_mode, async_grad_allreduce
+    )

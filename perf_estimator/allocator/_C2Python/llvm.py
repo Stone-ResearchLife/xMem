@@ -1,5 +1,5 @@
 def llvm_is_power_of_2(x: int) -> bool:
-    """ Check if a 64-bit integer is a power of 2.
+    """Check if a 64-bit integer is a power of 2.
 
     Args:
         x (int): 64-bit integer
@@ -12,7 +12,7 @@ def llvm_is_power_of_2(x: int) -> bool:
 
 
 def llvm_power_of_2_floor(x: int) -> int:
-    """ Return the largest power of 2 less than or equal to x.
+    """Return the largest power of 2 less than or equal to x.
 
     Args:
         x (int): 64-bit integer
@@ -32,7 +32,7 @@ def llvm_power_of_2_floor(x: int) -> int:
 
 
 def llvm_count_leading_zeros(n: int) -> int:
-    """ Count the number of leading zeros in a 64-bit integer.
+    """Count the number of leading zeros in a 64-bit integer.
 
     Args:
         n (int): 64-bit integer

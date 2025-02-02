@@ -6,10 +6,11 @@ import torch.distributed as dist
 from colossalai.context.parallel_mode import ParallelMode
 from colossalai.core import global_context as gpc
 from colossalai.constants import IS_TENSOR_PARALLEL
+
 try:
     from torch.nn.modules.module import _EXTRA_STATE_KEY_SUFFIX
 except ImportError:
-    _EXTRA_STATE_KEY_SUFFIX = '_extra_state'
+    _EXTRA_STATE_KEY_SUFFIX = "_extra_state"
 
 from .common import is_using_pp
 
@@ -19,14 +20,18 @@ __all__ = ["save_checkpoint", "load_checkpoint"]
 def broadcast_state_dict(state_dict, parallel_mode):
     state_dict = [state_dict.copy() if isinstance(state_dict, dict) else state_dict]
     src_rank = gpc.get_ranks_in_group(parallel_mode)[0]
-    dist.broadcast_object_list(state_dict, src=src_rank, group=gpc.get_cpu_group(parallel_mode))
+    dist.broadcast_object_list(
+        state_dict, src=src_rank, group=gpc.get_cpu_group(parallel_mode)
+    )
     return state_dict[0]
 
 
-def partition_tensor_parallel_state_dict(state_dict: OrderedDict,
-                                         parallel_mode: ParallelMode,
-                                         dims: dict = dict(),
-                                         partition_states: dict = dict()):
+def partition_tensor_parallel_state_dict(
+    state_dict: OrderedDict,
+    parallel_mode: ParallelMode,
+    dims: dict = dict(),
+    partition_states: dict = dict(),
+):
     src_rank = gpc.get_ranks_in_group(parallel_mode)[0]
     depth = gpc.get_world_size(parallel_mode)
     group = gpc.get_cpu_group(parallel_mode)
@@ -48,7 +53,9 @@ def partition_tensor_parallel_state_dict(state_dict: OrderedDict,
         if is_partitioned:
             output = torch.empty(shape, dtype=dtype)
             if is_rank0:
-                scatter_list = [t.contiguous() for t in state_dict[key].chunk(depth, dim)]
+                scatter_list = [
+                    t.contiguous() for t in state_dict[key].chunk(depth, dim)
+                ]
             else:
                 scatter_list = None
             dist.scatter(output, scatter_list, src_rank, group=group)
@@ -63,11 +70,11 @@ def partition_tensor_parallel_state_dict(state_dict: OrderedDict,
 
 
 def gather_tensor_parallel_state_dict(
-        state_dict: OrderedDict,
-        parallel_mode: ParallelMode,
-        dims: dict = dict(),
-        partition_states: dict = dict(),
-        keep_vars: bool = False,
+    state_dict: OrderedDict,
+    parallel_mode: ParallelMode,
+    dims: dict = dict(),
+    partition_states: dict = dict(),
+    keep_vars: bool = False,
 ):
     dst_rank = gpc.get_ranks_in_group(parallel_mode)[0]
     depth = gpc.get_world_size(parallel_mode)
@@ -86,7 +93,9 @@ def gather_tensor_parallel_state_dict(
                 shape[0] *= depth
                 param = torch.empty(shape, dtype=param.dtype, device=param.device)
                 gather_list = list(torch.chunk(param, depth, dim=0))
-            dist.gather(temp, gather_list, dst=dst_rank, group=gpc.get_cpu_group(parallel_mode))
+            dist.gather(
+                temp, gather_list, dst=dst_rank, group=gpc.get_cpu_group(parallel_mode)
+            )
             param = torch.transpose(param, 0, dim)
         # update params in state_dict only on local rank 0
         if gpc.get_local_rank(parallel_mode) == 0:
@@ -116,7 +125,9 @@ def partition_pipeline_parallel_state_dict(model, state_dict):
     if gpc.get_local_rank(ParallelMode.TENSOR) == 0:
         # receive all states from prev stage
         if not gpc.is_first_rank(ParallelMode.PIPELINE):
-            state_dict = _recv_state_dict(gpc.get_prev_global_rank(ParallelMode.PIPELINE), ParallelMode.PIPELINE)
+            state_dict = _recv_state_dict(
+                gpc.get_prev_global_rank(ParallelMode.PIPELINE), ParallelMode.PIPELINE
+            )
         # move states to output
         for name, _ in model.named_parameters(recurse=True):
             if name in state_dict:
@@ -130,14 +141,21 @@ def partition_pipeline_parallel_state_dict(model, state_dict):
                 pipeline_state[extra_state_key] = state_dict.pop(extra_state_key)
         # send rest states to next stage
         if not gpc.is_last_rank(ParallelMode.PIPELINE):
-            _send_state_dict(state_dict, gpc.get_next_global_rank(ParallelMode.PIPELINE), ParallelMode.PIPELINE)
+            _send_state_dict(
+                state_dict,
+                gpc.get_next_global_rank(ParallelMode.PIPELINE),
+                ParallelMode.PIPELINE,
+            )
 
     return pipeline_state
 
 
 def gather_pipeline_parallel_state_dict(state_dict):
-    gathered_states = ([None for _ in range(gpc.get_world_size(ParallelMode.PIPELINE))]
-                       if gpc.get_local_rank(ParallelMode.PIPELINE) == 0 else None)
+    gathered_states = (
+        [None for _ in range(gpc.get_world_size(ParallelMode.PIPELINE))]
+        if gpc.get_local_rank(ParallelMode.PIPELINE) == 0
+        else None
+    )
     dist.gather_object(
         state_dict,
         gathered_states,
@@ -145,18 +163,23 @@ def gather_pipeline_parallel_state_dict(state_dict):
         group=gpc.get_cpu_group(ParallelMode.PIPELINE),
     )
 
-    state_dict = (OrderedDict(chain.from_iterable(state.items() for state in gathered_states))
-                  if gpc.get_local_rank(ParallelMode.PIPELINE) == 0 else OrderedDict())
+    state_dict = (
+        OrderedDict(chain.from_iterable(state.items() for state in gathered_states))
+        if gpc.get_local_rank(ParallelMode.PIPELINE) == 0
+        else OrderedDict()
+    )
 
     return state_dict
 
 
-def save_checkpoint(file,
-                    epoch: int,
-                    model: torch.nn.Module,
-                    optimizer: torch.optim.Optimizer = None,
-                    lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
-                    **kwargs):
+def save_checkpoint(
+    file,
+    epoch: int,
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer = None,
+    lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+    **kwargs
+):
     """Stores the checkpoint to disk. Saves all the training components' parameters or buffers, such as model, optimizer,
     lr_scheduler etc. into a checkpoint dictionary.
 
@@ -194,8 +217,11 @@ def broadcast_model(model: torch.nn.Module):
     src_rank = gpc.get_ranks_in_group(ParallelMode.TENSOR)[0]
     for p in model.parameters():
         if not getattr(p, IS_TENSOR_PARALLEL, False) and p.storage().size() > 0:
-            group = gpc.get_group(ParallelMode.TENSOR) if p.device.type == 'cuda' else gpc.get_cpu_group(
-                ParallelMode.TENSOR)
+            group = (
+                gpc.get_group(ParallelMode.TENSOR)
+                if p.device.type == "cuda"
+                else gpc.get_cpu_group(ParallelMode.TENSOR)
+            )
             dist.broadcast(p, src_rank, group=group)
 
 
@@ -224,8 +250,11 @@ def load_checkpoint(
     Raises:
         RuntimeError: Raise error if the model/optimizer cannot successfully be recuperated
     """
-    state_dict = (torch.load(file, map_location=torch.device("cpu"))
-                  if gpc.get_local_rank(ParallelMode.MODEL) == 0 else None)
+    state_dict = (
+        torch.load(file, map_location=torch.device("cpu"))
+        if gpc.get_local_rank(ParallelMode.MODEL) == 0
+        else None
+    )
 
     # model states
     model_state = state_dict.pop("model") if state_dict is not None else dict()
@@ -240,12 +269,22 @@ def load_checkpoint(
         if error_msgs.startswith("Error(s) in loading state_dict for "):
             error_msgs = error_msgs.split("\n\t")[1:]
             dst_rank = gpc.get_ranks_in_group(ParallelMode.MODEL)[0]
-            all_error_msgs = [None for _ in range(gpc.get_world_size(ParallelMode.MODEL))]
-            dist.gather_object(error_msgs, all_error_msgs, dst=dst_rank, group=gpc.get_cpu_group(ParallelMode.MODEL))
+            all_error_msgs = [
+                None for _ in range(gpc.get_world_size(ParallelMode.MODEL))
+            ]
+            dist.gather_object(
+                error_msgs,
+                all_error_msgs,
+                dst=dst_rank,
+                group=gpc.get_cpu_group(ParallelMode.MODEL),
+            )
             if gpc.get_global_rank() == 0:
                 all_error_msgs = list(chain.from_iterable(all_error_msgs))
-                raise RuntimeError("Error(s) in loading state_dict for {}:\n\t{}".format(
-                    model.__class__.__name__, "\n\t".join(all_error_msgs)))
+                raise RuntimeError(
+                    "Error(s) in loading state_dict for {}:\n\t{}".format(
+                        model.__class__.__name__, "\n\t".join(all_error_msgs)
+                    )
+                )
         else:
             raise e
 

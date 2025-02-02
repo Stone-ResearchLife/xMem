@@ -41,15 +41,15 @@ class SnapshotPlugin(AbcPlugin):
     TIME_FORMAT_STR: str = "%b_%d_%H_%M_%S"
     MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT: int = 5000000
 
-
     def __init__(self, config: Config = default_setting):
         super(SnapshotPlugin, self).__init__("snapshot", config)
 
     def start(self, *args, **kwargs):
-        logger.debug(f"Start Snapshot Plugin, max_entires: {self.MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT}")
+        logger.debug(
+            f"Start Snapshot Plugin, max_entires: {self.MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT}"
+        )
         torch.cuda.memory._record_memory_history(
-            stacks="all",
-            max_entries=self.MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT
+            stacks="all", max_entries=self.MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT
         )
 
     def step(self, *args, **kwargs):
@@ -95,7 +95,9 @@ class ProfilerPlugin(AbcPlugin):
         self._profiler.start()
 
     def stop(self, *args, **kwargs):
-        logger.debug(f"Stop Profiler, the result will be saved to tensorboard {self.output_dir}")
+        logger.debug(
+            f"Stop Profiler, the result will be saved to tensorboard {self.output_dir}"
+        )
         if self._profiler is not None:
             self._profiler.stop()
 
@@ -107,12 +109,12 @@ class ProfilerPlugin(AbcPlugin):
 
 class HostMonitorPlugin(AbcPlugin):
     def __init__(
-            self,
-            interval_ms: int = 10,
-            cpu_enable: bool = True,
-            gpu_enable: bool = True,
-            network_enable: bool = True,
-            config: Config = default_setting
+        self,
+        interval_ms: int = 10,
+        cpu_enable: bool = True,
+        gpu_enable: bool = True,
+        network_enable: bool = True,
+        config: Config = default_setting,
     ):
         super(HostMonitorPlugin, self).__init__("host_monitor", config)
         self._monitor = MonitorThreading(name=self.tool_name)
@@ -121,7 +123,7 @@ class HostMonitorPlugin(AbcPlugin):
             "cpu_enable": cpu_enable,
             "gpu_enable": gpu_enable,
             "network_enable": network_enable,
-            "output_dir": self.output_dir
+            "output_dir": self.output_dir,
         }
 
     def start(self, *args, **kwargs):
@@ -131,10 +133,10 @@ class HostMonitorPlugin(AbcPlugin):
         self._monitor.run(**_params)
 
     def stop(self, *args, **kwargs):
-        logger.debug(f"Stop Host Monitor Plugin, the result will be saved to {self._params['output_dir']}")
+        logger.debug(
+            f"Stop Host Monitor Plugin, the result will be saved to {self._params['output_dir']}"
+        )
         self._monitor.stop()
 
     def step(self, *args, **kwargs):
         pass
-
-

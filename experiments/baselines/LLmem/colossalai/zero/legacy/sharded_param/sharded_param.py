@@ -36,12 +36,13 @@ class ShardedParamV2(object):
             self.set_data_none()
 
     def get_payload_tensors(self) -> List[StatefulTensor]:
-        """returns stateful tensors kept by this class.
-        """
+        """returns stateful tensors kept by this class."""
         return [self._sharded_data_tensor]
 
     def set_data_none(self):
-        self.param.data = get_empty_tensor(self.sharded_data_tensor.device, self.sharded_data_tensor.dtype)
+        self.param.data = get_empty_tensor(
+            self.sharded_data_tensor.device, self.sharded_data_tensor.dtype
+        )
 
     def set_grad_none(self):
         self.saved_grad.set_null()
@@ -96,15 +97,24 @@ class ShardedParamV2(object):
         _update_mem_use(self.data_payload)
         address_set.add(self.data_payload.data_ptr())
 
-        if not self.saved_grad.is_null() and self.saved_grad.data_ptr() not in address_set:
+        if (
+            not self.saved_grad.is_null()
+            and self.saved_grad.data_ptr() not in address_set
+        ):
             _update_mem_use(self.grad_payload)
             address_set.add(self.saved_grad.data_ptr())
 
-        if self.param.data is not None and self.param.data.data_ptr() not in address_set:
+        if (
+            self.param.data is not None
+            and self.param.data.data_ptr() not in address_set
+        ):
             _update_mem_use(self.param.data)
             address_set.add(self.param.data.data_ptr())
 
-        if self.param.grad is not None and self.param.grad.data_ptr() not in address_set:
+        if (
+            self.param.grad is not None
+            and self.param.grad.data_ptr() not in address_set
+        ):
             _update_mem_use(self.param.grad)
 
         return cuda_mem_use, cpu_mem_use

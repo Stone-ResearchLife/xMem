@@ -7,14 +7,16 @@ from torch.utils._pytree import tree_map
 
 class Chain:
 
-    def __init__(self,
-                 ftime: List[float],
-                 btime: List[float],
-                 x: List[int],
-                 xbar: List[int],
-                 ftmp: List[int],
-                 btmp: List[int],
-                 check_consistency: bool = True):
+    def __init__(
+        self,
+        ftime: List[float],
+        btime: List[float],
+        x: List[int],
+        xbar: List[int],
+        ftmp: List[int],
+        btmp: List[int],
+        check_consistency: bool = True,
+    ):
         """The chain is a basic linearized structure for solving the dynamic programming problem for activation checkpoint.
         See paper https://hal.inria.fr/hal-02352969 for details.
 
@@ -37,16 +39,32 @@ class Chain:
             raise AttributeError("In Chain, input lists do not have consistent lengths")
 
     def check_lengths(self):
-        return ((len(self.ftime) == len(self)) and (len(self.btime) == len(self) + 1) and (len(self.x) == len(self) + 1)
-                and (len(self.ftmp) == len(self)) and (len(self.btmp) == len(self) + 1)
-                and (len(self.xbar) == len(self) + 1))
+        return (
+            (len(self.ftime) == len(self))
+            and (len(self.btime) == len(self) + 1)
+            and (len(self.x) == len(self) + 1)
+            and (len(self.ftmp) == len(self))
+            and (len(self.btmp) == len(self) + 1)
+            and (len(self.xbar) == len(self) + 1)
+        )
 
     def __repr__(self):
         chain_list = []
         for i in range(len(self)):
-            chain_list.append((self.ftime[i], self.btime[i], self.x[i], self.xbar[i], self.ftmp[i], self.btmp[i]))
+            chain_list.append(
+                (
+                    self.ftime[i],
+                    self.btime[i],
+                    self.x[i],
+                    self.xbar[i],
+                    self.ftmp[i],
+                    self.btmp[i],
+                )
+            )
         i = len(self)
-        chain_list.append((None, self.btime[i], self.x[i], self.xbar[i], None, self.btmp[i]))
+        chain_list.append(
+            (None, self.btime[i], self.x[i], self.xbar[i], None, self.btmp[i])
+        )
         return chain_list.__repr__()
 
     def __len__(self):
@@ -109,9 +127,9 @@ class Forwards(Operation):
 
     def cost(self, chain: Chain):
         if chain is not None:
-            return sum(chain.ftime[self.index[0]:self.index[1] + 1])
+            return sum(chain.ftime[self.index[0] : self.index[1] + 1])
         else:
-            return (self.index[1] - self.index[0] + 1)
+            return self.index[1] - self.index[0] + 1
 
 
 def isForward(op):

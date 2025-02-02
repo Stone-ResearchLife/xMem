@@ -18,18 +18,22 @@ def build_moe_if_not_prebuilt():
     global moe
     if moe is None:
         from colossalai.kernel.op_builder import MOEBuilder
+
         moe = MOEBuilder().load()
 
 
 class AllGather(torch.autograd.Function):
 
     @staticmethod
-    def forward(ctx: Any, inputs: Tensor, group: Optional[ProcessGroup] = None) -> Tensor:
+    def forward(
+        ctx: Any, inputs: Tensor, group: Optional[ProcessGroup] = None
+    ) -> Tensor:
 
         global moe
 
         if moe is None:
             from colossalai.kernel.op_builder import MOEBuilder
+
             moe = MOEBuilder().load()
 
         if ctx is not None:
@@ -53,7 +57,9 @@ class AllGather(torch.autograd.Function):
 class ReduceScatter(torch.autograd.Function):
 
     @staticmethod
-    def forward(ctx: Any, inputs: Tensor, group: Optional[ProcessGroup] = None) -> Tensor:
+    def forward(
+        ctx: Any, inputs: Tensor, group: Optional[ProcessGroup] = None
+    ) -> Tensor:
         if ctx is not None:
             ctx.comm_grp = group
 
@@ -81,7 +87,9 @@ class AllToAll(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx: Any, inputs: Tensor, group: Optional[ProcessGroup] = None) -> Tensor:
+    def forward(
+        ctx: Any, inputs: Tensor, group: Optional[ProcessGroup] = None
+    ) -> Tensor:
         if ctx is not None:
             ctx.comm_grp = group
         if not inputs.is_contiguous():
@@ -119,7 +127,9 @@ class MoeDispatch(torch.autograd.Function):
     @staticmethod
     def backward(ctx, output_grad):
         mask, dest_idx = ctx.saved_tensors
-        d_tokens = moe.dispatch_backward(ctx.s, ctx.ec, ctx.h, output_grad, mask, dest_idx)
+        d_tokens = moe.dispatch_backward(
+            ctx.s, ctx.ec, ctx.h, output_grad, mask, dest_idx
+        )
         return d_tokens, None, None, None
 
 
@@ -137,7 +147,7 @@ class MoeCombine(torch.autograd.Function):
         # load moe kernel during runtime if not pre-built
         build_moe_if_not_prebuilt()
 
-        fp16_flag = (expert_tokens.dtype == torch.float16)
+        fp16_flag = expert_tokens.dtype == torch.float16
         cb_input = expert_tokens.to(torch.float32) if fp16_flag else expert_tokens
         ctokens = moe.combine_forward(s, e, c, h, cb_input, logits, mask, dest_idx)
         output = ctokens.to(torch.float16) if fp16_flag else ctokens
@@ -155,10 +165,15 @@ class MoeCombine(torch.autograd.Function):
     def backward(ctx, tokens_grad):
         expert_tokens, logits, mask, dest_idx = ctx.saved_tensors
 
-        cb_grad = tokens_grad.to(torch.float32) if tokens_grad.dtype is torch.float16 \
+        cb_grad = (
+            tokens_grad.to(torch.float32)
+            if tokens_grad.dtype is torch.float16
             else tokens_grad
+        )
         cb_input = expert_tokens.to(torch.float32) if ctx.fp16_flag else expert_tokens
-        d_expert, d_logits = moe.combine_backward(ctx.s, ctx.e, ctx.c, ctx.h, cb_grad, cb_input, logits, mask, dest_idx)
+        d_expert, d_logits = moe.combine_backward(
+            ctx.s, ctx.e, ctx.c, ctx.h, cb_grad, cb_input, logits, mask, dest_idx
+        )
         d_expert = d_expert.to(torch.float16) if ctx.fp16_flag else d_expert
 
         return d_expert, d_logits, None, None, None

@@ -9,13 +9,21 @@ from torch.distributed import ReduceOp
 from colossalai.context import ParallelMode
 from colossalai.core import global_context as gpc
 
-_all_gather_func = dist._all_gather_base \
-    if "all_gather_into_tensor" not in dir(dist) else dist.all_gather_into_tensor
-_reduce_scatter_func = dist._reduce_scatter_base \
-    if "reduce_scatter_tensor" not in dir(dist) else dist.reduce_scatter_tensor
+_all_gather_func = (
+    dist._all_gather_base
+    if "all_gather_into_tensor" not in dir(dist)
+    else dist.all_gather_into_tensor
+)
+_reduce_scatter_func = (
+    dist._reduce_scatter_base
+    if "reduce_scatter_tensor" not in dir(dist)
+    else dist.reduce_scatter_tensor
+)
 
 
-def all_gather(tensor: Tensor, dim: int, parallel_mode: ParallelMode, async_op: bool = False) -> Tensor:
+def all_gather(
+    tensor: Tensor, dim: int, parallel_mode: ParallelMode, async_op: bool = False
+) -> Tensor:
     r"""Gathers all tensors from the parallel group and concatenates them in a
     specific dimension.
 
@@ -38,10 +46,16 @@ def all_gather(tensor: Tensor, dim: int, parallel_mode: ParallelMode, async_op: 
         out = tensor
         work = None
     else:
-        tensor_in = tensor.contiguous() if dim == 0 else tensor.transpose(0, dim).contiguous()
+        tensor_in = (
+            tensor.contiguous() if dim == 0 else tensor.transpose(0, dim).contiguous()
+        )
         out_shape = (tensor_in.shape[0] * depth,) + tensor_in.shape[1:]
         tensor_out = torch.empty(out_shape, dtype=tensor.dtype, device=tensor.device)
-        group = gpc.get_cpu_group(parallel_mode) if tensor.device.type == "cpu" else gpc.get_group(parallel_mode)
+        group = (
+            gpc.get_cpu_group(parallel_mode)
+            if tensor.device.type == "cpu"
+            else gpc.get_group(parallel_mode)
+        )
         work = _all_gather_func(tensor_out, tensor_in, group=group, async_op=async_op)
         out = tensor_out if dim == 0 else tensor_out.transpose(0, dim)
     if async_op:
@@ -50,11 +64,13 @@ def all_gather(tensor: Tensor, dim: int, parallel_mode: ParallelMode, async_op: 
         return out
 
 
-def reduce_scatter(tensor: Tensor,
-                   dim: int,
-                   parallel_mode: ParallelMode,
-                   op: ReduceOp = ReduceOp.SUM,
-                   async_op: bool = False) -> Tensor:
+def reduce_scatter(
+    tensor: Tensor,
+    dim: int,
+    parallel_mode: ParallelMode,
+    op: ReduceOp = ReduceOp.SUM,
+    async_op: bool = False,
+) -> Tensor:
     r"""Reduces all tensors then scatters it in a specific dimension to all
     members in the parallel group.
 
@@ -81,11 +97,19 @@ def reduce_scatter(tensor: Tensor,
         out = tensor
         work = None
     else:
-        tensor_in = tensor.contiguous() if dim == 0 else tensor.transpose(0, dim).contiguous()
+        tensor_in = (
+            tensor.contiguous() if dim == 0 else tensor.transpose(0, dim).contiguous()
+        )
         out_shape = (tensor_in.shape[0] // depth,) + tensor_in.shape[1:]
         tensor_out = torch.empty(out_shape, dtype=tensor.dtype, device=tensor.device)
-        group = gpc.get_cpu_group(parallel_mode) if tensor.device.type == "cpu" else gpc.get_group(parallel_mode)
-        work = _reduce_scatter_func(tensor_out, tensor_in, op=op, group=group, async_op=async_op)
+        group = (
+            gpc.get_cpu_group(parallel_mode)
+            if tensor.device.type == "cpu"
+            else gpc.get_group(parallel_mode)
+        )
+        work = _reduce_scatter_func(
+            tensor_out, tensor_in, op=op, group=group, async_op=async_op
+        )
         out = tensor_out if dim == 0 else tensor_out.transpose(0, dim)
     if async_op:
         return out, work
@@ -93,10 +117,12 @@ def reduce_scatter(tensor: Tensor,
         return out
 
 
-def all_reduce(tensor: Tensor,
-               parallel_mode: ParallelMode,
-               op: ReduceOp = ReduceOp.SUM,
-               async_op: bool = False) -> Tensor:
+def all_reduce(
+    tensor: Tensor,
+    parallel_mode: ParallelMode,
+    op: ReduceOp = ReduceOp.SUM,
+    async_op: bool = False,
+) -> Tensor:
     r"""Reduces the tensor data across whole parallel group in such a way that all get the final result.
 
     Note:
@@ -122,7 +148,11 @@ def all_reduce(tensor: Tensor,
         work = None
     else:
         out = tensor.contiguous()
-        group = gpc.get_cpu_group(parallel_mode) if tensor.device.type == "cpu" else gpc.get_group(parallel_mode)
+        group = (
+            gpc.get_cpu_group(parallel_mode)
+            if tensor.device.type == "cpu"
+            else gpc.get_group(parallel_mode)
+        )
         work = dist.all_reduce(out, op=op, group=group, async_op=async_op)
     if async_op:
         return out, work
@@ -130,7 +160,9 @@ def all_reduce(tensor: Tensor,
         return out
 
 
-def broadcast(tensor: Tensor, src: int, parallel_mode: ParallelMode, async_op: bool = False):
+def broadcast(
+    tensor: Tensor, src: int, parallel_mode: ParallelMode, async_op: bool = False
+):
     r"""Broadcast tensors to whole parallel group. Tensor must have the same
     number of elements in all processes participating in the collective.
 
@@ -154,7 +186,11 @@ def broadcast(tensor: Tensor, src: int, parallel_mode: ParallelMode, async_op: b
         work = None
     else:
         out = tensor.contiguous()
-        group = gpc.get_cpu_group(parallel_mode) if tensor.device.type == "cpu" else gpc.get_group(parallel_mode)
+        group = (
+            gpc.get_cpu_group(parallel_mode)
+            if tensor.device.type == "cpu"
+            else gpc.get_group(parallel_mode)
+        )
         work = dist.broadcast(out, src=src, group=group, async_op=async_op)
     if async_op:
         return out, work
@@ -162,7 +198,13 @@ def broadcast(tensor: Tensor, src: int, parallel_mode: ParallelMode, async_op: b
         return out
 
 
-def reduce(tensor: Tensor, dst: int, parallel_mode: ParallelMode, op: ReduceOp = ReduceOp.SUM, async_op: bool = False):
+def reduce(
+    tensor: Tensor,
+    dst: int,
+    parallel_mode: ParallelMode,
+    op: ReduceOp = ReduceOp.SUM,
+    async_op: bool = False,
+):
     r"""Reduce tensors across whole parallel group. Only the process with
     rank ``dst`` is going to receive the final result.
 
@@ -186,7 +228,11 @@ def reduce(tensor: Tensor, dst: int, parallel_mode: ParallelMode, op: ReduceOp =
         work = None
     else:
         out = tensor.contiguous()
-        group = gpc.get_cpu_group(parallel_mode) if tensor.device.type == "cpu" else gpc.get_group(parallel_mode)
+        group = (
+            gpc.get_cpu_group(parallel_mode)
+            if tensor.device.type == "cpu"
+            else gpc.get_group(parallel_mode)
+        )
         work = dist.reduce(out, dst=dst, op=op, group=group, async_op=async_op)
     if async_op:
         return out, work
@@ -194,23 +240,38 @@ def reduce(tensor: Tensor, dst: int, parallel_mode: ParallelMode, op: ReduceOp =
         return out
 
 
-def scatter_object_list(scatter_object_output_list, scatter_object_input_list, src=0, group=None) -> None:
+def scatter_object_list(
+    scatter_object_output_list, scatter_object_input_list, src=0, group=None
+) -> None:
     r"""Modified from `torch.distributed.scatter_object_list
     <https://pytorch.org/docs/stable/_modules/torch/distributed/distributed_c10d.html#scatter_object_list>` to fix issues
     """
     if dist.distributed_c10d._rank_not_in_group(group):
         return
 
-    if (not isinstance(scatter_object_output_list, list) or len(scatter_object_output_list) < 1):
-        raise RuntimeError("Expected argument scatter_object_output_list to be a list of size at least 1.")
+    if (
+        not isinstance(scatter_object_output_list, list)
+        or len(scatter_object_output_list) < 1
+    ):
+        raise RuntimeError(
+            "Expected argument scatter_object_output_list to be a list of size at least 1."
+        )
 
     # set tensor device to cuda if backend is nccl
-    device = torch.cuda.current_device() if dist.get_backend(group) == 'nccl' else torch.device("cpu")
+    device = (
+        torch.cuda.current_device()
+        if dist.get_backend(group) == "nccl"
+        else torch.device("cpu")
+    )
 
-    my_rank = dist.get_rank()    # use global rank
+    my_rank = dist.get_rank()  # use global rank
     if my_rank == src:
         tensor_list, tensor_sizes = zip(
-            *[dist.distributed_c10d._object_to_tensor(obj) for obj in scatter_object_input_list])
+            *[
+                dist.distributed_c10d._object_to_tensor(obj)
+                for obj in scatter_object_input_list
+            ]
+        )
         tensor_list = list(map(lambda x: x.to(device), tensor_list))
         tensor_sizes = list(map(lambda x: x.to(device), tensor_sizes))
 
@@ -245,4 +306,6 @@ def scatter_object_list(scatter_object_output_list, scatter_object_input_list, s
 
     output_tensor, obj_tensor_size = output_tensor.cpu(), obj_tensor_size.cpu()
     # Deserialize back to object
-    scatter_object_output_list[0] = dist.distributed_c10d._tensor_to_object(output_tensor, obj_tensor_size)
+    scatter_object_output_list[0] = dist.distributed_c10d._tensor_to_object(
+        output_tensor, obj_tensor_size
+    )

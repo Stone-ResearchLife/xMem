@@ -100,7 +100,6 @@ class CircularDoublyLinkedList:
         return f"CircularDoublyLinkedList({self.value})"
 
 
-
 class NonCircularDoublyLinkedNode:
     def __init__(self, value: Any):
         """Create a non-circular doubly linked list node.
@@ -138,7 +137,6 @@ class NonCircularDoublyLinkedNode:
         if self._next:
             self._next._prev = node
         self._next = node
-
 
     def insert_before(self, node: NonCircularDoublyLinkedNode):
         """Insert a node before the current node.

@@ -24,7 +24,9 @@ def _get_valid_shape(shape):
         else:
             return _get_valid_shape(shape[0])
     else:
-        raise RuntimeError("expects an iterable array but finds '{}'".format(type(shape)))
+        raise RuntimeError(
+            "expects an iterable array but finds '{}'".format(type(shape))
+        )
 
 
 def _shape_infer(org_sp, tgt_sp):
@@ -45,18 +47,22 @@ def _shape_infer(org_sp, tgt_sp):
 
     if cnt == 0:
         if org_prod != tgt_prod:
-            raise RuntimeError("shape '{}' is invalid for input of size {}".format(tgt_sp, org_prod))
+            raise RuntimeError(
+                "shape '{}' is invalid for input of size {}".format(tgt_sp, org_prod)
+            )
         else:
             return tgt_sp
     elif org_prod % tgt_prod != 0:
-        raise RuntimeError("shape '{}' is invalid for input of size {}".format(tgt_sp, org_prod))
+        raise RuntimeError(
+            "shape '{}' is invalid for input of size {}".format(tgt_sp, org_prod)
+        )
 
     infer_dim = -(org_prod // tgt_prod)
-    return tgt_sp[:pos] + (infer_dim,) + tgt_sp[pos + 1:]
+    return tgt_sp[:pos] + (infer_dim,) + tgt_sp[pos + 1 :]
 
 
 @colo_op_impl(torch.Tensor.view)
-def colo_view(self: ColoTensor, *shape) -> 'ColoTensor':
+def colo_view(self: ColoTensor, *shape) -> "ColoTensor":
     """Handles ``__torch_function__`` dispatch for ``torch.Tensor.view``.
     Changes the shape of the current tensor.
     """
@@ -80,11 +86,15 @@ def colo_view(self: ColoTensor, *shape) -> 'ColoTensor':
         res = self.view(*new_shape)
     else:
         replicated_t = self.redistribute(dist_spec=ReplicaSpec())
-        return ColoTensor.from_torch_tensor(tensor=replicated_t.view(*shape),
-                                            spec=ColoTensorSpec(self.get_process_group()))
+        return ColoTensor.from_torch_tensor(
+            tensor=replicated_t.view(*shape),
+            spec=ColoTensorSpec(self.get_process_group()),
+        )
 
-    return ColoTensor.from_torch_tensor(tensor=res,
-                                        spec=ColoTensorSpec(pg=self.get_process_group(), dist_attr=self.dist_spec))
+    return ColoTensor.from_torch_tensor(
+        tensor=res,
+        spec=ColoTensorSpec(pg=self.get_process_group(), dist_attr=self.dist_spec),
+    )
 
 
 @colo_op_impl(torch.Tensor.size)

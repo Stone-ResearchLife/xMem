@@ -37,7 +37,7 @@ class ParamDistMeta:
         return self.zero_numel, self.zero_orig_shape
 
     @staticmethod
-    def from_dict(d: dict) -> 'ParamDistMeta':
+    def from_dict(d: dict) -> "ParamDistMeta":
         return ParamDistMeta(**d)
 
 

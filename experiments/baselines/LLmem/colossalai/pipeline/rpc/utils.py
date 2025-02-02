@@ -13,7 +13,9 @@ from colossalai.initialize import launch
 from colossalai.pipeline.pipeline_process_group import ppg
 
 
-def pyobj_map(obj: Any, fn: Callable, process_types: Union[Type, Tuple[Type]] = ()) -> Any:
+def pyobj_map(
+    obj: Any, fn: Callable, process_types: Union[Type, Tuple[Type]] = ()
+) -> Any:
     if isinstance(obj, process_types):
         return fn(obj)
     elif type(obj) is dict:
@@ -26,7 +28,12 @@ def pyobj_map(obj: Any, fn: Callable, process_types: Union[Type, Tuple[Type]] = 
         return obj
 
 
-def pytree_map(obj: Any, fn: Callable, process_types: Union[Type, Tuple[Type]] = (), map_all: bool = False) -> Any:
+def pytree_map(
+    obj: Any,
+    fn: Callable,
+    process_types: Union[Type, Tuple[Type]] = (),
+    map_all: bool = False,
+) -> Any:
     """process object recursively, like pytree
 
     Args:
@@ -61,7 +68,7 @@ def get_batch_lengths(batch):
 
 
 def split_batch(batch: Any, start, stop, device: str):
-    if device == 'cuda':
+    if device == "cuda":
         fn = lambda x: x[start:stop].cuda()
     else:
         fn = lambda x: x[start:stop]
@@ -87,7 +94,9 @@ def pytree_filter(fn, obj, process_types):
 
 
 def get_real_args_kwargs(args_or_kwargs):
-    args_or_kwargs = pytree_map(args_or_kwargs, fn=lambda x: x.wait(), process_types=Future)
+    args_or_kwargs = pytree_map(
+        args_or_kwargs, fn=lambda x: x.wait(), process_types=Future
+    )
     # TODO : combine producer and consumer
     # by default, merge all args in the output args or kwargs
     if args_or_kwargs is not None:
@@ -95,15 +104,17 @@ def get_real_args_kwargs(args_or_kwargs):
             pass
         else:
             flatten_args = []
-            pytree_map(args_or_kwargs, fn=lambda x: flatten_args.append(x), map_all=True)
+            pytree_map(
+                args_or_kwargs, fn=lambda x: flatten_args.append(x), map_all=True
+            )
             args_or_kwargs = flatten_args
 
     return args_or_kwargs
 
 
 def run_worker(rank, args, master_func):
-    os.environ['MASTER_ADDR'] = args.master_addr
-    os.environ['MASTER_PORT'] = args.master_port
+    os.environ["MASTER_ADDR"] = args.master_addr
+    os.environ["MASTER_PORT"] = args.master_port
 
     device = args.device
     world_size = args.world_size
@@ -112,15 +123,17 @@ def run_worker(rank, args, master_func):
     num_worker_threads = args.num_worker_threads
     host = args.master_addr
     port = args.master_port
-    backend = 'nccl' if device == 'cuda' else 'gloo'
+    backend = "nccl" if device == "cuda" else "gloo"
 
     launch(dict(), rank, world_size, host, int(port), backend, verbose=False)
-    ppg.set_global_info(rank=rank,
-                        world_size=world_size,
-                        dp_degree=dp_degree,
-                        tp_degree=tp_degree,
-                        num_worker_threads=num_worker_threads,
-                        device=device)
+    ppg.set_global_info(
+        rank=rank,
+        world_size=world_size,
+        dp_degree=dp_degree,
+        tp_degree=tp_degree,
+        num_worker_threads=num_worker_threads,
+        device=device,
+    )
     ppg.args = args
     # in rpc mode, only rank 0 is needed to be coded
     if rank == 0:
@@ -139,17 +152,19 @@ def rpc_run(args, master_func):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epoch', type=int, default=1)
-    parser.add_argument('--world_size', type=int, default=2)
-    parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--dp_degree', type=int, default=1)
-    parser.add_argument('--tp_degree', type=int, default=1)
-    parser.add_argument('--num_microbatches', type=int, default=2)
-    parser.add_argument('--chunk', type=int, default=1)
-    parser.add_argument('--use_checkpoint', action='store_true')
-    parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'RMSprop'], default='SGD')
-    parser.add_argument('--device', type=str, choices=['cpu', 'cuda'], default='cuda')
-    parser.add_argument('--master_addr', type=str, default='localhost')
-    parser.add_argument('--master_port', type=str, default='29020')
-    parser.add_argument('--num_worker_threads', type=int, default=128)
+    parser.add_argument("--epoch", type=int, default=1)
+    parser.add_argument("--world_size", type=int, default=2)
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--dp_degree", type=int, default=1)
+    parser.add_argument("--tp_degree", type=int, default=1)
+    parser.add_argument("--num_microbatches", type=int, default=2)
+    parser.add_argument("--chunk", type=int, default=1)
+    parser.add_argument("--use_checkpoint", action="store_true")
+    parser.add_argument(
+        "--optimizer", type=str, choices=["SGD", "Adam", "RMSprop"], default="SGD"
+    )
+    parser.add_argument("--device", type=str, choices=["cpu", "cuda"], default="cuda")
+    parser.add_argument("--master_addr", type=str, default="localhost")
+    parser.add_argument("--master_port", type=str, default="29020")
+    parser.add_argument("--num_worker_threads", type=int, default=128)
     return parser.parse_args()

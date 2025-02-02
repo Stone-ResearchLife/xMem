@@ -46,7 +46,11 @@ class Initializer_Sequence_DP(ProcessGroupInitializer):
         for i in range(self.num_group):
             ranks = [i * self.dp_size + j for j in range(self.dp_size)]
             group = dist.new_group(ranks)
-            group_cpu = dist.new_group(ranks, backend='gloo') if dist.get_backend() != 'gloo' else group
+            group_cpu = (
+                dist.new_group(ranks, backend="gloo")
+                if dist.get_backend() != "gloo"
+                else group
+            )
 
             if self.rank in ranks:
                 local_rank = ranks.index(self.rank)
@@ -55,7 +59,14 @@ class Initializer_Sequence_DP(ProcessGroupInitializer):
                 cpu_group = group_cpu
                 ranks_in_group = ranks
 
-        return local_rank, group_world_size, process_group, cpu_group, ranks_in_group, mode
+        return (
+            local_rank,
+            group_world_size,
+            process_group,
+            cpu_group,
+            ranks_in_group,
+            mode,
+        )
 
 
 @DIST_GROUP_INITIALIZER.register_module
@@ -91,11 +102,21 @@ class Initializer_Sequence(ProcessGroupInitializer):
 
         parallel_setting = []
 
-        local_rank, group_world_size, process_group, cpu_group, ranks_in_group, mode = \
+        local_rank, group_world_size, process_group, cpu_group, ranks_in_group, mode = (
             self._sequence_initializer.init_dist_group()
+        )
         # change mode to sequence
         mode = ParallelMode.SEQUENCE
 
-        parallel_setting.append((local_rank, group_world_size, process_group, cpu_group, ranks_in_group, mode))
+        parallel_setting.append(
+            (
+                local_rank,
+                group_world_size,
+                process_group,
+                cpu_group,
+                ranks_in_group,
+                mode,
+            )
+        )
         parallel_setting.append(self._sequence_dp_initializer.init_dist_group())
         return parallel_setting

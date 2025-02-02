@@ -32,7 +32,11 @@ def _reduce(input_, parallel_mode):
     # skip if only one rank involved
     if gpc.get_world_size(parallel_mode) == 1:
         return input_
-    group = gpc.get_cpu_group(parallel_mode) if input_.device.type == "cpu" else gpc.get_group(parallel_mode)
+    group = (
+        gpc.get_cpu_group(parallel_mode)
+        if input_.device.type == "cpu"
+        else gpc.get_group(parallel_mode)
+    )
     dist.all_reduce(input_, group=group)
 
     return input_
@@ -46,9 +50,10 @@ def _split(input_, parallel_mode, dim=-1):
 
     # Split along last dimension.
     dim_size = input_.size(dim)
-    assert dim_size % world_size == 0, \
-        f'The dimension to split ({dim_size}) is not a multiple of world size ({world_size}), ' \
-        f'cannot split tensor evenly'
+    assert dim_size % world_size == 0, (
+        f"The dimension to split ({dim_size}) is not a multiple of world size ({world_size}), "
+        f"cannot split tensor evenly"
+    )
 
     tensor_list = torch.split(input_, dim_size // world_size, dim=dim)
     rank = gpc.get_local_rank(parallel_mode)
@@ -67,7 +72,11 @@ def _gather(input_, parallel_mode, dim=-1):
     rank = gpc.get_local_rank(parallel_mode)
     tensor_list = [torch.empty_like(input_) for _ in range(world_size)]
     tensor_list[rank] = input_
-    group = gpc.get_cpu_group(parallel_mode) if input_.device.type == "cpu" else gpc.get_group(parallel_mode)
+    group = (
+        gpc.get_cpu_group(parallel_mode)
+        if input_.device.type == "cpu"
+        else gpc.get_group(parallel_mode)
+    )
     torch.distributed.all_gather(tensor_list, input_, group=group)
 
     # concat
@@ -124,7 +133,7 @@ class _ReduceInput(torch.autograd.Function):
 class _SplitForwardGatherBackward(torch.autograd.Function):
     """
     Split the input and keep only the corresponding chuck to the rank.
-    
+
     Args:
         input_: input matrix.
         parallel_mode: parallel mode.

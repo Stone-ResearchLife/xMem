@@ -14,13 +14,16 @@ from colossalai.auto_parallel.tensor_shard.node_handler import (
     operator_registry,
 )
 from colossalai.auto_parallel.tensor_shard.sharding_strategy import StrategiesVector
-from colossalai.auto_parallel.tensor_shard.utils import generate_resharding_costs, generate_sharding_spec
+from colossalai.auto_parallel.tensor_shard.utils import (
+    generate_resharding_costs,
+    generate_sharding_spec,
+)
 from colossalai.auto_parallel.tensor_shard.utils.factory import find_repeat_blocks
 from colossalai.device.device_mesh import DeviceMesh
 
 from ..options import DataloaderOption, SolverOptions
 
-__all__ = ['StrategiesConstructor']
+__all__ = ["StrategiesConstructor"]
 
 
 class StrategiesConstructor:
@@ -33,9 +36,13 @@ class StrategiesConstructor:
         solver_options (SolverOptions): a SolverOptions object which specifies the preferences for plan searching.
     """
 
-    def __init__(self, graph: Graph, device_mesh: DeviceMesh, solver_options: SolverOptions):
+    def __init__(
+        self, graph: Graph, device_mesh: DeviceMesh, solver_options: SolverOptions
+    ):
         self.graph = graph
-        assert graph.owning_module is not None, 'The given graph is not associated with a owning_module'
+        assert (
+            graph.owning_module is not None
+        ), "The given graph is not associated with a owning_module"
         self.root_module = self.graph.owning_module
         self.nodes = list(graph.nodes)
         self.device_mesh = device_mesh
@@ -46,11 +53,11 @@ class StrategiesConstructor:
         self.alias_set = None
 
     def remove_duplicated_strategy(self, strategies_vector):
-        '''
+        """
         In build_strategies_and_cost method, we may produce some duplicated strategies.
         In this method, we will remove the duplicated strategies depending on the strategies name.
         Note that this operation is in-place.
-        '''
+        """
         name_checklist = []
         remove_list = []
         for strategy in strategies_vector:
@@ -64,7 +71,9 @@ class StrategiesConstructor:
     def generate_alias_set(self):
 
         node_list = [strategy_vector.node for strategy_vector in self.leaf_strategies]
-        common_blocks = find_repeat_blocks(node_list, self.root_module, common_length_threshold=10)
+        common_blocks = find_repeat_blocks(
+            node_list, self.root_module, common_length_threshold=10
+        )
 
         repeat_block_nums = len(common_blocks)
         alias_set = {}
@@ -74,7 +83,9 @@ class StrategiesConstructor:
 
         for index, common_node in enumerate(common_blocks[0]):
             for i in range(1, repeat_block_nums):
-                alias_set[node_list.index(common_blocks[i][index])] = node_list.index(common_node)
+                alias_set[node_list.index(common_blocks[i][index])] = node_list.index(
+                    common_node
+                )
         return alias_set
 
     def build_strategies_and_cost(self):
@@ -83,7 +94,7 @@ class StrategiesConstructor:
         """
 
         def _check_no_strategy_for_node(node):
-            if node.op in ('placeholder', 'get_attr', 'output'):
+            if node.op in ("placeholder", "get_attr", "output"):
                 return False
 
             def _check_no_strategy_for_data(data):
@@ -105,80 +116,107 @@ class StrategiesConstructor:
                 pass
 
             # placeholder node
-            elif node.op == 'placeholder':
-                if self.solver_options.dataloader_option == DataloaderOption.DISTRIBUTED:
-                    placeholder_option = 'distributed'
+            elif node.op == "placeholder":
+                if (
+                    self.solver_options.dataloader_option
+                    == DataloaderOption.DISTRIBUTED
+                ):
+                    placeholder_option = "distributed"
                 else:
-                    assert self.solver_options.dataloader_option == DataloaderOption.REPLICATED, f'placeholder_option {self.solver_options.dataloader_option} is not supported'
-                    placeholder_option = 'replicated'
-                placeholder_handler = PlaceholderHandler(node,
-                                                         self.device_mesh,
-                                                         strategies_vector,
-                                                         placeholder_option=placeholder_option)
+                    assert (
+                        self.solver_options.dataloader_option
+                        == DataloaderOption.REPLICATED
+                    ), f"placeholder_option {self.solver_options.dataloader_option} is not supported"
+                    placeholder_option = "replicated"
+                placeholder_handler = PlaceholderHandler(
+                    node,
+                    self.device_mesh,
+                    strategies_vector,
+                    placeholder_option=placeholder_option,
+                )
                 placeholder_handler.register_strategy()
 
             # get_attr node
-            elif node.op == 'get_attr':
-                getattr_handler = GetattrHandler(node,
-                                                 self.device_mesh,
-                                                 strategies_vector,
-                                                 shard_option=self.solver_options.shard_option,
-                                                 solver_perference=self.solver_options.solver_perference)
+            elif node.op == "get_attr":
+                getattr_handler = GetattrHandler(
+                    node,
+                    self.device_mesh,
+                    strategies_vector,
+                    shard_option=self.solver_options.shard_option,
+                    solver_perference=self.solver_options.solver_perference,
+                )
                 getattr_handler.register_strategy()
 
             # call_module node
-            elif node.op == 'call_module':
+            elif node.op == "call_module":
                 target = node.target
                 submod = self.root_module.get_submodule(target)
                 submod_type = type(submod)
-                handler = operator_registry.get(submod_type)(node,
-                                                             self.device_mesh,
-                                                             strategies_vector,
-                                                             shard_option=self.solver_options.shard_option,
-                                                             solver_perference=self.solver_options.solver_perference)
+                handler = operator_registry.get(submod_type)(
+                    node,
+                    self.device_mesh,
+                    strategies_vector,
+                    shard_option=self.solver_options.shard_option,
+                    solver_perference=self.solver_options.solver_perference,
+                )
                 handler.register_strategy()
                 # attach strategies_info to node
-                if hasattr(handler, 'strategies_info'):
-                    setattr(node, 'strategies_info', handler.strategies_info)
+                if hasattr(handler, "strategies_info"):
+                    setattr(node, "strategies_info", handler.strategies_info)
 
             # call_function node
-            elif node.op == 'call_function':
+            elif node.op == "call_function":
                 target = node.target
-                handler = operator_registry.get(target)(node,
-                                                        self.device_mesh,
-                                                        strategies_vector,
-                                                        shard_option=self.solver_options.shard_option,
-                                                        solver_perference=self.solver_options.solver_perference)
+                handler = operator_registry.get(target)(
+                    node,
+                    self.device_mesh,
+                    strategies_vector,
+                    shard_option=self.solver_options.shard_option,
+                    solver_perference=self.solver_options.solver_perference,
+                )
                 handler.register_strategy()
                 # attach strategies_info to node
-                if hasattr(handler, 'strategies_info'):
-                    setattr(node, 'strategies_info', handler.strategies_info)
+                if hasattr(handler, "strategies_info"):
+                    setattr(node, "strategies_info", handler.strategies_info)
 
             # call_method node
-            elif node.op == 'call_method':
+            elif node.op == "call_method":
                 method = getattr(node.args[0]._meta_data.__class__, node.target)
-                handler = operator_registry.get(method)(node,
-                                                        self.device_mesh,
-                                                        strategies_vector,
-                                                        shard_option=self.solver_options.shard_option,
-                                                        solver_perference=self.solver_options.solver_perference)
+                handler = operator_registry.get(method)(
+                    node,
+                    self.device_mesh,
+                    strategies_vector,
+                    shard_option=self.solver_options.shard_option,
+                    solver_perference=self.solver_options.solver_perference,
+                )
                 handler.register_strategy()
                 # attach strategies_info to node
-                if hasattr(handler, 'strategies_info'):
-                    setattr(node, 'strategies_info', handler.strategies_info)
+                if hasattr(handler, "strategies_info"):
+                    setattr(node, "strategies_info", handler.strategies_info)
 
             # output node
-            elif node.op == 'output':
-                if self.solver_options.dataloader_option == DataloaderOption.DISTRIBUTED:
-                    output_option = 'distributed'
+            elif node.op == "output":
+                if (
+                    self.solver_options.dataloader_option
+                    == DataloaderOption.DISTRIBUTED
+                ):
+                    output_option = "distributed"
                 else:
-                    assert self.solver_options.dataloader_option == DataloaderOption.REPLICATED, f'placeholder_option {self.solver_options.dataloader_option} is not supported'
-                    output_option = 'replicated'
-                output_handler = OutputHandler(node, self.device_mesh, strategies_vector, output_option=output_option)
+                    assert (
+                        self.solver_options.dataloader_option
+                        == DataloaderOption.REPLICATED
+                    ), f"placeholder_option {self.solver_options.dataloader_option} is not supported"
+                    output_option = "replicated"
+                output_handler = OutputHandler(
+                    node,
+                    self.device_mesh,
+                    strategies_vector,
+                    output_option=output_option,
+                )
                 output_handler.register_strategy()
 
             self.remove_duplicated_strategy(strategies_vector)
-            setattr(node, 'strategies_vector', strategies_vector)
+            setattr(node, "strategies_vector", strategies_vector)
             self.leaf_strategies.append(strategies_vector)
             self.strategy_map[node] = strategies_vector
 

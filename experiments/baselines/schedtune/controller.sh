@@ -46,7 +46,7 @@ gpu_3070="3070"
 gpu_3090="3090"
 
 #touch queue.csv
-#./scheduler.sh $1 & 
+#./scheduler.sh $1 &
 
 #using the same arrival times as the baseline for fair comparison
 input="baseline_arrival_times.csv"
@@ -69,11 +69,11 @@ do
      parameters=$(cat ./train/model_stats.csv | grep "$model,$bs" | head -1 | cut -d',' -f4) ; echo "$parameters"
      input=$(cat ./train/model_stats.csv | grep "$model,$bs" | head -1 | cut -d',' -f5) ; echo "$input"
 #     echo "$(date) controller:	Getting predictions..." | tee -a ./log_ours.txt
-     python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -i $input -g $gpu_2070s > gpu2070s_predictions & pid1=$! 
+     python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -i $input -g $gpu_2070s > gpu2070s_predictions & pid1=$!
      python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -i $input -g $gpu_3070 > gpu3070_predictions & pid2=$!
      python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -i $input -g $gpu_3090 > gpu3090_predictions & pid3=$!
      wait "$pid1" "$pid2" "$pid3"
-#     echo "$(date) controller: done extracting info and getting predictions for $job_name" | tee -a ./log_ours.txt 
+#     echo "$(date) controller: done extracting info and getting predictions for $job_name" | tee -a ./log_ours.txt
    else
      #inference-vgg19-cat2
 #     echo "$(date) controller: extracting inference job: $job_name information..." | tee -a ./log_ours.txt
@@ -81,7 +81,7 @@ do
      activations=$(cat ./train/model_stats.csv | grep "$model" | head -1 | cut -d',' -f3)
      parameters=$(cat ./train/model_stats.csv | grep "$model" | head -1 | cut -d',' -f4)
 #     echo "$(date) controller:Getting predictions..." | tee -a ./log_ours.txt
-     python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -g $gpu_2070s > gpu2070s_predictions & pid1=$! 
+     python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -g $gpu_2070s > gpu2070s_predictions & pid1=$!
      python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -g $gpu_3070 > gpu3070_predictions & pid2=$!
      python3 ./predictor.py -j $job_name -o $1 -a $activations -p $parameters -g $gpu_3090 > gpu3090_predictions & pid3=$!
      wait "$pid1" "$pid2" "$pid3"

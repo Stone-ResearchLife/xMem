@@ -177,7 +177,9 @@ class GradAccumLrSchedulerByStep(_LRScheduler):
         self.accumulate_step = 0
 
     @staticmethod
-    def compute_effective_steps_per_epoch(dataloader: Iterable, accumulate_size: int) -> int:
+    def compute_effective_steps_per_epoch(
+        dataloader: Iterable, accumulate_size: int
+    ) -> int:
         """
         Computes the number of effective training iterations. An effective iteration is defined
         as the the aggregation of <accumulate_size> iterations. For examples, if accumulate_size = 4,
@@ -272,8 +274,9 @@ class GradAccumGradientHandler:
     """
 
     def __init__(self, grad_handler: BaseGradientHandler, accumulate_size: int) -> None:
-        assert isinstance(grad_handler, BaseGradientHandler), \
-            f'expected grad_handler to be type BaseGradientHandler, but got {type(grad_handler)}'
+        assert isinstance(
+            grad_handler, BaseGradientHandler
+        ), f"expected grad_handler to be type BaseGradientHandler, but got {type(grad_handler)}"
         self.grad_handler = grad_handler
         self.accumulate_size = accumulate_size
         self.accumulate_step = 0

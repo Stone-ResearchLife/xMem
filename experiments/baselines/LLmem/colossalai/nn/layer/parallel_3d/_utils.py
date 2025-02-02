@@ -4,7 +4,13 @@ from functools import partial
 import torch
 from torch import Tensor
 
-from colossalai.constants import INPUT_GROUP_3D, INPUT_X_WEIGHT_3D, OUTPUT_GROUP_3D, OUTPUT_X_WEIGHT_3D, WEIGHT_GROUP_3D
+from colossalai.constants import (
+    INPUT_GROUP_3D,
+    INPUT_X_WEIGHT_3D,
+    OUTPUT_GROUP_3D,
+    OUTPUT_X_WEIGHT_3D,
+    WEIGHT_GROUP_3D,
+)
 from colossalai.core import global_context as gpc
 from colossalai.global_variables import tensor_parallel_env as env
 
@@ -12,17 +18,24 @@ from colossalai.global_variables import tensor_parallel_env as env
 def get_depth_from_env() -> int:
     try:
         depth = env.depth_3d
-        assert depth > 0, 'DEPTH must be greater than zero'
+        assert depth > 0, "DEPTH must be greater than zero"
         return depth
 
     except KeyError as e:
-        raise EnvironmentError('DEPTH is not found in the current environment, '
-                               'please make sure that you have used the correct process group initializer')
+        raise EnvironmentError(
+            "DEPTH is not found in the current environment, "
+            "please make sure that you have used the correct process group initializer"
+        )
 
 
 def get_parallel_mode_from_env(group):
-    assert group in [INPUT_GROUP_3D, WEIGHT_GROUP_3D, OUTPUT_GROUP_3D, INPUT_X_WEIGHT_3D, OUTPUT_X_WEIGHT_3D], \
-        f'{group} is not valid for 3D tensor parallelism.'
+    assert group in [
+        INPUT_GROUP_3D,
+        WEIGHT_GROUP_3D,
+        OUTPUT_GROUP_3D,
+        INPUT_X_WEIGHT_3D,
+        OUTPUT_X_WEIGHT_3D,
+    ], f"{group} is not valid for 3D tensor parallelism."
     return getattr(env, group)
 
 
@@ -38,8 +51,7 @@ def dbg_check_shape(tensor: Tensor, shape: tuple):
     rank = gpc.get_global_rank()
     if rank == 0:
         print(tensor.shape)
-    assert tensor.shape == shape, \
-        '{} does not match {}'.format(tensor.shape, shape)
+    assert tensor.shape == shape, "{} does not match {}".format(tensor.shape, shape)
 
 
 class AsyncGradientBucket(object):
@@ -52,7 +64,9 @@ class AsyncGradientBucket(object):
 
     def push(self, async_op, grad_tensor, param_id):
         self.bucket[param_id] = tuple((async_op, grad_tensor))
-        return torch.zeros_like(grad_tensor, dtype=grad_tensor.dtype, device=grad_tensor.device)
+        return torch.zeros_like(
+            grad_tensor, dtype=grad_tensor.dtype, device=grad_tensor.device
+        )
 
     def pop(self, param_id):
         grad = None
@@ -96,4 +110,6 @@ def synchronize(params=list()):
     _async_grad_bucket.synchronize(params)
     torch.cuda.default_stream().synchronize()
     if len(_async_grad_bucket) > 0:
-        raise RuntimeError(f"{len(_async_grad_bucket)} asynchronous gradient(s) not collected.")
+        raise RuntimeError(
+            f"{len(_async_grad_bucket)} asynchronous gradient(s) not collected."
+        )

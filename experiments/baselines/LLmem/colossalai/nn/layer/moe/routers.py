@@ -23,13 +23,15 @@ class MoeRouter(nn.Module, ABC):
         drop_tks (bool, optional): Whether drops tokens in evaluation
     """
 
-    def __init__(self,
-                 k_value: int,
-                 capacity_factor_train: float,
-                 capacity_factor_eval: float,
-                 min_capacity: int,
-                 noisy_func: Callable = None,
-                 drop_tks: bool = True):
+    def __init__(
+        self,
+        k_value: int,
+        capacity_factor_train: float,
+        capacity_factor_eval: float,
+        min_capacity: int,
+        noisy_func: Callable = None,
+        drop_tks: bool = True,
+    ):
         super().__init__()
         self.k_value = k_value
         self.capacity_factor_train = capacity_factor_train
@@ -40,8 +42,12 @@ class MoeRouter(nn.Module, ABC):
         self._routing_loss = None
 
     def get_capacity(self, logits_shape):
-        capacity_factor = self.capacity_factor_train if self.training else self.capacity_factor_eval
-        capacity = math.floor(self.k_value * capacity_factor * logits_shape[-2] / logits_shape[-1])
+        capacity_factor = (
+            self.capacity_factor_train if self.training else self.capacity_factor_eval
+        )
+        capacity = math.floor(
+            self.k_value * capacity_factor * logits_shape[-2] / logits_shape[-1]
+        )
         capacity += capacity % 2
         capacity = max(capacity, self.min_capacity)
         assert capacity > 0
@@ -71,27 +77,37 @@ class Top1Router(MoeRouter):
         drop_tks (bool, optional): Whether drops tokens in evaluation
     """
 
-    def __init__(self,
-                 capacity_factor_train: float = 1.25,
-                 capacity_factor_eval: float = 2.0,
-                 min_capacity: int = 4,
-                 select_policy: str = "first",
-                 noisy_func: Callable = None,
-                 drop_tks: bool = True):
-        super().__init__(k_value=1,
-                         capacity_factor_train=capacity_factor_train,
-                         capacity_factor_eval=capacity_factor_eval,
-                         min_capacity=min_capacity,
-                         noisy_func=noisy_func,
-                         drop_tks=drop_tks)
+    def __init__(
+        self,
+        capacity_factor_train: float = 1.25,
+        capacity_factor_eval: float = 2.0,
+        min_capacity: int = 4,
+        select_policy: str = "first",
+        noisy_func: Callable = None,
+        drop_tks: bool = True,
+    ):
+        super().__init__(
+            k_value=1,
+            capacity_factor_train=capacity_factor_train,
+            capacity_factor_eval=capacity_factor_eval,
+            min_capacity=min_capacity,
+            noisy_func=noisy_func,
+            drop_tks=drop_tks,
+        )
         self.select_policy = select_policy
         assert select_policy in {"first", "random"}
         if select_policy == "random":
-            self.uniform = torch.distributions.uniform.Uniform(low=torch.tensor(0.0, device=get_current_device()),
-                                                               high=torch.tensor(1.0,
-                                                                                 device=get_current_device())).rsample
+            self.uniform = torch.distributions.uniform.Uniform(
+                low=torch.tensor(0.0, device=get_current_device()),
+                high=torch.tensor(1.0, device=get_current_device()),
+            ).rsample
 
-    def forward(self, inputs: torch.Tensor, use_kernel: bool = False, ep_group: Optional[ProcessGroup] = None):
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        use_kernel: bool = False,
+        ep_group: Optional[ProcessGroup] = None,
+    ):
 
         if self.noisy_func is not None and self.training:
             inputs = self.noisy_func(inputs)
@@ -152,26 +168,35 @@ class Top2Router(MoeRouter):
         drop_tks (bool, optional): Whether drops tokens in evaluation.
     """
 
-    def __init__(self,
-                 capacity_factor_train: float = 1.25,
-                 capacity_factor_eval: float = 2.0,
-                 min_capacity: int = 4,
-                 noisy_func: Callable = None,
-                 drop_tks: bool = True):
-        super().__init__(k_value=2,
-                         capacity_factor_train=capacity_factor_train,
-                         capacity_factor_eval=capacity_factor_eval,
-                         min_capacity=min_capacity,
-                         noisy_func=noisy_func,
-                         drop_tks=drop_tks)
+    def __init__(
+        self,
+        capacity_factor_train: float = 1.25,
+        capacity_factor_eval: float = 2.0,
+        min_capacity: int = 4,
+        noisy_func: Callable = None,
+        drop_tks: bool = True,
+    ):
+        super().__init__(
+            k_value=2,
+            capacity_factor_train=capacity_factor_train,
+            capacity_factor_eval=capacity_factor_eval,
+            min_capacity=min_capacity,
+            noisy_func=noisy_func,
+            drop_tks=drop_tks,
+        )
 
-    def forward(self, inputs: torch.Tensor, use_kernel: bool = False, ep_group: Optional[ProcessGroup] = None):
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        use_kernel: bool = False,
+        ep_group: Optional[ProcessGroup] = None,
+    ):
         # inputs: [s, h]
         if self.noisy_func is not None and self.training:
             inputs = self.noisy_func(inputs)
 
         assert inputs.dtype == torch.float
-        logits = F.softmax(inputs, dim=-1)    # logits: [s, e]
+        logits = F.softmax(inputs, dim=-1)  # logits: [s, e]
         num_experts = logits.size(-1)
         capacity = self.get_capacity(logits.shape)
 
@@ -181,12 +206,12 @@ class Top2Router(MoeRouter):
         top2_idx = torch.argmax(logits_except1, dim=-1)
         mask2 = F.one_hot(top2_idx, num_classes=num_experts).to(torch.int32)
 
-        cmask = (mask1 + mask2)    # loss: [s, e]
+        cmask = mask1 + mask2  # loss: [s, e]
 
         # caculate the auxiliary loss
         me = torch.mean(logits, dim=0)
         ce = torch.mean(cmask.float(), dim=0)
-        l_aux = num_experts * torch.sum(me * ce) / 2.0    # div 2 to normalize it to 1
+        l_aux = num_experts * torch.sum(me * ce) / 2.0  # div 2 to normalize it to 1
         self.set_routing_loss(l_aux)
 
         if not self.training and not self.drop_tks:
@@ -194,7 +219,7 @@ class Top2Router(MoeRouter):
             dist.all_reduce(max_num, op=dist.ReduceOp.MAX, group=ep_group)
             capacity = max_num.item()
 
-        rank1 = moe_cumsum(mask1)    # rank1: [s, e]
+        rank1 = moe_cumsum(mask1)  # rank1: [s, e]
         rank2 = moe_cumsum(mask2)
         rank2 += torch.sum(mask1, dim=-2, keepdim=True)
 
@@ -209,7 +234,9 @@ class Top2Router(MoeRouter):
             mask2 = torch.sum(mask2, dim=-1)
 
             mask = torch.stack([mask1, mask2], dim=0).to(torch.int32)
-            dest_idx = torch.stack([top1_idx * capacity + rank1, top2_idx * capacity + rank2], dim=0).to(torch.int32)
+            dest_idx = torch.stack(
+                [top1_idx * capacity + rank1, top2_idx * capacity + rank2], dim=0
+            ).to(torch.int32)
 
             return logits, mask, dest_idx, num_experts * capacity
         else:

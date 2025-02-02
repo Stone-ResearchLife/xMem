@@ -17,20 +17,54 @@ logger = logging.getLogger(__name__)
 
 
 class BuildConfig(BaseModel):
-    base_image: str = Field(default="python:3.10-slim", title="Base Image", description="Base image for the container")
-    platform: Optional[str] = Field(default=None, title="Platform", description="Platform for the base image")
-    python_dependencies: Optional[List[str]] = Field(default=None, title="Python Dependencies", description="Python dependencies to be installed")
-    sys_dependencies: Optional[List[str]] = Field(default=None, title="System Dependencies", description="System dependencies to be installed")
-    labels: Optional[List[Tuple[str, str]]] = Field(default=None, title="Labels", description="Labels for the image")
-    uid: Optional[int] = Field(default=None, title="User ID", description="User ID for the container")
-    user: Optional[str] = Field(default=None, title="User", description="User for the container")
-    entrypoint: Optional[List[str]] = Field(default=None, title="Entrypoint", description="Entrypoint for the container")
-    cmd: Optional[List[str]] = Field(default=None, title="Command", description="Command for the container")
+    base_image: str = Field(
+        default="python:3.10-slim",
+        title="Base Image",
+        description="Base image for the container",
+    )
+    platform: Optional[str] = Field(
+        default=None, title="Platform", description="Platform for the base image"
+    )
+    python_dependencies: Optional[List[str]] = Field(
+        default=None,
+        title="Python Dependencies",
+        description="Python dependencies to be installed",
+    )
+    sys_dependencies: Optional[List[str]] = Field(
+        default=None,
+        title="System Dependencies",
+        description="System dependencies to be installed",
+    )
+    labels: Optional[List[Tuple[str, str]]] = Field(
+        default=None, title="Labels", description="Labels for the image"
+    )
+    uid: Optional[int] = Field(
+        default=None, title="User ID", description="User ID for the container"
+    )
+    user: Optional[str] = Field(
+        default=None, title="User", description="User for the container"
+    )
+    entrypoint: Optional[List[str]] = Field(
+        default=None, title="Entrypoint", description="Entrypoint for the container"
+    )
+    cmd: Optional[List[str]] = Field(
+        default=None, title="Command", description="Command for the container"
+    )
     # The data structure for environment is a dictionary with the keys being the environment variable names
-    environment: Optional[Dict[str, str]] = Field(default=None, title="Environment", description="Environment variables for the container")
+    environment: Optional[Dict[str, str]] = Field(
+        default=None,
+        title="Environment",
+        description="Environment variables for the container",
+    )
     # The data structure for copies is a list of dictionaries with the keys "src", "dest", and "mode"
-    copies: Optional[List[Dict[str, str]]] = Field(default=None, title="Copies", description="Files to be copied to the container")
-    context_dir: Union[str, Path] = Field(default=Path().cwd(), title="Context Directory", description="Directory for the build context")
+    copies: Optional[List[Dict[str, str]]] = Field(
+        default=None, title="Copies", description="Files to be copied to the container"
+    )
+    context_dir: Union[str, Path] = Field(
+        default=Path().cwd(),
+        title="Context Directory",
+        description="Directory for the build context",
+    )
 
     def add_label(self, key: str, value: str):
         logger.info(f"Adding label {key} with value {value}")
@@ -42,10 +76,7 @@ class BuildConfig(BaseModel):
         logger.info(f"Adding copy {src} to {dest}")
         if self.copies is None:
             self.copies = []
-        self.copies.append({
-            "src": src,
-            "dest": dest
-        })
+        self.copies.append({"src": src, "dest": dest})
 
     def add_environment(self, key: str, value: str):
         logger.info(f"Adding environment variable {key} with value {value}")
@@ -99,7 +130,11 @@ class DockerfileConstructor:
 
     def _set_based_image(self):
         _config = self._config
-        base_image = _config.base_image if _config.platform is None else f"--platform={_config.platform} {_config.base_image}"
+        base_image = (
+            _config.base_image
+            if _config.platform is None
+            else f"--platform={_config.platform} {_config.base_image}"
+        )
         self._insert_command_line(f"FROM {base_image}")
 
     def _set_labels(self):
@@ -118,8 +153,12 @@ class DockerfileConstructor:
             self._insert_command_line(f"ARG USER_NAME={self._config.user}")
             if self._config.uid is not None:
                 self._insert_command_line(f"ARG UID={self._config.uid}")
-                self._insert_command_line(f"RUN useradd -m -u $UID -s /bin/bash -d $HOME_DIR $USER_NAME")
-                self._insert_command_line(f"RUN chown -R $USER_NAME:$USER_NAME $HOME_DIR")
+                self._insert_command_line(
+                    f"RUN useradd -m -u $UID -s /bin/bash -d $HOME_DIR $USER_NAME"
+                )
+                self._insert_command_line(
+                    f"RUN chown -R $USER_NAME:$USER_NAME $HOME_DIR"
+                )
             self._insert_command_line(f"USER $USER_NAME")
             self._insert_command_line(f"WORKDIR $HOME_DIR")
 
@@ -129,14 +168,20 @@ class DockerfileConstructor:
         if self._config.sys_dependencies is not None:
             _system_dependencies = _system_dependencies + self._config.sys_dependencies
         if len(_system_dependencies) > 0:
-            self._insert_command_line(f"RUN {package_manager} update && {package_manager} install -y {' '.join(_system_dependencies)} && {package_manager} clean && rm -rf /var/lib/apt/lists/*")
+            self._insert_command_line(
+                f"RUN {package_manager} update && {package_manager} install -y {' '.join(_system_dependencies)} && {package_manager} clean && rm -rf /var/lib/apt/lists/*"
+            )
 
     def _set_python_dependencies(self):
         _python_dependencies = []
         if self._config.python_dependencies is not None:
-            _python_dependencies = _python_dependencies + self._config.python_dependencies
+            _python_dependencies = (
+                _python_dependencies + self._config.python_dependencies
+            )
         if len(_python_dependencies) > 0:
-            self._insert_command_line(f"RUN pip install --upgrade pip && pip install --no-cache-dir {' '.join(_python_dependencies)} && rm -rf /tmp/* /var/tmp/*")
+            self._insert_command_line(
+                f"RUN pip install --upgrade pip && pip install --no-cache-dir {' '.join(_python_dependencies)} && rm -rf /tmp/* /var/tmp/*"
+            )
 
     def _set_entrypoint(self):
         _entrypoint = self._config.entrypoint
@@ -175,6 +220,7 @@ class ImageInfo:
     @property
     def image(self) -> Image:
         return self._image
+
     @property
     def id(self) -> str:
         return self._image.id
@@ -204,7 +250,9 @@ class ImageInfo:
         return self._image.tags[0]
 
     def info(self):
-        print(f"\033[1;33m====================================== Image Info ===============================================\033[0m")
+        print(
+            f"\033[1;33m====================================== Image Info ===============================================\033[0m"
+        )
         print(f"Name: {self.name}")
         print(f"Image ID: {self.id}")
         print(f"Architecture: {self.architecture}")
@@ -213,7 +261,13 @@ class ImageInfo:
 
 
 class ContainerImage:
-    def __init__(self, image_name: str, config: Optional[BuildConfig] = None, rebuild: bool = False, temp_dir: Optional[Path] = None):
+    def __init__(
+        self,
+        image_name: str,
+        config: Optional[BuildConfig] = None,
+        rebuild: bool = False,
+        temp_dir: Optional[Path] = None,
+    ):
         self._image_name = image_name
         self._temp_dir = temp_dir or fetch_temp_folder()
         self._rebuild = rebuild
@@ -228,11 +282,15 @@ class ContainerImage:
     def get_image(self) -> ImageInfo:
         _is_build_needed = self.is_build_needed()
         if _is_build_needed:
-            logger.warning(f"\033[1;33m====================================== Image Not Found, Start Building ===============================================\033[0m")
+            logger.warning(
+                f"\033[1;33m====================================== Image Not Found, Start Building ===============================================\033[0m"
+            )
             _base_image = self._create_base_image()
             _runtime_image = self._create_runtime_image(_base_image.name)
         else:
-            logger.info(f"\033[1;33m====================================== Image Found, Skip Building ===============================================\033[0m")
+            logger.info(
+                f"\033[1;33m====================================== Image Found, Skip Building ===============================================\033[0m"
+            )
             _runtime_image = self._get_image()
         return _runtime_image
 
@@ -244,7 +302,9 @@ class ContainerImage:
 
         """
         _image_name = name or self._image_name
-        logger.debug(f"Getting image name and tag for {_image_name}, input name: {name}")
+        logger.debug(
+            f"Getting image name and tag for {_image_name}, input name: {name}"
+        )
         _split_image_name = str(_image_name).split(":")
         if len(_split_image_name) == 1:
             return _split_image_name[0], "latest"
@@ -281,7 +341,7 @@ class ContainerImage:
     def _create_base_image(self) -> ImageInfo:
         # Start build a base image
         _build_config = BuildConfig(
-            base_image = self._build_config.base_image,
+            base_image=self._build_config.base_image,
             python_dependencies=self._build_config.python_dependencies,
             sys_dependencies=self._build_config.sys_dependencies,
         )
@@ -289,12 +349,16 @@ class ContainerImage:
         _dockerfile_constructor = DockerfileConstructor(_build_config)
         _dockerfile_path = self.cache_dir() / "Dockerfile-base"
         _dockerfile_constructor.save(_dockerfile_path)
-        print(f"\033[1;33m====================================== Start Building Base Image ===============================================\033[0m")
+        print(
+            f"\033[1;33m====================================== Start Building Base Image ===============================================\033[0m"
+        )
         print(f"Dockerfile Path: {_dockerfile_path}")
         base_image_name = f"base-{self._image_name}"
         _name, _tag = self.get_image_name(base_image_name)
         base_image_name = f"{_name}:{_tag}"
-        return self._build_image(_dockerfile_path, base_image_name, _build_config.context_dir)
+        return self._build_image(
+            _dockerfile_path, base_image_name, _build_config.context_dir
+        )
 
     def _create_runtime_image(self, base_image: Optional[str] = None) -> ImageInfo:
         # Start build a runtime image
@@ -310,14 +374,13 @@ class ContainerImage:
         _dockerfile_constructor = DockerfileConstructor(_build_config)
         _dockerfile_path = self.cache_dir() / "Dockerfile-runtime"
         _dockerfile_constructor.save(_dockerfile_path)
-        print(f"\033[1;33m====================================== Start Building Runtime Image ===============================================\033[0m")
+        print(
+            f"\033[1;33m====================================== Start Building Runtime Image ===============================================\033[0m"
+        )
         print(f"Dockerfile Path: {_dockerfile_path}")
         return self._build_image(
-            _dockerfile_path,
-            self._image_name,
-            _build_config.context_dir
+            _dockerfile_path, self._image_name, _build_config.context_dir
         )
-
 
     def _build_image(self, dockerfile: Path, tag: str, context: Path) -> ImageInfo:
         args = {
@@ -340,6 +403,8 @@ class ContainerImage:
             logger.debug(line)
         logger.info(f"Image {tag} is built successfully!")
         image_info = ImageInfo(image)
-        print(f"\033[1;33m====================================== {image_info.name} is built successfully! ===============================================\033[0m")
+        print(
+            f"\033[1;33m====================================== {image_info.name} is built successfully! ===============================================\033[0m"
+        )
         image_info.info()
         return image_info

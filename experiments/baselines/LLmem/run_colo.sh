@@ -1,7 +1,7 @@
 export WANDB_MODE=offline
 # train_llama.py train_colo.py train_colo_wiki.py // train_colo_dp.py
 # --model_name_or_path huggyllama/llama-7b facebook/opt-6.7b huggyllama/llama-13b
-# --master_port=8888 
+# --master_port=8888
 # facebook/opt-125m facebook/opt-350m facebook/opt-1.3b facebook/opt-2.7b facebook/opt-6.7b
 # gpt2 gpt2-medium gpt2-large gpt2-xl distilgpt2 / openai-gpt (not support gradient checkpointing)
 # bigcode/gpt_bigcode-santacoder (1.1B params)

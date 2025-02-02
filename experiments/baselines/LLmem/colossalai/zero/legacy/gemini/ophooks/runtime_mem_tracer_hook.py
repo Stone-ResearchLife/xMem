@@ -15,7 +15,7 @@ class TrainingPhase(Enum):
     BACKWARD = 1
 
 
-class GradMemStats():
+class GradMemStats:
 
     def __init__(self) -> None:
         self.unreleased_grad_flag = {}
@@ -26,7 +26,7 @@ class GradMemStats():
         self.unreleased_grad_volume = 0
 
 
-class GradMemTracerHook():
+class GradMemTracerHook:
 
     def __init__(self, grad_stats: GradMemStats):
         self.grad_hook_list = []
@@ -41,7 +41,9 @@ class GradMemTracerHook():
     def register_grad_hook(self, module: torch.nn.Module):
         for p in module.parameters():
             if p.requires_grad:
-                self.grad_hook_list.append(p.register_hook(partial(self.grad_handle, p)))
+                self.grad_hook_list.append(
+                    p.register_hook(partial(self.grad_handle, p))
+                )
                 self._grad_stats.unreleased_grad_flag[p] = False
 
     def remove_grad_hook(self):
@@ -79,10 +81,12 @@ class ParamMemTracerHook(ColoParamOpHook):
             if cur_dev == "cpu":
                 if p.grad is not None and p.grad.device.type == "cpu":
                     raise NotImplementedError("Only run in forward propagation")
-                p.data = torch.empty(p.data.shape,
-                                     device="cuda",
-                                     dtype=p.data.dtype,
-                                     requires_grad=p.data.requires_grad)
+                p.data = torch.empty(
+                    p.data.shape,
+                    device="cuda",
+                    dtype=p.data.dtype,
+                    requires_grad=p.data.requires_grad,
+                )
             elif cur_dev == "cuda":
                 alloc_storage(p.data)
 
@@ -133,7 +137,9 @@ class ParamMemTracerHook(ColoParamOpHook):
         self.post_op(params)
 
     @contextmanager
-    def switch_training_phase(self, training_phase: TrainingPhase = TrainingPhase.BACKWARD):
+    def switch_training_phase(
+        self, training_phase: TrainingPhase = TrainingPhase.BACKWARD
+    ):
         old_training_phase = self._training_phase
         try:
             self._training_phase = training_phase
@@ -142,4 +148,6 @@ class ParamMemTracerHook(ColoParamOpHook):
             self._training_phase = old_training_phase
 
     switch_to_backward = switch_training_phase
-    switch_to_forward = partial(switch_to_backward, training_phase=TrainingPhase.FORWARD)
+    switch_to_forward = partial(
+        switch_to_backward, training_phase=TrainingPhase.FORWARD
+    )

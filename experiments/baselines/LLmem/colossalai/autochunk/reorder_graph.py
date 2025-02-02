@@ -18,13 +18,17 @@ class ReorderGraph(object):
         chunk_region_start = chunk_info["region"][0]
         chunk_region_end = chunk_info["region"][1]
         chunk_prepose_nodes = chunk_info["args"]["prepose_nodes"]
-        chunk_prepose_nodes_idx = [self.node_mgr.find_node_idx(i) for i in chunk_prepose_nodes]
+        chunk_prepose_nodes_idx = [
+            self.node_mgr.find_node_idx(i) for i in chunk_prepose_nodes
+        ]
         # put prepose nodes ahead
         for idx, n in enumerate(chunk_prepose_nodes):
             n_idx = chunk_prepose_nodes_idx[idx]
             reorder_map[n_idx] = chunk_region_start + idx
         # put other nodes after prepose nodes
-        for n in self.node_mgr.get_node_slice_by_idx(chunk_region_start, chunk_region_end + 1):
+        for n in self.node_mgr.get_node_slice_by_idx(
+            chunk_region_start, chunk_region_end + 1
+        ):
             if n in chunk_prepose_nodes:
                 continue
             n_idx = self.node_mgr.find_node_idx(n)
@@ -60,7 +64,9 @@ class ReorderGraph(object):
 
     def _reorder_idx_trace(self, reorder_map):
         # reorder list
-        new_idx_trace_list = [None for _ in range(len(self.trace_indice.indice_trace_list))]
+        new_idx_trace_list = [
+            None for _ in range(len(self.trace_indice.indice_trace_list))
+        ]
         for old_idx, new_idx in reorder_map.items():
             new_idx_trace_list[new_idx] = self.trace_indice.indice_trace_list[old_idx]
         self.trace_indice.indice_trace_list = new_idx_trace_list

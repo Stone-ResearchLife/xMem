@@ -7,7 +7,7 @@ import warnings
 from packaging import version
 from torch.distributed import ProcessGroup
 
-if version.parse(torch.__version__) >= version.parse('1.12.0'):
+if version.parse(torch.__version__) >= version.parse("1.12.0"):
     from torch.distributed.fsdp import FullStateDictConfig
     from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
     from torch.distributed.fsdp import StateDictType
@@ -31,7 +31,7 @@ from colossalai.interface import ModelWrapper, OptimizerWrapper
 
 from .dp_plugin_base import DPPluginBase
 
-__all__ = ['TorchFSDPPlugin']
+__all__ = ["TorchFSDPPlugin"]
 
 
 class TorchFSDPCheckpointIO(GeneralCheckpointIO):
@@ -50,7 +50,13 @@ class TorchFSDPCheckpointIO(GeneralCheckpointIO):
         sharded_osd = FSDP.scatter_full_optim_state_dict(checkpoint, fsdp_model)
         optimizer.load_state_dict(sharded_osd)
 
-    def save_unsharded_model(self, model: nn.Module, checkpoint: str, gather_dtensor: bool, use_safetensors: bool):
+    def save_unsharded_model(
+        self,
+        model: nn.Module,
+        checkpoint: str,
+        gather_dtensor: bool,
+        use_safetensors: bool,
+    ):
         """
         Save model to checkpoint but only on master process.
         """
@@ -58,42 +64,69 @@ class TorchFSDPCheckpointIO(GeneralCheckpointIO):
         cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
         with FSDP.state_dict_type(model, StateDictType.FULL_STATE_DICT, cfg):
             full_model_state = model.state_dict()
-        utils.save_state_dict(full_model_state, checkpoint_file_path=checkpoint, use_safetensors=use_safetensors)
+        utils.save_state_dict(
+            full_model_state,
+            checkpoint_file_path=checkpoint,
+            use_safetensors=use_safetensors,
+        )
 
-    def save_unsharded_optimizer(self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool):
+    def save_unsharded_optimizer(
+        self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool
+    ):
         """
         Save optimizer to checkpoint but only on master process.
         """
         assert isinstance(optimizer, FSDPOptimizerWrapper)
         fsdp_model = optimizer.unwrap_model()
-        full_optimizer_state = FSDP.full_optim_state_dict(fsdp_model, optim=optimizer, rank0_only=True)
-        utils.save_state_dict(full_optimizer_state, checkpoint_file_path=checkpoint, use_safetensors=False)
+        full_optimizer_state = FSDP.full_optim_state_dict(
+            fsdp_model, optim=optimizer, rank0_only=True
+        )
+        utils.save_state_dict(
+            full_optimizer_state, checkpoint_file_path=checkpoint, use_safetensors=False
+        )
 
-    def save_sharded_model(self, model: nn.Module, checkpoint: str, gather_dtensor: bool, variant: Optional[str],
-                           size_per_shard: int, use_safetensors: bool):
+    def save_sharded_model(
+        self,
+        model: nn.Module,
+        checkpoint: str,
+        gather_dtensor: bool,
+        variant: Optional[str],
+        size_per_shard: int,
+        use_safetensors: bool,
+    ):
         """
         Save model to checkpoint but only on master process.
         """
         raise NotImplementedError("Sharded model checkpoint is not supported yet.")
 
-    def load_sharded_model(self,
-                           model: nn.Module,
-                           checkpoint_index_file: Path,
-                           strict: bool = False,
-                           use_safetensors: bool = False,
-                           load_sub_module: bool = True):
+    def load_sharded_model(
+        self,
+        model: nn.Module,
+        checkpoint_index_file: Path,
+        strict: bool = False,
+        use_safetensors: bool = False,
+        load_sub_module: bool = True,
+    ):
         """
         Load model to checkpoint but only on master process.
         """
         raise NotImplementedError("Sharded model checkpoint is not supported yet.")
 
-    def save_sharded_optimizer(self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool):
+    def save_sharded_optimizer(
+        self, optimizer: Optimizer, checkpoint: str, gather_dtensor: bool
+    ):
         """
         Save optimizer to checkpoint but only on master process.
         """
         raise NotImplementedError("Sharded optimizer checkpoint is not supported yet.")
 
-    def load_sharded_optimizer(self, optimizer: Optimizer, index_file_path: str, prefix: str, size_per_shard: int):
+    def load_sharded_optimizer(
+        self,
+        optimizer: Optimizer,
+        index_file_path: str,
+        prefix: str,
+        size_per_shard: int,
+    ):
         """
         Load optimizer to checkpoint but only on master process.
         """
@@ -146,7 +179,7 @@ class TorchFSDPPlugin(DPPluginBase):
         See https://pytorch.org/docs/stable/fsdp.html for details.
     """
 
-    if version.parse(torch.__version__) >= version.parse('1.12.0'):
+    if version.parse(torch.__version__) >= version.parse("1.12.0"):
 
         def __init__(
             self,
@@ -161,15 +194,18 @@ class TorchFSDPPlugin(DPPluginBase):
             sync_module_states: bool = False,
         ):
             super().__init__()
-            self.fsdp_kwargs = dict(process_group=process_group,
-                                    sharding_strategy=sharding_strategy,
-                                    cpu_offload=cpu_offload,
-                                    auto_wrap_policy=auto_wrap_policy,
-                                    backward_prefetch=backward_prefetch,
-                                    mixed_precision=mixed_precision,
-                                    ignored_modules=ignored_modules,
-                                    param_init_fn=param_init_fn,
-                                    sync_module_states=sync_module_states)
+            self.fsdp_kwargs = dict(
+                process_group=process_group,
+                sharding_strategy=sharding_strategy,
+                cpu_offload=cpu_offload,
+                auto_wrap_policy=auto_wrap_policy,
+                backward_prefetch=backward_prefetch,
+                mixed_precision=mixed_precision,
+                ignored_modules=ignored_modules,
+                param_init_fn=param_init_fn,
+                sync_module_states=sync_module_states,
+            )
+
     else:
         raise RuntimeError("FSDP is not supported while torch version under 1.12.0.")
 
@@ -183,13 +219,13 @@ class TorchFSDPPlugin(DPPluginBase):
         return True
 
     def supported_precisions(self) -> List[str]:
-        return ['fp16', 'bf16']
+        return ["fp16", "bf16"]
 
     def control_device(self) -> bool:
         return True
 
     def supported_devices(self) -> List[str]:
-        return ['cuda']
+        return ["cuda"]
 
     def configure(
         self,
@@ -201,11 +237,13 @@ class TorchFSDPPlugin(DPPluginBase):
     ) -> Tuple[Union[nn.Module, OptimizerWrapper, LRScheduler, DataLoader]]:
 
         # wrap the model with PyTorch FSDP
-        fsdp_model = TorchFSDPModel(model, device_id=torch.cuda.current_device(), **self.fsdp_kwargs)
+        fsdp_model = TorchFSDPModel(
+            model, device_id=torch.cuda.current_device(), **self.fsdp_kwargs
+        )
 
         if len(optimizer.param_groups) > 1:
             warnings.warn(
-                'TorchFSDPPlugin does not support optimizer that use multi param groups. The results may not be as expected if used.'
+                "TorchFSDPPlugin does not support optimizer that use multi param groups. The results may not be as expected if used."
             )
         optimizer.__init__(fsdp_model.parameters(), **optimizer.defaults)
 

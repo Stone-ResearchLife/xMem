@@ -1,67 +1,67 @@
 {
-    "solution": {
-        "runtime": 20.73896622657776,
-        "memory": 8036286464,
-        "oom": true,
-        "ground": 8206155776.0,
-        "error": 0.020700230002555584,
-        "real_oom": true,
-        "correct_estimation": true,
-        "2nd verification": {}
+  "config": {
+    "dataset": {
+      "shuffle": true
     },
-    "dnnmem": {
-        "runtime": 126.1657202243805,
-        "memory": 8034189312,
-        "oom": true,
-        "ground": 8206155776.0,
-        "error": 0.02095578839764886,
-        "real_oom": true,
-        "correct_estimation": true,
-        "2nd verification": {}
-    },
-    "schedtune": {
-        "runtime": 4.945674419403076,
-        "memory": 14317099417.6,
-        "oom": true,
-        "ground": 8206155776.0,
-        "error": 0.7446779963490666,
-        "real_oom": true,
-        "correct_estimation": true,
-        "2nd verification": {}
-    },
-    "llmem": {
-        "runtime": 10.097796440124512,
-        "memory": 1148190720.0,
-        "oom": false,
-        "ground": 8206155776.0,
-        "error": 0.8600817786864299,
-        "real_oom": true,
-        "correct_estimation": false,
-        "2nd verification": {}
-    },
-    "train info": {
-        "model": "ResNet101",
-        "batch_size": 821,
-        "target_iteration": 2,
-        "optimiser": "SGD",
-        "device": 1,
-        "verification": 1.0,
-        "input_size": 86,
-        "zero_grad_mode": 1,
-        "total_gpu_memory": 7.642578125,
-        "used_gpu_memory": 0.017578125
-    },
-    "config": {
-        "name": "DL-Estimator",
-        "debug": false,
-        "save2tmp": false,
-        "run_id": "20241201-114142-c1c7",
-        "dataset": {
-            "shuffle": true
-        },
-        "trainer": {
-            "lr": 0.001,
-            "epochs": 1
-        }
+    "debug": false,
+    "name": "DL-Estimator",
+    "run_id": "20241201-114142-c1c7",
+    "save2tmp": false,
+    "trainer": {
+      "epochs": 1,
+      "lr": 0.001
     }
+  },
+  "dnnmem": {
+    "2nd verification": {},
+    "correct_estimation": true,
+    "error": 0.02095578839764886,
+    "ground": 8206155776.0,
+    "memory": 8034189312,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 126.1657202243805
+  },
+  "llmem": {
+    "2nd verification": {},
+    "correct_estimation": false,
+    "error": 0.8600817786864299,
+    "ground": 8206155776.0,
+    "memory": 1148190720.0,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 10.097796440124512
+  },
+  "schedtune": {
+    "2nd verification": {},
+    "correct_estimation": true,
+    "error": 0.7446779963490666,
+    "ground": 8206155776.0,
+    "memory": 14317099417.6,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 4.945674419403076
+  },
+  "solution": {
+    "2nd verification": {},
+    "correct_estimation": true,
+    "error": 0.020700230002555584,
+    "ground": 8206155776.0,
+    "memory": 8036286464,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 20.73896622657776
+  },
+  "train info": {
+    "batch_size": 821,
+    "device": 1,
+    "input_size": 86,
+    "model": "ResNet101",
+    "optimiser": "SGD",
+    "target_iteration": 2,
+    "total_gpu_memory": 7.642578125,
+    "used_gpu_memory": 0.017578125,
+    "verification": 1.0,
+    "zero_grad_mode": 1
+  }
 }

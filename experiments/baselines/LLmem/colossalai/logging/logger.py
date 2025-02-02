@@ -43,13 +43,19 @@ class DistributedLogger:
     def __init__(self, name):
         if name in DistributedLogger.__instances:
             raise Exception(
-                'Logger with the same name has been created, you should use colossalai.logging.get_dist_logger')
+                "Logger with the same name has been created, you should use colossalai.logging.get_dist_logger"
+            )
         else:
             handler = None
-            formatter = logging.Formatter('colossalai - %(name)s - %(levelname)s: %(message)s')
+            formatter = logging.Formatter(
+                "colossalai - %(name)s - %(levelname)s: %(message)s"
+            )
             try:
                 from rich.logging import RichHandler
-                handler = RichHandler(show_path=False, markup=True, rich_tracebacks=True)
+
+                handler = RichHandler(
+                    show_path=False, markup=True, rich_tracebacks=True
+                )
                 handler.setFormatter(formatter)
             except ImportError:
                 handler = logging.StreamHandler()
@@ -79,7 +85,12 @@ class DistributedLogger:
 
     @staticmethod
     def _check_valid_logging_level(level: str):
-        assert level in ['INFO', 'DEBUG', 'WARNING', 'ERROR'], 'found invalid logging level'
+        assert level in [
+            "INFO",
+            "DEBUG",
+            "WARNING",
+            "ERROR",
+        ], "found invalid logging level"
 
     def set_level(self, level: str) -> None:
         """Set the logging level
@@ -90,7 +101,13 @@ class DistributedLogger:
         self._check_valid_logging_level(level)
         self._logger.setLevel(getattr(logging, level))
 
-    def log_to_file(self, path: Union[str, Path], mode: str = 'a', level: str = 'INFO', suffix: str = None) -> None:
+    def log_to_file(
+        self,
+        path: Union[str, Path],
+        mode: str = "a",
+        level: str = "INFO",
+        suffix: str = None,
+    ) -> None:
         """Save the logs to file
 
         Args:
@@ -99,8 +116,9 @@ class DistributedLogger:
             level (str): Can only be INFO, DEBUG, WARNING and ERROR.
             suffix (str): The suffix string of log's name.
         """
-        assert isinstance(path, (str, Path)), \
-            f'expected argument path to be type str or Path, but got {type(path)}'
+        assert isinstance(
+            path, (str, Path)
+        ), f"expected argument path to be type str or Path, but got {type(path)}"
         self._check_valid_logging_level(level)
 
         if isinstance(path, str):
@@ -116,23 +134,27 @@ class DistributedLogger:
             rank = colossalai.core.global_context.get_global_rank()
 
         if suffix is not None:
-            log_file_name = f'rank_{rank}_{suffix}.log'
+            log_file_name = f"rank_{rank}_{suffix}.log"
         else:
-            log_file_name = f'rank_{rank}.log'
+            log_file_name = f"rank_{rank}.log"
         path = path.joinpath(log_file_name)
 
         # add file handler
         file_handler = logging.FileHandler(path, mode)
         file_handler.setLevel(getattr(logging, level))
-        formatter = logging.Formatter('colossalai - %(name)s - %(levelname)s: %(message)s')
+        formatter = logging.Formatter(
+            "colossalai - %(name)s - %(levelname)s: %(message)s"
+        )
         file_handler.setFormatter(formatter)
         self._logger.addHandler(file_handler)
 
-    def _log(self,
-             level,
-             message: str,
-             parallel_mode: ParallelMode = ParallelMode.GLOBAL,
-             ranks: List[int] = None) -> None:
+    def _log(
+        self,
+        level,
+        message: str,
+        parallel_mode: ParallelMode = ParallelMode.GLOBAL,
+        ranks: List[int] = None,
+    ) -> None:
         if ranks is None:
             getattr(self._logger, level)(message)
         else:
@@ -140,7 +162,12 @@ class DistributedLogger:
             if local_rank in ranks:
                 getattr(self._logger, level)(message)
 
-    def info(self, message: str, parallel_mode: ParallelMode = ParallelMode.GLOBAL, ranks: List[int] = None) -> None:
+    def info(
+        self,
+        message: str,
+        parallel_mode: ParallelMode = ParallelMode.GLOBAL,
+        ranks: List[int] = None,
+    ) -> None:
         """Log an info message.
 
         Args:
@@ -150,10 +177,15 @@ class DistributedLogger:
             ranks (List[int]): List of parallel ranks.
         """
         message_prefix = "{}:{} {}".format(*self.__get_call_info())
-        self._log('info', message_prefix, parallel_mode, ranks)
-        self._log('info', message, parallel_mode, ranks)
+        self._log("info", message_prefix, parallel_mode, ranks)
+        self._log("info", message, parallel_mode, ranks)
 
-    def warning(self, message: str, parallel_mode: ParallelMode = ParallelMode.GLOBAL, ranks: List[int] = None) -> None:
+    def warning(
+        self,
+        message: str,
+        parallel_mode: ParallelMode = ParallelMode.GLOBAL,
+        ranks: List[int] = None,
+    ) -> None:
         """Log a warning message.
 
         Args:
@@ -163,10 +195,15 @@ class DistributedLogger:
             ranks (List[int]): List of parallel ranks.
         """
         message_prefix = "{}:{} {}".format(*self.__get_call_info())
-        self._log('warning', message_prefix, parallel_mode, ranks)
-        self._log('warning', message, parallel_mode, ranks)
+        self._log("warning", message_prefix, parallel_mode, ranks)
+        self._log("warning", message, parallel_mode, ranks)
 
-    def debug(self, message: str, parallel_mode: ParallelMode = ParallelMode.GLOBAL, ranks: List[int] = None) -> None:
+    def debug(
+        self,
+        message: str,
+        parallel_mode: ParallelMode = ParallelMode.GLOBAL,
+        ranks: List[int] = None,
+    ) -> None:
         """Log a debug message.
 
         Args:
@@ -176,10 +213,15 @@ class DistributedLogger:
             ranks (List[int]): List of parallel ranks.
         """
         message_prefix = "{}:{} {}".format(*self.__get_call_info())
-        self._log('debug', message_prefix, parallel_mode, ranks)
-        self._log('debug', message, parallel_mode, ranks)
+        self._log("debug", message_prefix, parallel_mode, ranks)
+        self._log("debug", message, parallel_mode, ranks)
 
-    def error(self, message: str, parallel_mode: ParallelMode = ParallelMode.GLOBAL, ranks: List[int] = None) -> None:
+    def error(
+        self,
+        message: str,
+        parallel_mode: ParallelMode = ParallelMode.GLOBAL,
+        ranks: List[int] = None,
+    ) -> None:
         """Log an error message.
 
         Args:
@@ -189,5 +231,5 @@ class DistributedLogger:
             ranks (List[int]): List of parallel ranks.
         """
         message_prefix = "{}:{} {}".format(*self.__get_call_info())
-        self._log('error', message_prefix, parallel_mode, ranks)
-        self._log('error', message, parallel_mode, ranks)
+        self._log("error", message_prefix, parallel_mode, ranks)
+        self._log("error", message, parallel_mode, ranks)
