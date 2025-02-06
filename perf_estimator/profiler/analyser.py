@@ -157,12 +157,20 @@ class IterationData:
         return data
 
     @property
-    def dataset_load_time(self):
+    def dataset_load_time(self) -> list[float]:
         load_times = []
         first_layer = list(self.get_layers().values())[0]
         for op in first_layer.ops:
             if op.function_name == "to":
                 load_times.append(op.start_time)
+        # todo: temporary fix: Due to profiling data from HuggingFace Trainer execute a pre-process stage before
+        #       actually loading dataset, it leads for xMem failure, which is caused by not loading right dataset
+        #       loading activities.
+        #       This fix will load dataset timestamp from cpu_op event if it does not exist in Layer
+        if len(load_times) == 0:
+            for op in self.get_operators():
+                if op.function_name == "to":
+                    load_times.append(op.start_time)
         return load_times
 
     def add_layer(self, node: StackNode):

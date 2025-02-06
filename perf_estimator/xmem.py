@@ -39,7 +39,7 @@ class XMem:
         return self._config
 
     def estimate(self, profiler_file: str, output_only: bool = False) -> dict:
-        iteration = 2  # default value, better to keep it as default
+        iteration = 1  # default value, better to keep it as default
         before_run = time.time()
         estimator = Estimator(
             dataloader=copy.deepcopy(self._data_loader),
