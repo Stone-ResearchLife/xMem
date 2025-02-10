@@ -129,8 +129,19 @@ class ModelTrainer:
                 logging_steps=50,
                 save_strategy="epoch",
                 report_to="tensorboard",
-                use_cpu=("cpu" in str(self._device)),
+                max_steps=self._iterations,
+                # use_cpu=("cpu" in str(self._device)),
             )
+            if "mps" in str(self._device):
+                training_args.use_mps_device = True
+                training_args.use_cpu = False
+            elif "cpu" in str(self._device):
+                training_args.use_cpu = True
+                training_args.use_mps_device = False
+            else:
+                training_args.use_cpu = False
+                training_args.use_mps_device = False
+
             if self._optimiser is None:
                 self._optimiser = torch.optim.SGD
             optimiser = self._optimiser(params=self._model.parameters(), lr=self._lr)
@@ -144,7 +155,7 @@ class ModelTrainer:
                 ),
                 callbacks=[
                     ProfilerCallback(self._config),
-                    StepBasedStopCallback(stop_after_steps=self._iterations, config=self._config)
+                    # StepBasedStopCallback(stop_after_steps=self._iterations, config=self._config)
                 ],
             )
             trainer.train()
