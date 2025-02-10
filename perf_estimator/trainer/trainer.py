@@ -2,9 +2,37 @@ from venv import logger
 
 import torch
 import platform
-from typing import Optional, List, Tuple
+from typing import Optional, List, Dict
 from perf_estimator.config import Config, default_setting
 from .train_loop import conv_train_loop
+
+
+class HuggingDataset(torch.utils.data.Dataset):
+    def __init__(self, dataset: torch.utils.data.Dataset):
+        self.dataset = dataset
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
+        image, label = self.dataset[idx]
+        return {"pixel_values": image, "labels": label}
+
+
+class HuggingFaceModel(torch.nn.Module):
+    def __init__(self, model: torch.nn.Module, loss: torch.nn.Module = None):
+        super(HuggingFaceModel, self).__init__()
+        self.model = model
+        self.loss = loss or torch.nn.CrossEntropyLoss()
+        self.model_input_names = ["pixel_values", "labels"]
+
+    def forward(self, pixel_values, labels):
+        logits = self.resnet(pixel_values)
+        if labels is not None:
+            loss = self.loss(logits, labels)
+            return {"loss": loss, "logits": logits}
+        else:
+            return logits
 
 
 class ModelTrainer:
@@ -63,24 +91,49 @@ class ModelTrainer:
         print(f"Directory: {self._config.base_dir}")
         print("================================================")
 
-    def train(self):
+    def train(self, mode="torch"):
         self.show_summary()
-        train_func = conv_train_loop
+        if mode == "torch":
+            train_func = conv_train_loop
 
-        train_func(
-            model=self._model,
-            data_loader=self._data_loader,
-            epochs=self._epochs,
-            device=self._device,
-            batch_size=(
-                self._data_loader.batch_size
-                if self._data_loader is not None
-                else self._batch_size
-            ),
-            iterations=self._iterations,
-            loss=self._loss,
-            lr=self._lr,
-            plugins=self._plugins,
-            optimizer=self._optimiser,
-            zero_grad_mode=self._zero_grad_mode,
-        )
+            train_func(
+                model=self._model,
+                data_loader=self._data_loader,
+                epochs=self._epochs,
+                device=self._device,
+                batch_size=(
+                    self._data_loader.batch_size
+                    if self._data_loader is not None
+                    else self._batch_size
+                ),
+                iterations=self._iterations,
+                loss=self._loss,
+                lr=self._lr,
+                plugins=self._plugins,
+                optimizer=self._optimiser,
+                zero_grad_mode=self._zero_grad_mode,
+            )
+        elif mode == "huggingface-conv":
+            from transformers import TrainingArguments, Trainer
+            _dataset = HuggingDataset(self._data_loader.dataset)
+            _model = HuggingFaceModel(self._model, self._loss)
+            # --- Training Arguments ---
+            training_args = TrainingArguments(
+                output_dir="./results",
+                num_train_epochs=self._epochs,
+                per_device_train_batch_size=self._data_loader.batch_size if self._data_loader is not None else self._batch_size,
+                logging_dir="./logs",
+                logging_steps=50,
+                save_strategy="epoch",
+                report_to="tensorboard",
+                no_cuda=(not "cuda" in str(self._device))
+            )
+            trainer = Trainer(
+                model=_model,
+                args=training_args,
+                train_dataset=_dataset,
+            )
+            trainer.train()
+
+
+
