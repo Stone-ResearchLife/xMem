@@ -40,12 +40,12 @@ class XMemProfiler:
     def conf(self) -> Config:
         return self._config
 
-    def _train(self, **kwargs):
+    def _train(self, mode=None, **kwargs):
         logger.debug(f"Start Training with {kwargs}")
         trainer = ModelTrainer(**kwargs)
         torch.cuda.empty_cache()
         time.sleep(1)
-        trainer.train()
+        trainer.train(mode=mode)
         time.sleep(1)
 
     def train_on_cpu(
@@ -54,7 +54,8 @@ class XMemProfiler:
         optimizer: Optional[torch.optim.Optimizer] = None,
         loss: Optional[torch.nn.Module] = None,
         zero_grad_mode: int = 0,
-    ) -> str:
+        hugging_face_enable:bool=False,
+    ) -> Optional[str]:
         trainer_conf = {
             "model": copy.deepcopy(self._model),
             "data_loader": copy.deepcopy(self._data_loader),
@@ -71,13 +72,18 @@ class XMemProfiler:
         }
         print(f"================== Evaluate on CPU ==================")
         try:
-            self._train(**trainer_conf)
+            _mode = "huggingface-conv" if hugging_face_enable else "torch"
+            self._train(mode=_mode, **trainer_conf)
         finally:
             profiler_files = filter_files(
                 "pt.trace.json", str(self._config.result_dir), fuzz=True
             )
             profiler_files.sort(key=lambda x: os.path.getmtime(x))
-        return profiler_files[-1]
+
+        if len(profiler_files) > 1:
+            return profiler_files[-1]
+        else:
+            return None
 
 
 def main(
@@ -85,6 +91,7 @@ def main(
     optimizer: str = "SGD",
     batch_size: int = 200,
     input_size: int = 86,
+    enable_hugging_face: bool = False,
 ):
     models_enum = EnumManipulator(AllModels)
     models_list = models_enum.fetch_keys()
@@ -99,7 +106,8 @@ def main(
         model=model, batch_size=batch_size, input_size=input_size, config=_conf
     )
     profiler_file = profiler.train_on_cpu(
-        optimizer=getattr(torch.optim, optimizer, torch.optim.SGD)
+        optimizer=getattr(torch.optim, optimizer, torch.optim.SGD),
+        hugging_face_enable=enable_hugging_face
     )
     print(f"Profiler file is saved in {profiler_file}")
 

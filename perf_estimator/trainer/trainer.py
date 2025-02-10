@@ -27,7 +27,7 @@ class HuggingFaceModel(torch.nn.Module):
         self.model_input_names = ["pixel_values", "labels"]
 
     def forward(self, pixel_values, labels):
-        logits = self.resnet(pixel_values)
+        logits = self.model(pixel_values)
         if labels is not None:
             loss = self.loss(logits, labels)
             return {"loss": loss, "logits": logits}
@@ -91,7 +91,9 @@ class ModelTrainer:
         print(f"Directory: {self._config.base_dir}")
         print("================================================")
 
-    def train(self, mode="torch"):
+    def train(self, mode=None):
+        if mode is None:
+            mode = "torch"
         self.show_summary()
         if mode == "torch":
             train_func = conv_train_loop
@@ -115,23 +117,32 @@ class ModelTrainer:
             )
         elif mode == "huggingface-conv":
             from transformers import TrainingArguments, Trainer
+            from perf_estimator.trainer.plugins import ProfilerCallback, StepBasedStopCallback
             _dataset = HuggingDataset(self._data_loader.dataset)
             _model = HuggingFaceModel(self._model, self._loss)
             # --- Training Arguments ---
             training_args = TrainingArguments(
-                output_dir="./results",
+                output_dir=str(self._config.result_dir.joinpath('huggingface')),
                 num_train_epochs=self._epochs,
                 per_device_train_batch_size=self._data_loader.batch_size if self._data_loader is not None else self._batch_size,
-                logging_dir="./logs",
+                logging_dir=str(self._config.log_dir.joinpath('huggingface')),
                 logging_steps=50,
                 save_strategy="epoch",
                 report_to="tensorboard",
-                no_cuda=(not "cuda" in str(self._device))
+                use_cpu=("cpu" in str(self._device)),
             )
+            if self._optimiser is None:
+                self._optimiser = torch.optim.SGD
+            optimiser = self._optimiser(params=self._model.parameters(), lr=self._lr)
             trainer = Trainer(
                 model=_model,
                 args=training_args,
                 train_dataset=_dataset,
+                optimizers=(
+                    optimiser,
+                    torch.optim.lr_scheduler.StepLR(optimiser, step_size=7, gamma=0.1),
+                ),
+                callbacks=[ProfilerCallback(self._config)],
             )
             trainer.train()
 

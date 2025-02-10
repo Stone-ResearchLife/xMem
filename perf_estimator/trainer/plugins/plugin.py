@@ -30,7 +30,7 @@ class AbcPlugin(InterfacePlugin, ABC):
 
     @property
     def output_dir(self) -> Path:
-        _result_dir = self.config.result_dir.joinpath(self.tool_name)
+        _result_dir = self.config.result_dir.joinpath("plugins", self.tool_name)
         _result_dir.mkdir(parents=True, exist_ok=True)
         return _result_dir
 
