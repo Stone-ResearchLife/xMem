@@ -142,7 +142,10 @@ class ModelTrainer:
                     optimiser,
                     torch.optim.lr_scheduler.StepLR(optimiser, step_size=7, gamma=0.1),
                 ),
-                callbacks=[ProfilerCallback(self._config)],
+                callbacks=[
+                    ProfilerCallback(self._config),
+                    StepBasedStopCallback(stop_after_steps=self._iterations, config=self._config)
+                ],
             )
             trainer.train()
 
