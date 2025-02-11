@@ -27,6 +27,10 @@ class Config(BaseModel):
     trainer: TrainerConfig = TrainerConfig()
 
     @property
+    def parent_dir(self) -> Path:
+        return self.base_dir.parent
+
+    @property
     def base_dir(self):
         if self.save2tmp:
             _base_dir = Path(temp_dir_with_specific_path(self.name, self.run_id))

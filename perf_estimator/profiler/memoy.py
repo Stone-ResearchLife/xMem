@@ -6,6 +6,10 @@ from .node import CpuInstantNode
 
 class MemoryBlock(AbstractMemoryBlock):
     def __init__(self, node: CpuInstantNode):
+        # debug
+        if int(node.bytes) < 0:
+            print(CpuInstantNode)
+            raise RuntimeError(f"Memory block {node} is a negative value")
         self._start: CpuInstantNode = node
         self._end: Optional[CpuInstantNode] = None
         self._forward = False
@@ -79,10 +83,12 @@ class MemoryBlock(AbstractMemoryBlock):
         if str(node.address) != self.address:
             raise ValueError(
                 "The address of the free node is not the same as the current block."
+                f"Original address: {self.address} != free address: {node.address}"
             )
         if self.bytes != (node.bytes * -1):
             raise ValueError(
-                "The amount of memory freed is not the same as the current block."
+                f"Time {self.alloc_time}, the amount of memory freed is not the same as the current block."
+                f"Original Size: {self.bytes} != free Size: {node.bytes}"
             )
         self._end = node
 

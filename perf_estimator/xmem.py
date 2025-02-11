@@ -74,7 +74,7 @@ class XMem:
                 f"Estimated Peak GPU Memory: {format_memory(estimated_result['memory']['segment'])}"
             )
             print(
-                f"Estimated Peak Tensor Memory: {format_memory(estimated_result['memory']['tensor'])}GB"
+                f"Estimated Peak Tensor Memory: {format_memory(estimated_result['memory']['tensor'])}"
             )
 
         return _estimated_result

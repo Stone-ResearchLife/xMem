@@ -42,11 +42,7 @@ class ProfilerCallback(AbsCallback):
         print("Starting profiler...")
         self.profiler.start()
 
-    def on_epoch_begin(self, args, state, control, **kwargs):
-        print("Starting profiler...")
-        self.profiler.step()
-
-    def on_step_end(self, args, state, control, **kwargs):
+    def on_step_begin(self, args, state, control, **kwargs):
         self.profiler.step()
 
     def on_train_end(self, args, state, control, **kwargs):

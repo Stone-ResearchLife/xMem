@@ -1,10 +1,14 @@
-from venv import logger
-
 import torch
 import platform
+import logging
+from transformers import TrainingArguments, Trainer
+from perf_estimator.trainer.plugins import ProfilerCallback
 from typing import Optional, List, Dict
 from perf_estimator.config import Config, default_setting
 from .train_loop import conv_train_loop
+
+
+logger = logging.getLogger(__name__)
 
 
 class HuggingDataset(torch.utils.data.Dataset):
@@ -91,9 +95,8 @@ class ModelTrainer:
         print(f"Directory: {self._config.base_dir}")
         print("================================================")
 
-    def train(self, mode=None):
-        if mode is None:
-            mode = "torch"
+    def train(self):
+        mode = "torch"
         self.show_summary()
         if mode == "torch":
             train_func = conv_train_loop
@@ -116,8 +119,7 @@ class ModelTrainer:
                 zero_grad_mode=self._zero_grad_mode,
             )
         elif mode == "huggingface-conv":
-            from transformers import TrainingArguments, Trainer
-            from perf_estimator.trainer.plugins import ProfilerCallback, StepBasedStopCallback
+
             _dataset = HuggingDataset(self._data_loader.dataset)
             _model = HuggingFaceModel(self._model, self._loss)
             # --- Training Arguments ---
@@ -133,12 +135,15 @@ class ModelTrainer:
                 # use_cpu=("cpu" in str(self._device)),
             )
             if "mps" in str(self._device):
+                print("Enable MPS Devices")
                 training_args.use_mps_device = True
                 training_args.use_cpu = False
             elif "cpu" in str(self._device):
+                print("Enable CPU Devices")
                 training_args.use_cpu = True
                 training_args.use_mps_device = False
             else:
+                print("Enable GPU Devices")
                 training_args.use_cpu = False
                 training_args.use_mps_device = False
 
@@ -159,6 +164,3 @@ class ModelTrainer:
                 ],
             )
             trainer.train()
-
-
-

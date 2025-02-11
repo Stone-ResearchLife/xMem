@@ -25,7 +25,6 @@ def main(
     output_file = data_dir.joinpath("estimated_result.json")
     with open(output_file, "w") as f:
         import json
-
         json.dump(estimated_result, f, indent=4)
     print(f"Estimated result is saved in {output_file}")
 
