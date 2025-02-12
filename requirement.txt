@@ -3,4 +3,5 @@ plotly~=5.24.0
 pydantic~=2.9.2
 fire~=0.7.0
 matplotlib~=3.9.2
-transformers~=4.48.1
+transformers[torch]~=4.48.1
+tensorboardX~=2.6.2.2

@@ -215,5 +215,26 @@ class Estimator:
                 "segment": peak_seg,
             },
         }
+        max_gpu_memory_in_gp = sim_result.allowed_memory_maximum / 1024 ** 3
+        try:
+            input_size = self._calculate_input_tensor_size()
+            seg_memory_overhead_pre_byte = (peak_seg / input_size) / max_gpu_memory_in_gp
+            tensor_memory_overhead_pre_byte = (peak_tensor / input_size) / max_gpu_memory_in_gp
+        except Exception as e:
+            seg_memory_overhead_pre_byte = -1
+            tensor_memory_overhead_pre_byte = -1
+            print(f"Error: {e}")
+        finally:
+            estimated_result['memory']['seg_memory_overhead_pre_byte'] = round(seg_memory_overhead_pre_byte, 0)
+            estimated_result['memory']['tensor_memory_overhead_pre_byte'] = round(tensor_memory_overhead_pre_byte, 0)
 
         return sim_result, estimated_result
+
+    def _calculate_input_tensor_size(self) -> int:
+        _data = self.data_memory()
+        # only pick X tensor for image classification training.
+        # Actually, tensor Y does not impact the memory usage too much.
+        _input_data = _data[0]
+        return _input_data.bytes
+
+

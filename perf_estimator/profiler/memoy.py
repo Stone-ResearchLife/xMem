@@ -7,9 +7,9 @@ from .node import CpuInstantNode
 class MemoryBlock(AbstractMemoryBlock):
     def __init__(self, node: CpuInstantNode):
         # debug
-        if int(node.bytes) < 0:
-            print(CpuInstantNode)
-            raise RuntimeError(f"Memory block {node} is a negative value")
+        # if int(node.bytes) < 0:
+        #     print(CpuInstantNode)
+        #     raise RuntimeError(f"Memory block {node} is a negative value")
         self._start: CpuInstantNode = node
         self._end: Optional[CpuInstantNode] = None
         self._forward = False
