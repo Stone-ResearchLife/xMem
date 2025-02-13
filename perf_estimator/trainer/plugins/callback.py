@@ -1,10 +1,14 @@
 import torch
+import time
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from transformers import TrainerCallback
+from transformers import TrainerCallback, TrainingArguments, TrainerState, TrainerControl
 from typing import Optional
 from torch.profiler import profile, ProfilerActivity
 from perf_estimator.config import Config, default_setting
+
+logger = logging.getLogger(__name__)
 
 
 class AbsCallback(TrainerCallback, ABC):
@@ -50,13 +54,23 @@ class ProfilerCallback(AbsCallback):
         self.profiler.stop()
     
 
-class StepBasedStopCallback(AbsCallback):
-    def __init__(self, stop_after_steps: int, config: Optional[Config] = None):
-        super(StepBasedStopCallback, self).__init__(name="StepBasedStopCallback", config=config)
-        self.stop_after_steps = stop_after_steps
+class SnapshotCallback(AbsCallback):
+    TIME_FORMAT_STR: str = "%b_%d_%H_%M_%S"
+    MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT: int = 5000000
+    def __init__(self, config: Optional[Config] = None):
+        super(SnapshotCallback, self).__init__(name="Snapshot", config=config)
 
-    def on_step_end(self, args, state, control, **kwargs):
-        # Check if the number of steps has reached the limit
-        if state.global_step >= self.stop_after_steps:
-            control.should_training_stop = True  # Signal to stop training
-        return control
+    def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        torch.cuda.memory._record_memory_history(
+            stacks="all", max_entries=self.MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT
+        )
+
+    def on_train_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        file_name = f"{self.name}_result-{int(time.time())}.pickle"
+        out_file = self.output_dir().joinpath(file_name)
+        if out_file.parent.is_dir() is False:
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Stop Snapshot Plugin and save the result to {out_file}")
+        torch.cuda.memory._dump_snapshot(out_file)
+        torch.cuda.memory._record_memory_history(enabled=None)
+

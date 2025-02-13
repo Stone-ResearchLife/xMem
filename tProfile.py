@@ -3,7 +3,7 @@ from transformers import TrainingArguments, Trainer
 from perf_estimator.models import AllModels
 from perf_estimator.dataset import HuggingFaceCIFAR10
 from perf_estimator.config import Config
-from perf_estimator.trainer.plugins import ProfilerCallback
+from perf_estimator.trainer.plugins import ProfilerCallback, SnapshotCallback
 from perf_estimator.utilis.enum import EnumManipulator
 
 
@@ -31,9 +31,11 @@ def main(
     batch_size: int = 200,
     input_size: int = 86,
     unified_output: bool = False,
-    gpu_memory_capacity: int = 4
+    gpu_memory_capacity: int = 4,
+    cuda_enable: bool = False
 ):
     config = Config(save2tmp=False)
+
     training_args = TrainingArguments(
         output_dir=str(config.result_dir.joinpath("huggingface")),
         num_train_epochs=5,
@@ -43,7 +45,7 @@ def main(
         save_strategy="epoch",
         report_to="tensorboard",
         max_steps=3,
-        use_cpu=True
+        use_cpu= (cuda_enable is False)
     )
     loss = torch.nn.CrossEntropyLoss()
     # _model = AllModels[model].value
@@ -59,11 +61,14 @@ def main(
     _optimiser = getattr(torch.optim, optimizer, torch.optim.SGD)
     _optimiser = _optimiser(params=_model.parameters(), lr=config.trainer.lr)
     _scheduler = torch.optim.lr_scheduler.StepLR(_optimiser, step_size=7, gamma=0.1)
+    _callbacks = [ProfilerCallback(config=config)]
+    if cuda_enable:
+        _callbacks.append(SnapshotCallback(config=config))
     _trainer = Trainer(
         model=_model,
         args=training_args,
         train_dataset=_dataset,
-        callbacks=[ProfilerCallback(config=config)],
+        callbacks=_callbacks,
         optimizers=(_optimiser, _scheduler),
     )
     _trainer.train()
