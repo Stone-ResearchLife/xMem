@@ -1,7 +1,8 @@
 sortedcontainers~=2.4.0
 plotly~=5.24.0
-pydantic~=2.9.2
+pydantic~=2.10.6
 fire~=0.7.0
 matplotlib~=3.9.2
 transformers[torch]~=4.48.1
 tensorboardX~=2.6.2.2
+ures~=1.5.0

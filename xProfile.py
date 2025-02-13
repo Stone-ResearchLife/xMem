@@ -91,7 +91,6 @@ def main(
     optimizer: str = "SGD",
     batch_size: int = 200,
     input_size: int = 86,
-    enable_hugging_face: bool = False,
     unified_output: bool = False,
     gpu_memory_capacity: int = 4,
 ):
@@ -110,7 +109,6 @@ def main(
     )
     profiler_file = profiler.train_on_cpu(
         optimizer=getattr(torch.optim, optimizer, torch.optim.SGD),
-        hugging_face_enable=enable_hugging_face
     )
     print(f"Profiler file is saved in {profiler_file}")
     
