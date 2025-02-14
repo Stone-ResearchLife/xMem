@@ -32,9 +32,13 @@ def main(
     input_size: int = 86,
     unified_output: bool = False,
     gpu_memory_capacity: int = 4,
-    cuda_enable: bool = False
+    cuda_enable: bool = False,
+    run_id: str = None,
 ):
-    config = Config(save2tmp=False)
+    if run_id is not None:
+        config = Config(run_id=run_id, save2tmp=False)
+    else:
+        config = Config(save2tmp=False)
 
     training_args = TrainingArguments(
         output_dir=str(config.result_dir.joinpath("huggingface")),

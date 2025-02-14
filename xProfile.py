@@ -93,6 +93,7 @@ def main(
     input_size: int = 86,
     unified_output: bool = False,
     gpu_memory_capacity: int = 4,
+    run_id: Optional[str] = None,
 ):
     models_enum = EnumManipulator(AllModels)
     models_list = models_enum.fetch_keys()
@@ -100,7 +101,10 @@ def main(
         raise ValueError(
             f"Model {model} is not supported. Supported models are {','.join(models_list)}"
         )
-    config = _conf = Config(save2tmp=False)
+    if run_id is not None:
+        config = _conf = Config(run_id=run_id, save2tmp=False)
+    else:
+        config = _conf = Config(save2tmp=False)
     init_logging(level="WARNING", conf=_conf)
     _model = AllModels[model].value
     _model.train()
