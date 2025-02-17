@@ -53,6 +53,28 @@ class SnapshotAnalyser:
         with open(json_path, "w") as f:
             json.dump(_data, f, indent=4)
 
+    def group_by_file(self, file_path: str):
+        code_no_sorted = {}
+        activiies = list(self.activity_blocks.values())
+        for activity in activiies:
+            print(f"Number of activities: {len(code_no_sorted.keys())}")
+            for act in activity:
+                frames = act._start.frames
+                frames.reverse()
+                for frame in frames:
+                    if file_path in frame["filename"]:
+                        code_number = frame["line"]
+                        print(code_number)
+                        if code_number not in code_no_sorted.keys():
+                            code_no_sorted[str(code_number)] = []
+                        code_no_sorted[str(code_number)].append(act)
+                        break
+
+        return code_no_sorted
+
+
+
+
     def _build_trace_blocks(self) -> Tuple:
         blocks = {
             "trace": {"collective": {}, "active": {}, "func": ActivityMemory},
