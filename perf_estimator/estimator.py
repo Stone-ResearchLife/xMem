@@ -1,6 +1,6 @@
 import torch
 import copy
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union, Optional, Dict
 from .profiler import ProfilerDataProcessing, MemoryBlock, CpuInstantNode
 from .allocator import AllocatorSim, CachingAllocator
 from .config import Config
@@ -33,7 +33,7 @@ class Estimator:
                     model_blocks_start_instant._value["ts"] = index
                     model_blocks.append(memory)
             self._model_memory = model_blocks
-        return self._model_memory
+        return copy.deepcopy(self._model_memory)
 
     def data_memory(self) -> List[MemoryBlock]:
         data = next(iter(self.dataloader))
@@ -151,13 +151,7 @@ class Estimator:
                     memory_activity.append(backward)
         return sorted(memory_activity, key=lambda x: x.alloc_time)
 
-    def estimate(self, target_iteration: int = 2) -> Tuple[CachingAllocator, dict]:
-        """Generate memory activity in order of time for the model
-
-        Returns:
-            List[MemoryBlock]: a list of memory activity in order of time
-
-        """
+    def get_memory_activity(self, target_iteration: int = 2) -> List[MemoryBlock]:
         if target_iteration > 1:
             # The memory blocks in the first iteration should be replaced by the memory blocks in the second iteration
             # Because the memory blocks in the first iteration are not freed until the end of the second iteration
@@ -196,7 +190,29 @@ class Estimator:
         sorted_memory = copy.deepcopy(
             sorted(memory_activity, key=lambda x: x.alloc_time)
         )
-        sim_result: CachingAllocator = self.allocator_sim.simulate(sorted_memory)
+        return sorted_memory
+
+    def estimate(self, target_iteration: int = 2) -> Tuple[CachingAllocator, Dict]:
+        """Generate memory activity in order of time for the model
+
+        Returns:
+            List[MemoryBlock]: a list of memory activity in order of time
+
+        """
+        sorted_memory = self.get_memory_activity(target_iteration=target_iteration)
+        return self.memory_estimate(sorted_memory)
+
+    def _calculate_input_tensor_size(self) -> int:
+        _data = self.data_memory()
+        # only pick X tensor for image classification training.
+        # Actually, tensor Y does not impact the memory usage too much.
+        _input_data = _data[0]
+        return _input_data.bytes
+
+    def memory_estimate(
+        self, memory_activities: List[MemoryBlock]
+    ) -> Tuple[CachingAllocator, Dict]:
+        sim_result: CachingAllocator = self.allocator_sim.simulate(memory_activities)
         ## supplement the memory section with the memory usage of forward and backward
         peak_seg = max(sim_result._trace.max_segment_changes)
         peak_tensor = max(sim_result._trace.max_usage_changes)
@@ -215,26 +231,25 @@ class Estimator:
                 "segment": peak_seg,
             },
         }
-        max_gpu_memory_in_gp = sim_result.allowed_memory_maximum / 1024 ** 3
+        max_gpu_memory_in_gp = sim_result.allowed_memory_maximum / 1024**3
         try:
             input_size = self._calculate_input_tensor_size()
-            seg_memory_overhead_pre_byte = (peak_seg / input_size) / max_gpu_memory_in_gp
-            tensor_memory_overhead_pre_byte = (peak_tensor / input_size) / max_gpu_memory_in_gp
+            seg_memory_overhead_pre_byte = (
+                peak_seg / input_size
+            ) / max_gpu_memory_in_gp
+            tensor_memory_overhead_pre_byte = (
+                peak_tensor / input_size
+            ) / max_gpu_memory_in_gp
         except Exception as e:
             seg_memory_overhead_pre_byte = -1
             tensor_memory_overhead_pre_byte = -1
             print(f"Error: {e}")
         finally:
-            estimated_result['memory']['seg_memory_overhead_pre_byte'] = round(seg_memory_overhead_pre_byte, 0)
-            estimated_result['memory']['tensor_memory_overhead_pre_byte'] = round(tensor_memory_overhead_pre_byte, 0)
+            estimated_result["memory"]["seg_memory_overhead_pre_byte"] = round(
+                seg_memory_overhead_pre_byte, 0
+            )
+            estimated_result["memory"]["tensor_memory_overhead_pre_byte"] = round(
+                tensor_memory_overhead_pre_byte, 0
+            )
 
         return sim_result, estimated_result
-
-    def _calculate_input_tensor_size(self) -> int:
-        _data = self.data_memory()
-        # only pick X tensor for image classification training.
-        # Actually, tensor Y does not impact the memory usage too much.
-        _input_data = _data[0]
-        return _input_data.bytes
-
-

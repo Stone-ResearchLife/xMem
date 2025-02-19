@@ -24,7 +24,6 @@ class ModelWrapper(torch.nn.Module):
             return logits
 
 
-
 def main(
     model: str,
     optimizer: str = "SGD",
@@ -49,7 +48,7 @@ def main(
         save_strategy="epoch",
         report_to="tensorboard",
         max_steps=3,
-        use_cpu= (cuda_enable is False)
+        use_cpu=(cuda_enable is False),
     )
     loss = torch.nn.CrossEntropyLoss()
     # _model = AllModels[model].value
@@ -66,6 +65,7 @@ def main(
     _optimiser = _optimiser(params=_model.parameters(), lr=config.trainer.lr)
     _scheduler = torch.optim.lr_scheduler.StepLR(_optimiser, step_size=7, gamma=0.1)
     _callbacks = [ProfilerCallback(config=config)]
+    _optimiser.zero_grad()
     if cuda_enable:
         _callbacks.append(SnapshotCallback(config=config))
     _trainer = Trainer(
@@ -97,7 +97,9 @@ def main(
         if "huggingface" not in _results_data[model][optimizer][str(batch_size)].keys():
             _results_data[model][optimizer][str(batch_size)]["huggingface"] = {}
 
-        profiler_files = filter_files("pt.trace.json", str(config.result_dir), fuzz=True)
+        profiler_files = filter_files(
+            "pt.trace.json", str(config.result_dir), fuzz=True
+        )
         profiler_files.sort(key=lambda x: os.path.getmtime(x))
 
         data_file = profiler_files[-1]
@@ -108,19 +110,14 @@ def main(
             config=config,
         )
         result = xmen.estimate(profiler_file=profiler_files[-1])
-        _result = {
-            "file": data_file,
-            "estimated": result
-        }
+        _result = {"file": data_file, "estimated": result}
 
         _results_data[model][optimizer][str(batch_size)]["huggingface"].update(_result)
         with open(_output_file, "w") as f:
             json.dump(_results_data, f, indent=4)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import fire
+
     fire.Fire(main)
-
-
-

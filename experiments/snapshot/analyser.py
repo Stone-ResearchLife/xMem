@@ -57,23 +57,19 @@ class SnapshotAnalyser:
         code_no_sorted = {}
         activiies = list(self.activity_blocks.values())
         for activity in activiies:
-            print(f"Number of activities: {len(code_no_sorted.keys())}")
             for act in activity:
                 frames = act._start.frames
-                frames.reverse()
                 for frame in frames:
                     if file_path in frame["filename"]:
                         code_number = frame["line"]
-                        print(code_number)
-                        if code_number not in code_no_sorted.keys():
-                            code_no_sorted[str(code_number)] = []
-                        code_no_sorted[str(code_number)].append(act)
+                        name = frame["name"]
+                        key = f"{str(code_number)}/{name}"
+                        if key not in code_no_sorted.keys():
+                            code_no_sorted[key] = []
+                        code_no_sorted[key].append(act)
                         break
 
         return code_no_sorted
-
-
-
 
     def _build_trace_blocks(self) -> Tuple:
         blocks = {
