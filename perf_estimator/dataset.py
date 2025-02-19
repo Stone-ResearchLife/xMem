@@ -8,7 +8,10 @@ from pathlib import Path
 def _fetch_cifar10(split, transform) -> torch.utils.data.Dataset:
     temp_dataset_dir = os.path.join(Path().home(), "pytorch_datasets")
     return torchvision.datasets.CIFAR10(
-        root=temp_dataset_dir, train=(split == "train"), download=True, transform=transform
+        root=temp_dataset_dir,
+        train=(split == "train"),
+        download=True,
+        transform=transform,
     )
 
 
@@ -35,7 +38,7 @@ def image_dataset(
 
 
 class HuggingFaceCIFAR10(torch.utils.data.Dataset):
-    def __init__(self, spilt, transform = None, image_size: Tuple[int, int] = (86, 86)):
+    def __init__(self, spilt, transform=None, image_size: Tuple[int, int] = (86, 86)):
         if transform is None:
             transform = [
                 torchvision.transforms.Resize(image_size),
@@ -45,13 +48,10 @@ class HuggingFaceCIFAR10(torch.utils.data.Dataset):
             transform = torchvision.transforms.Compose(transform)
 
         self.data = _fetch_cifar10(spilt, transform=transform)
-    
+
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx: int):
         image, label = self.data[idx]
         return {"pixel_values": image, "labels": label}
-
-
-

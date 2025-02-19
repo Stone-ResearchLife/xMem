@@ -54,7 +54,7 @@ class XMemProfiler:
         optimizer: Optional[torch.optim.Optimizer] = None,
         loss: Optional[torch.nn.Module] = None,
         zero_grad_mode: int = 0,
-        hugging_face_enable:bool=False,
+        hugging_face_enable: bool = False,
     ) -> Optional[str]:
         trainer_conf = {
             "model": copy.deepcopy(self._model),
@@ -115,7 +115,7 @@ def main(
         optimizer=getattr(torch.optim, optimizer, torch.optim.SGD),
     )
     print(f"Profiler file is saved in {profiler_file}")
-    
+
     if unified_output:
         import json
         import os
@@ -137,7 +137,9 @@ def main(
         if "torch" not in _results_data[model][optimizer][str(batch_size)].keys():
             _results_data[model][optimizer][str(batch_size)]["torch"] = {}
 
-        profiler_files = filter_files("pt.trace.json", str(config.result_dir), fuzz=True)
+        profiler_files = filter_files(
+            "pt.trace.json", str(config.result_dir), fuzz=True
+        )
         profiler_files.sort(key=lambda x: os.path.getmtime(x))
 
         data_file = profiler_files[-1]
@@ -148,10 +150,7 @@ def main(
             config=config,
         )
         result = xmen.estimate(profiler_file=profiler_files[-1])
-        _result = {
-            "file": data_file,
-            "estimated": result
-        }
+        _result = {"file": data_file, "estimated": result}
 
         print(_result)
         _results_data[model][optimizer][str(batch_size)]["torch"].update(_result)

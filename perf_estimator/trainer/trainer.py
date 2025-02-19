@@ -124,10 +124,14 @@ class ModelTrainer:
             _model = HuggingFaceModel(self._model, self._loss)
             # --- Training Arguments ---
             training_args = TrainingArguments(
-                output_dir=str(self._config.result_dir.joinpath('huggingface')),
+                output_dir=str(self._config.result_dir.joinpath("huggingface")),
                 num_train_epochs=self._epochs,
-                per_device_train_batch_size=self._data_loader.batch_size if self._data_loader is not None else self._batch_size,
-                logging_dir=str(self._config.log_dir.joinpath('huggingface')),
+                per_device_train_batch_size=(
+                    self._data_loader.batch_size
+                    if self._data_loader is not None
+                    else self._batch_size
+                ),
+                logging_dir=str(self._config.log_dir.joinpath("huggingface")),
                 logging_steps=50,
                 save_strategy="epoch",
                 report_to="tensorboard",
