@@ -26,9 +26,10 @@ class Estimator:
             layers_memory = self.get_an_iteration_memory(iteration, zero_grad=False)
             layers_memory = copy.deepcopy(layers_memory)
             layers_memory.reverse()
+            current_iteration_zero_grad_time = self.profiler.get_iteration(iteration).zero_grad_time
             model_blocks = []
             for index, memory in enumerate(layers_memory):
-                if memory.is_backward and memory.free_time is None:
+                if memory.is_backward and (memory.free_time is None or memory.free_time == current_iteration_zero_grad_time):
                     model_blocks_start_instant = memory._start
                     model_blocks_start_instant._value["ts"] = index
                     model_blocks.append(memory)
@@ -116,7 +117,7 @@ class Estimator:
         memory_activity: List[MemoryBlock] = []
         iteration = self.profiler.get_iteration(iteration_index)
         layers = iteration.layer_summary()
-        if not zero_grad:
+        if not zero_grad: # zero_grad is False
             for mem in layers:
                 for forward in mem.get("forward_memory", []):
                     forward._comments.append(mem["name"])

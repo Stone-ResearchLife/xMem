@@ -60,7 +60,7 @@ class SnapshotCallback(AbsCallback):
     def __init__(self, config: Optional[Config] = None):
         super(SnapshotCallback, self).__init__(name="Snapshot", config=config)
 
-    def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+    def on_init_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         torch.cuda.memory._record_memory_history(
             stacks="all", max_entries=self.MAX_NUM_OF_MEM_EVENTS_PER_SNAPSHOT
         )

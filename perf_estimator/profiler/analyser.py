@@ -126,7 +126,7 @@ class IterationData:
         self._layer = None
         self._ops: Optional[List[OperatorNode]] = None
         self._memory: Optional[Dict[int, MemoryBlock]] = None
-        self._zero_grad: Optional[int] = None
+        self._zero_grad: Optional[float] = None
         self._optimiser_step: Optional[Tuple[int, int]] = None
         self._optimiser: Optional[str] = None
 
@@ -143,7 +143,7 @@ class IterationData:
         return self._optimiser_step
 
     @property
-    def zero_grad_time(self) -> Optional[int]:
+    def zero_grad_time(self) -> Optional[float]:
         return self._zero_grad
 
     @property
@@ -174,6 +174,11 @@ class IterationData:
         return load_times
 
     def add_layer(self, node: StackNode):
+        if node.function_name == "zero_grad":
+            if self.start <= node.start_time <= self.end:
+                if self._zero_grad is None:
+                    self._zero_grad = node.start_time
+                return
         # filter out the layer that belongs to the optimiser step
         # which could be fetched by the optimiser_step time
         if self.optimiser_step is not None:
@@ -466,7 +471,7 @@ class ProfilerDataProcessing:
                 if stack.parent_id in self._python_stack.keys():
                     self._python_stack[stack.parent_id].add_child(stack)
                 self._python_stack[stack.id] = stack
-                if stack.is_module_layer:
+                if stack.is_module_layer or stack.function_name == "zero_grad":
                     for iteration in self._iteration.values():
                         iteration.add_layer(stack)
             else:
