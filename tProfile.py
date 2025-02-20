@@ -50,6 +50,7 @@ def main(
         max_steps=3,
         use_cpu=(cuda_enable is False),
     )
+
     loss = torch.nn.CrossEntropyLoss()
     # _model = AllModels[model].value
     models_enum = EnumManipulator(AllModels)

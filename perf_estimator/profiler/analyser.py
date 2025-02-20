@@ -125,7 +125,7 @@ class IterationData:
         self._sequence_ops: Dict[int, List[OperatorNode]] = {}
         self._layer = None
         self._ops: Optional[List[OperatorNode]] = None
-        self._memory: Optional[Dict[int, MemoryBlock]] = None
+        self._memory: Optional[Dict[int, List[MemoryBlock]]] = None
         self._zero_grad: Optional[float] = None
         self._optimiser_step: Optional[Tuple[int, int]] = None
         self._optimiser: Optional[str] = None
