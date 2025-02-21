@@ -126,8 +126,10 @@ class IterationData:
         self._layer = None
         self._ops: Optional[List[OperatorNode]] = None
         self._memory: Optional[Dict[int, List[MemoryBlock]]] = None
-        self._zero_grad: Optional[float] = None
-        self._optimiser_step: Optional[Tuple[int, int]] = None
+        self._zero_grad: Optional[Tuple[Union[int, float], Union[int, float]]] = None
+        self._optimiser_step: Optional[Tuple[Union[int, float], Union[int, float]]] = (
+            None
+        )
         self._optimiser: Optional[str] = None
 
     @property
@@ -139,11 +141,11 @@ class IterationData:
         return self._data["ts"] + self._data["dur"]
 
     @property
-    def optimiser_step(self) -> Optional[Tuple[int, int]]:
+    def optimiser_step(self) -> Optional[Tuple[Union[int, float], Union[int, float]]]:
         return self._optimiser_step
 
     @property
-    def zero_grad_time(self) -> Optional[float]:
+    def zero_grad_time(self) -> Optional[Tuple[Union[int, float], Union[int, float]]]:
         return self._zero_grad
 
     @property
@@ -151,9 +153,9 @@ class IterationData:
         return self._optimiser
 
     @property
-    def cpu_ops(self):
-        data = self._cat.get(ProfilerDataCategory.CPU_OP.value, [])
-        data = sorted(data, key=lambda x: x.start_time)
+    def cpu_ops(self) -> List[Tuple[Union[int, float], OperatorNode]]:
+        data = self._cat.get(ProfilerDataCategory.CPU_OP.value, ())
+        data = sorted(data, key=lambda x: x[0])
         return data
 
     @property
@@ -177,7 +179,7 @@ class IterationData:
         if node.function_name == "zero_grad":
             if self.start <= node.start_time <= self.end:
                 if self._zero_grad is None:
-                    self._zero_grad = node.start_time
+                    self._zero_grad = (node.start_time, node.start_time + node.duration)
                 return
         # filter out the layer that belongs to the optimiser step
         # which could be fetched by the optimiser_step time
@@ -229,7 +231,7 @@ class IterationData:
                 pattern_zero_grad = "^Optimizer.zero_grad#[a-zA-Z0-9]+.zero_grad$"
                 pattern_optimizer_step = "^Optimizer.step#[a-zA-Z0-9]+.step$"
                 if re.match(pattern_zero_grad, event["name"]):
-                    self._zero_grad = event["ts"]
+                    self._zero_grad = (event["ts"], event["ts"] + event["dur"])
                 elif re.match(pattern_optimizer_step, event["name"]):
                     self._optimiser_step = (event["ts"], event["ts"] + event["dur"])
                     optimiser_name_pattern = r"#(\w+)\."
