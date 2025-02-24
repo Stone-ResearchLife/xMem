@@ -34,6 +34,8 @@ def basic_config() -> BuildConfig:
         for line in f.readlines():
             line = str(line).replace("\n", "").strip()
             if len(line) > 0:
+                if "[" in line and "]" in line:
+                    line = "'" + line + "'"
                 _config.add_python_dependency(line)
 
     return _config
