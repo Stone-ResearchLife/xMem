@@ -12,6 +12,7 @@ from transformers import (
 from typing import Optional
 from torch.profiler import profile, ProfilerActivity
 from perf_estimator.config import Config, default_setting
+from .monitor import MonitorThreading
 
 logger = logging.getLogger(__name__)
 
@@ -88,3 +89,47 @@ class SnapshotCallback(AbsCallback):
         logger.debug(f"Stop Snapshot Plugin and save the result to {out_file}")
         torch.cuda.memory._dump_snapshot(out_file)
         torch.cuda.memory._record_memory_history(enabled=None)
+
+
+class HostMonitorCallback(AbsCallback):
+    def __init__(
+        self,
+        interval_ms: int = 10,
+        cpu_enable: bool = True,
+        gpu_enable: bool = True,
+        network_enable: bool = True,
+        config: Optional[Config] = None,
+    ):
+        super(HostMonitorCallback, self).__init__(name="HostMonitor", config=config)
+        self._monitor = MonitorThreading(name="HostMonitor")
+        self._params = {
+            "interval_ms": interval_ms,
+            "cpu_enable": cpu_enable,
+            "gpu_enable": gpu_enable,
+            "network_enable": network_enable,
+            "output_dir": self.output_dir,
+        }
+
+    def on_train_begin(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs,
+    ):
+        logger.debug("Start Host Monitor Plugin")
+        _params = kwargs
+        _params.update(self._params)
+        self._monitor.run(**_params)
+
+    def on_train_end(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs,
+    ):
+        logger.debug(
+            f"Stop Host Monitor Plugin, the result will be saved to {self._params['output_dir']}"
+        )
+        self._monitor.stop()
