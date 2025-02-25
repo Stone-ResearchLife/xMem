@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from ures.docker import BuildConfig, RuntimeConfig
+from ures.docker import BuildConfig, RuntimeConfig, Container
 
 
 def basic_config() -> BuildConfig:

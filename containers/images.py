@@ -1,6 +1,5 @@
 import docker
 from typing import Optional
-from pathlib import Path
 from ures.docker.image import ImageOrchestrator, Image
 from containers.config import *
 
