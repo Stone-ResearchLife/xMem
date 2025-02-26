@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
+from typing import Optional
 from ures.docker import BuildConfig, RuntimeConfig
 
 
 class Configs:
+    def __init__(self, username: Optional[str] = None):
+        self._username = username or "xmem"
+
     def user(self) -> str:
-        return "xmem"
+        return self._username
 
     def container_home_dir(self) -> Path:
         return Path(f"/home/{self.user()}")
