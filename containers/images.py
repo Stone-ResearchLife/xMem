@@ -31,12 +31,3 @@ class xMemImages:
 
     def build(self):
         self._manager.build_all()
-
-
-if __name__ == "__main__":
-    import logging
-
-    logging.basicConfig(level=logging.INFO)
-    xmem = xMemImages()
-    xmem.prepare()
-    xmem.build()
