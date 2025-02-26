@@ -4,18 +4,14 @@ from ures.docker import BuildConfig, RuntimeConfig
 
 
 class Configs:
+    def user(self) -> str:
+        return "xmem"
 
-    def user(self):
-        pass
-
-    def workdir(self):
-        pass
+    def container_home_dir(self) -> Path:
+        return Path(f"/home/{self.user()}")
 
     def host_home_dir(self) -> Path:
         return Path().home()
-
-    def pytorch_dataset_dir(self) -> Path:
-        return self.host_home_dir().joinpath("pytorch_datasets")
 
     def host_cache_dir(self) -> Path:
         return self.host_home_dir().joinpath(".cache", "XMemEstimator")
@@ -25,10 +21,12 @@ class Configs:
             detach=True,
             remove=False,
         )
+        # add pytorch dataset volume
+        dataset_dir_name = "pytorch_datasets"
         _config.add_volume(
-            host_path=self.pytorch_dataset_dir(), container_path=f"pytorch_datasets"
+            host_path=self.host_home_dir().joinpath(dataset_dir_name),
+            container_path=self.container_home_dir().joinpath(dataset_dir_name)
         )
-        _config.add_volume(host_path=self.host_cache_dir(), container_path="cache")
 
     def basic_config(self) -> BuildConfig:
         root_path = Path(__file__).parent.parent

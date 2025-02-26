@@ -37,7 +37,7 @@ class DockerCleanup:
         plan2remove_containers = stopped_containers + just_created_containers
 
         if not plan2remove_containers:
-            print("No stopped containers to prune.")
+            print("No stopped xmem_container to prune.")
             return
 
         for container in plan2remove_containers:
