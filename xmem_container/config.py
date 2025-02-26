@@ -16,18 +16,6 @@ class Configs:
     def host_cache_dir(self) -> Path:
         return self.host_home_dir().joinpath(".cache", "XMemEstimator")
 
-    def basic_runtime_config(self) -> RuntimeConfig:
-        _config = RuntimeConfig(
-            detach=True,
-            remove=False,
-        )
-        # add pytorch dataset volume
-        dataset_dir_name = "pytorch_datasets"
-        _config.add_volume(
-            host_path=self.host_home_dir().joinpath(dataset_dir_name),
-            container_path=self.container_home_dir().joinpath(dataset_dir_name)
-        )
-
     def basic_config(self) -> BuildConfig:
         root_path = Path(__file__).parent.parent
         mandatory_requirements = root_path.joinpath("requirement.txt")

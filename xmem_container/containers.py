@@ -1,7 +1,7 @@
 import docker
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, List
 from ures.docker.image import ImageOrchestrator, Image
-from .config import Configs, BuildConfig, RuntimeConfig
+from .config import Configs, BuildConfig
 
 
 class ContainersReady:
@@ -9,6 +9,10 @@ class ContainersReady:
         self._client = client or docker.from_env()
         self._configs = Configs()
         self._image_manager = ImageOrchestrator()
+
+    @property
+    def configs(self) -> Configs:
+        return self._configs
 
     @property
     def base_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
@@ -64,6 +68,10 @@ class ContainersReady:
                 base=self.base_image['image']
             )
         return self._image_manager.images[full_name]
+    
+    @property
+    def images(self) -> List[Dict[str, Union[Optional[Image], BuildConfig, str]]]:
+        return list(self._image_manager.images.values())
 
     def _add_image(
             self,
