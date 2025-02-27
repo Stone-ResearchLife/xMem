@@ -49,10 +49,12 @@ def main(
         per_device_train_batch_size=batch_size,
         logging_dir=str(config.log_dir),
         logging_steps=50,
-        save_strategy="epoch",
+        save_strategy="no",
         report_to="tensorboard",
         max_steps=3,
         use_cpu=(cuda_enable is False),
+        do_train=True,
+        skip_memory_metrics=False,
     )
 
     loss = torch.nn.CrossEntropyLoss()

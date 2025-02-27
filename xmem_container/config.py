@@ -43,7 +43,7 @@ class Configs:
                 },
             ],
             context_dir=Path(__file__).parent.parent,
-            user="xmem",
+            user=self.user(),
             uid=os.getuid(),
         )
         with open(mandatory_requirements) as f:
@@ -128,4 +128,44 @@ class Configs:
             entrypoint=["python", "tProfile.py"],
             context_dir=Path(__file__).parent.parent,
         )
+        return _config
+
+    def tprofiler_config_python_image(self) -> BuildConfig:
+        root_path = Path(__file__).parent.parent
+        mandatory_requirements = root_path.joinpath("requirement.txt")
+        _config = BuildConfig(
+            base_image="python:3.10",
+            python_deps_manager="pip",
+            sys_dependencies=["vim"],
+            sys_deps_manager="apt",
+            labels=[
+                ("Project", "xMem"),
+                ("Purpose", "xMem Basic"),
+            ],
+            python_dependencies=[
+                "torchvision",
+            ],
+            copies=[
+                {
+                    "src": "perf_estimator",
+                    "dest": "perf_estimator",
+                },
+                {
+                    "src": "tProfile.py",
+                    "dest": "tProfile.py",
+                },
+            ],
+            context_dir=Path(__file__).parent.parent,
+            user=self.user(),
+            uid=os.getuid(),
+            entrypoint=["python", "tProfile.py"],
+        )
+        with open(mandatory_requirements) as f:
+            # Insert the python dependencies
+            for line in f.readlines():
+                line = str(line).replace("\n", "").strip()
+                if len(line) > 0:
+                    if "[" in line and "]" in line:
+                        line = "'" + line + "'"
+                    _config.add_python_dependency(line)
         return _config

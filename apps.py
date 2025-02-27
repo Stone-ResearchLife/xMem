@@ -1,5 +1,6 @@
 import fire
 from xmem_container.apps import XMem, XProfiler, TProfiler
+from xmem_container.evaluations import HFTComparsion
 
 
 class APPs:
@@ -17,6 +18,7 @@ class APPs:
         self.xmem = XMem()
         self.xprofiler = XProfiler()
         self.tprofiler = TProfiler()
+        self.hftcomp = HFTComparsion()
 
 
 if __name__ == "__main__":

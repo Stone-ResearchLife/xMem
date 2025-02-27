@@ -45,7 +45,7 @@ class ProfilerCallback(AbsCallback):
             with_modules=True,
         )
 
-    def on_train_begin(self, args, state, control, **kwargs):
+    def on_init_end(self, args, state, control, **kwargs):
         print("Starting profiler...")
         self.profiler.start()
 

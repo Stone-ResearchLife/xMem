@@ -44,6 +44,25 @@ class ContainersReady:
         image_name = "xmem-tprofiler"
         tag = "latest"
         full_name = f"{image_name}:{tag}"
+        # Using python image inseatd of pytorch image avoids that unmatched-memory block issue occurs
+        # during memory analysis of xMem
+        if full_name not in self._image_manager.images.keys():
+            self._add_image(
+                image_name=image_name,
+                tag=tag,
+                config=self._configs.tprofiler_config_python_image(),
+            )
+        return self._image_manager.images[full_name]
+
+    @property
+    def tprofiler_image_nvidia_version(
+        self,
+    ) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
+        image_name = "xmem-tprofiler-nvidia"
+        tag = "latest"
+        full_name = f"{image_name}:{tag}"
+        # Using python image inseatd of pytorch image avoids that unmatched-memory block issue occurs
+        # during memory analysis of xMem
         if full_name not in self._image_manager.images.keys():
             self._add_image(
                 image_name=image_name,
@@ -86,5 +105,6 @@ class ContainersReady:
         _ = self.base_image
         _ = self.xprofiler_image
         _ = self.tprofiler_image
+        _ = self.tprofiler_image_nvidia_version
         _ = self.experiment_image
         self._image_manager.build_all()
