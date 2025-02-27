@@ -90,8 +90,8 @@ class XProfiler(AbcExecutor):
         batch_size: int = 200,
         input_size: int = 86,
         unified_output: bool = False,
-        gpu_memory_capcity: int = 8,
-        cuda_enabled: bool = False,
+        gpu_memory_capacity: int = 8,
+        cuda_enable: bool = False,
         run_id: Optional[str] = None,
         gpu_id: Optional[int] = None,
         memory_capacity: Optional[str] = None,
@@ -108,14 +108,16 @@ class XProfiler(AbcExecutor):
             "--unified_output",
             unified_output,
             "--gpu_memory_capacity",
-            gpu_memory_capcity,
-            "--cuda_enabled",
-            cuda_enabled,
+            gpu_memory_capacity,
+            "--cuda_enable",
+            cuda_enable,
             "--run_id",
             str(run_id),
         ]
         runtime_conf = RuntimeConfig(name=f"xprofiler-{run_id}", command=command)
-        if gpu_id is not None:
+        if gpu_id is not None or cuda_enable is not None:
+            if gpu_id is None:
+                gpu_id = 0
             runtime_conf.gpus = [str(gpu_id)]
         if memory_capacity is not None:
             runtime_conf.memory = memory_capacity
@@ -136,8 +138,8 @@ class TProfiler(AbcExecutor):
         batch_size: int = 200,
         input_size: int = 86,
         unified_output: bool = False,
-        gpu_memory_capcity: int = 8,
-        cuda_enabled: bool = False,
+        gpu_memory_capacity: int = 8,
+        cuda_enable: bool = False,
         run_id: Optional[str] = None,
         gpu_id: Optional[int] = None,
         memory_capacity: Optional[str] = None,
@@ -154,14 +156,16 @@ class TProfiler(AbcExecutor):
             "--unified_output",
             unified_output,
             "--gpu_memory_capacity",
-            gpu_memory_capcity,
-            "--cuda_enabled",
-            cuda_enabled,
+            gpu_memory_capacity,
+            "--cuda_enable",
+            cuda_enable,
             "--run_id",
             str(run_id),
         ]
         runtime_conf = RuntimeConfig(name=f"tprofiler-{run_id}", command=command)
-        if gpu_id is not None:
+        if gpu_id is not None or cuda_enable is not None:
+            if gpu_id is None:
+                gpu_id = 0
             runtime_conf.gpus = [str(gpu_id)]
         if memory_capacity is not None:
             runtime_conf.memory = memory_capacity

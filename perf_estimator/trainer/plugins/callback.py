@@ -102,12 +102,13 @@ class HostMonitorCallback(AbsCallback):
     ):
         super(HostMonitorCallback, self).__init__(name="HostMonitor", config=config)
         self._monitor = MonitorThreading(name="HostMonitor")
+        self.output_dir().mkdir(parents=True, exist_ok=True)
         self._params = {
             "interval_ms": interval_ms,
             "cpu_enable": cpu_enable,
             "gpu_enable": gpu_enable,
             "network_enable": network_enable,
-            "output_dir": self.output_dir,
+            "output_dir": self.output_dir(),
         }
 
     def on_train_begin(
@@ -118,11 +119,9 @@ class HostMonitorCallback(AbsCallback):
         **kwargs,
     ):
         logger.debug("Start Host Monitor Plugin")
-        _params = kwargs
-        _params.update(self._params)
-        self._monitor.run(**_params)
+        self._monitor.run(**self._params)
 
-    def on_train_end(
+    def on_epoch_end(
         self,
         args: TrainingArguments,
         state: TrainerState,
@@ -133,3 +132,13 @@ class HostMonitorCallback(AbsCallback):
             f"Stop Host Monitor Plugin, the result will be saved to {self._params['output_dir']}"
         )
         self._monitor.stop()
+
+    def on_train_end(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs,
+    ):
+        if self._monitor.thread is not None:
+            self._monitor.thread.join(timeout=300)

@@ -114,5 +114,6 @@ class MonitorThreading:
         logger.info(
             f"Stop monitoring thread: {self.name}, thread id: {self.thread.ident}"
         )
+        output_dir = Path(output_dir)
         file_name = f"host_metrics-{int(time.time())}.json"
         _monitor.save(output_dir.joinpath(file_name))

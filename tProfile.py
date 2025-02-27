@@ -3,7 +3,11 @@ from transformers import TrainingArguments, Trainer
 from perf_estimator.models import AllModels
 from perf_estimator.dataset import HuggingFaceCIFAR10
 from perf_estimator.config import Config
-from perf_estimator.trainer.plugins import ProfilerCallback, SnapshotCallback
+from perf_estimator.trainer.plugins import (
+    ProfilerCallback,
+    SnapshotCallback,
+    HostMonitorCallback,
+)
 from perf_estimator.utilis.enum import EnumManipulator
 
 
@@ -69,6 +73,11 @@ def main(
     _optimiser.zero_grad()
     if cuda_enable:
         _callbacks.append(SnapshotCallback(config=config))
+        _callbacks.append(
+            HostMonitorCallback(
+                cpu_enable=False, gpu_enable=True, network_enable=False, config=config
+            )
+        )
     _trainer = Trainer(
         model=_model,
         args=training_args,
