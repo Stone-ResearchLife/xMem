@@ -63,7 +63,6 @@ class ContainersReady:
                 image_name=image_name,
                 tag=tag,
                 config=self._configs.experiments_config(),
-                base=self.base_image["image"],
             )
         return self._image_manager.images[full_name]
 

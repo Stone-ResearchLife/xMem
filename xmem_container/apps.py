@@ -28,11 +28,13 @@ class AbcExecutor(ABC):
         return Path(f"/home/{self._images._configs.user()}")
 
     def prepare(self):
+        print("Building all images.")
+        self._images.build_images()
         _check = all([image_dict["image"].exist for image_dict in self._images.images])
         if _check is False:
-            print("Some images are not ready. Building images.")
-            self._images.build_images()
-        print("All images are ready.")
+            print("All images are ready.")
+        else:
+            print("Some images build failed.")
 
     def _add_pytorch_dataset_volume(self, config: RuntimeConfig):
         dir_in_host = Path().home().joinpath("pytorch_datasets")
@@ -180,13 +182,12 @@ class XMem(AbcExecutor):
         profiler_file = Path(profiler_file)
         profiler_dir = profiler_file.parent
         profiler_name = profiler_file.name
-        profiler_file_in_container = self._cache_dir().joinpath(profiler_name)
         config.add_volume(
             host_path=str(profiler_dir),
-            container_path=str(profiler_file_in_container),
+            container_path=str(self._cache_dir()),
             mode="ro",
         )
-        return profiler_file_in_container
+        return self._cache_dir().joinpath(profiler_name)
 
     def execute(
         self,
@@ -202,6 +203,7 @@ class XMem(AbcExecutor):
         profiler_path_in_container = self._mount_profiler_dir(
             config=runtime_conf, profiler_file=profiler_file
         )
+        entrypoint = ["python", "main.py"]
         command = [
             "--profiler_file",
             str(profiler_path_in_container),
@@ -213,6 +215,7 @@ class XMem(AbcExecutor):
             gpu_memory_in_gb,
         ]
         runtime_conf.command = command
+        runtime_conf.entrypoint = entrypoint
         self._add_pytorch_dataset_volume(config=runtime_conf)
         self._add_cache_volume(config=runtime_conf)
         self._execute(config=runtime_conf)
