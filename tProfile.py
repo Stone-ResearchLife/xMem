@@ -45,7 +45,7 @@ def main(
 
     training_args = TrainingArguments(
         output_dir=str(config.result_dir.joinpath("huggingface")),
-        num_train_epochs=5,
+        num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         logging_dir=str(config.log_dir),
         logging_steps=50,
@@ -54,7 +54,7 @@ def main(
         max_steps=3,
         use_cpu=(cuda_enable is False),
         do_train=True,
-        skip_memory_metrics=False,
+        # skip_memory_metrics=False, # the option may generate bulk of python_function information.
     )
 
     loss = torch.nn.CrossEntropyLoss()
