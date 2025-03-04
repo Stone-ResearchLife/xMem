@@ -73,13 +73,13 @@ def main(
     _scheduler = torch.optim.lr_scheduler.StepLR(_optimiser, step_size=7, gamma=0.1)
     _callbacks = [ProfilerCallback(config=config)]
     _optimiser.zero_grad()
+    _host_callback = HostMonitorCallback(
+        cpu_enable=True, gpu_enable=True, network_enable=False, config=config
+    )
+
     if cuda_enable:
         _callbacks.append(SnapshotCallback(config=config))
-        _callbacks.append(
-            HostMonitorCallback(
-                cpu_enable=False, gpu_enable=True, network_enable=False, config=config
-            )
-        )
+        _callbacks.append(_host_callback)
     _trainer = Trainer(
         model=_model,
         args=training_args,
@@ -87,7 +87,16 @@ def main(
         callbacks=_callbacks,
         optimizers=(_optimiser, _scheduler),
     )
-    _trainer.train()
+    try:
+        _trainer.train()
+    except:
+        # force to stop the host monitor thread when exception occurs.
+        _host_callback._monitor.thread.join()
+        real_oom = True
+    else:
+        real_oom = False
+
+
     if unified_output:
         import json
         import os
@@ -122,7 +131,11 @@ def main(
             config=config,
         )
         result = xmen.estimate(profiler_file=profiler_files[-1])
-        _result = {"file": data_file, "estimated": result}
+        _result = {
+            "oom": real_oom,
+            "file": data_file,
+            "estimated": result
+        }
 
         _results_data[model][optimizer][str(batch_size)]["huggingface"].update(_result)
         with open(_output_file, "w") as f:

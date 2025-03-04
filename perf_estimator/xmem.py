@@ -6,7 +6,7 @@ from typing import Optional, Union
 from uuid import uuid4
 from perf_estimator.config import Config
 from perf_estimator.dataset import image_dataset
-from perf_estimator.estimator import Estimator
+from perf_estimator.estimator import Estimator, TrainerEstimator
 from perf_estimator.utilis.utilis import format_memory
 
 
@@ -38,15 +38,23 @@ class XMem:
     def conf(self) -> Config:
         return self._config
 
-    def estimate(self, profiler_file: str, output_only: bool = False) -> dict:
+    def estimate(self, profiler_file: str, output_only: bool = False, trainer_enable: bool = False) -> dict:
         iteration = 2  # default value, better to keep it as default
         before_run = time.time()
-        estimator = Estimator(
-            dataloader=copy.deepcopy(self._data_loader),
-            profiler_file=profiler_file,
-            max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
-            config=self.conf,
-        )
+        if trainer_enable:
+            estimator = TrainerEstimator(
+                dataloader=copy.deepcopy(self._data_loader),
+                profiler_file=profiler_file,
+                max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
+                config=self.conf,
+            )
+        else:
+            estimator = Estimator(
+                dataloader=copy.deepcopy(self._data_loader),
+                profiler_file=profiler_file,
+                max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
+                config=self.conf,
+            )
         _, estimation_result = estimator.estimate(target_iteration=iteration)
         after_run = time.time()
         estimation_result.update({"runtime": round(after_run - before_run, 2)})

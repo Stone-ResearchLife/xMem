@@ -142,3 +142,4 @@ class HostMonitorCallback(AbsCallback):
     ):
         if self._monitor.thread is not None:
             self._monitor.thread.join(timeout=300)
+
