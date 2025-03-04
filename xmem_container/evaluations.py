@@ -74,25 +74,43 @@ class HFTComparsion(AbcExecutor):
 
     def execute(
         self,
-        optimizer: str = "SGD",
         input_size: int = 86,
     ):
-        models = ["VGG16", "ConvNeXtTiny", "ResNet50"]
+        models = [
+            "VGG11",
+            "VGG16",
+            "VGG19",
+            "ResNet50",
+            "ResNet101",
+            "ResNet152",
+            "MobileNetV2",
+            "MobeNetV3Small",
+            "MobeNetV3Large",
+            "MnasNet",
+            "ConvNeXtTiny",
+            "ConvNeXtBase",
+            "RegNetX400MF",
+            "RegNetX32GF",
+            "RegNetY400MF",
+            "RegNetY32GF",
+        ]
         batch_size = range(10, 570, 40)
+        optimizers = ["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"]
         for model in models:
-            for batch in batch_size:
-                run_id = f"tprofiler-{model}-batch-{batch}-Nvidia"
-                self._add_container(
-                    model=model,
-                    optimizer=optimizer,
-                    batch_size=batch,
-                    input_size=input_size,
-                    unified_output=False,
-                    gpu_memory_capacity=8,
-                    cuda_enable=True,
-                    run_id=run_id,
-                    gpu_id=0,
-                    memory_capacity=None,
-                )
+            for optimizer in optimizers:
+                for batch in batch_size:
+                    run_id = f"tprofiler-{model}-{optimizer}-batch-{batch}-Nvidia"
+                    self._add_container(
+                        model=model,
+                        optimizer=optimizer,
+                        batch_size=batch,
+                        input_size=input_size,
+                        unified_output=False,
+                        gpu_memory_capacity=8,
+                        cuda_enable=True,
+                        run_id=run_id,
+                        gpu_id=0,
+                        memory_capacity=None,
+                    )
 
         self._execute()
