@@ -90,6 +90,8 @@ class DataAggregation:
 
         with open(josn_file, "r") as f:
             data = json.load(f)
+        for record in data:
+            print(record)
         self.results = [EstimatedMemoryRecord(**record) for record in data]
 
     def process(self, processor: DataProcessorInterface):

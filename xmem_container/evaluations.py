@@ -51,7 +51,7 @@ class HFTComparsion(AbcExecutor):
             str(run_id),
         ]
         runtime_conf = RuntimeConfig(
-            name=f"{run_id}-{unique_id()[:4]}", command=command
+            name=f"{run_id}-{unique_id()[:8]}", command=command
         )
         if gpu_id is not None or cuda_enable is not None:
             if gpu_id is None:
@@ -109,7 +109,7 @@ class HFTComparsion(AbcExecutor):
                         gpu_memory_capacity=8,
                         cuda_enable=True,
                         run_id=run_id,
-                        gpu_id=0,
+                        gpu_id=1,
                         memory_capacity=None,
                     )
 

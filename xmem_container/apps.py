@@ -198,7 +198,7 @@ class XMem(AbcExecutor):
         profiler_file: str,
         batch_size: int = 200,
         input_size: int = 86,
-        gpu_memory_in_gb: Union[int, float] = 4,
+        gpu_memory_in_gb: Union[int, float] = 8,
     ):
         runtime_conf = RuntimeConfig(
             name=f"xmem-{unique_id()[0:8]}",
