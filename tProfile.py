@@ -1,4 +1,7 @@
+import time
+
 import torch
+import os
 from transformers import TrainingArguments, Trainer
 from perf_estimator.models import AllModels
 from perf_estimator.dataset import HuggingFaceCIFAR10
@@ -9,6 +12,13 @@ from perf_estimator.trainer.plugins import (
     HostMonitorCallback,
 )
 from perf_estimator.utilis.enum import EnumManipulator
+
+
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# os.environ["NCCL_P2P_DISABLE"] = "1"
+# os.environ["NCCL_IB_DISABLE"] = "1"
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":0:0"
+torch.backends.cuda.cufft_plan_cache.max_size = 1
 
 
 class ModelWrapper(torch.nn.Module):
@@ -50,7 +60,6 @@ def main(
         logging_dir=str(config.log_dir),
         logging_steps=50,
         save_strategy="no",
-        report_to="tensorboard",
         max_steps=3,
         use_cpu=(cuda_enable is False),
         do_train=True,
@@ -74,7 +83,7 @@ def main(
     _callbacks = [ProfilerCallback(config=config)]
     _optimiser.zero_grad()
     _host_callback = HostMonitorCallback(
-        cpu_enable=True, gpu_enable=True, network_enable=False, config=config
+        cpu_enable=False, gpu_enable=True, network_enable=False, config=config
     )
 
     if cuda_enable:
@@ -91,11 +100,12 @@ def main(
         _trainer.train()
     except:
         # force to stop the host monitor thread when exception occurs.
+        _host_callback._monitor.stop()
+        time.sleep(1)
         _host_callback._monitor.thread.join()
         real_oom = True
     else:
         real_oom = False
-
 
     if unified_output:
         import json
@@ -131,11 +141,7 @@ def main(
             config=config,
         )
         result = xmen.estimate(profiler_file=profiler_files[-1])
-        _result = {
-            "oom": real_oom,
-            "file": data_file,
-            "estimated": result
-        }
+        _result = {"oom": real_oom, "file": data_file, "estimated": result}
 
         _results_data[model][optimizer][str(batch_size)]["huggingface"].update(_result)
         with open(_output_file, "w") as f:

@@ -22,6 +22,7 @@ MODELS=(
 )
 
 optimizers=("SGD" "Adam" "RMSprop" "Adagrad" "AdamW")
+optimizers=("SGD" "RMSprop" "Adagrad")
 
 total_models="${#MODELS[@]}"
 model_count=0
@@ -34,8 +35,10 @@ for MODEL in "${MODELS[@]}"; do
     echo "  Batch size: $b"
     for optimize in "${optimizers[@]}"; do
       echo "    Optimizer: $optimize"
-      ID_xMem_LLM="${MODEL}-${b}-${optimize}"
-      python tProfile.py -m "$MODEL" -b "$b" -o "$optimize" -u -g 8 -r "${ID_xMem_LLM}"
+#      ID_xMem_LLM="${MODEL}-${b}-${optimize}"
+      ID_xMem_LLM="tprofiler-${MODEL}-${optimize}-batch-${b}-Nvidia"
+#      python tProfile.py -m "$MODEL" -b "$b" -o "$optimize" -u -g 8 -r "${ID_xMem_LLM}"
+      NCCL_P2P_DISABLE=1 NCCL_IB_DISABLE=1 CUDA_VISIBLE_DEVICES=1 python tProfile.py "$MODEL" -b "$b" -o "$optimize" -g 8 -r "${ID_xMem_LLM}" -c
       if [ $? -ne 0 ]; then
         echo "    ERROR: tProfile.py failed for $ID_xMem_LLM"
       fi

@@ -51,6 +51,7 @@ class TrainerComparsion(DataProcessorInterface):
         summary_jsons = search_files(
             "evaluation_result.json",
             self.get_paper_dir(model=model, batch=batch, optimizer=optimizer),
+            fuzz=False,
         )
         with open(str(summary_jsons[-1]), "r") as f:
             paper_result = json.load(f)
@@ -81,12 +82,22 @@ class TrainerComparsion(DataProcessorInterface):
                 model=model, batch=batch, optimizer=optimizer
             )
         )
+        if len(ground_truth_json) == 0:
+            raise FileNotFoundError(
+                f"No ground truth json file for {model}/{batch}/{optimizer}"
+            )
+
         unified_data = self.data_dir.joinpath("001-CPU-profiling", "output.json")
+        if unified_data.exists() is False:
+            raise FileNotFoundError(
+                f"No output json file for {model}/{batch}/{optimizer}"
+            )
+
         with open(str(unified_data), "r") as f:
             unified_data = json.load(f)
 
         ground_truth_data = get_nvml_result(ground_truth_json[-1])
-        estimated_data = unified_data[model][optimizer][batch]["huggingface"][
+        estimated_data = unified_data[model][optimizer][str(batch)]["huggingface"][
             "estimated"
         ]
 
@@ -112,14 +123,31 @@ class TrainerComparsion(DataProcessorInterface):
         batchs = range(10, 570, 40)
         optimizers = ["SGD"]
         gpu_capacity = 8
+
+        models = kwargs.pop("models", models)
+        batchs = kwargs.pop("batchs", batchs)
+        optimizers = kwargs.pop("optimizers", optimizers)
+        gpu_capacity = kwargs.pop("gpu_capacity", gpu_capacity)
         records = []
         for model in models:
             for batch in batchs:
                 for opt in optimizers:
-                    records.append(
-                        self._get_trainer_data(model=model, batch=batch, optimizer=opt)
-                    )
-                    records.append(
-                        self._get_paper_data(model=model, batch=batch, optimizer=opt)
-                    )
+                    try:
+                        trainer_record = self._get_trainer_data(
+                            model=model, batch=batch, optimizer=opt
+                        )
+                    except Exception:
+                        print(f"No trainer json file for {model}/{batch}/{opt}")
+                        continue
+                    else:
+                        records.append(trainer_record)
+                    try:
+                        paper_record = self._get_paper_data(
+                            model=model, batch=batch, optimizer=opt
+                        )
+                    except Exception:
+                        print(f"No paper json file for {model}/{batch}/{opt}")
+                        continue
+                    else:
+                        records.append(paper_record)
         return records

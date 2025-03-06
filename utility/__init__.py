@@ -20,9 +20,11 @@ def search_profiler_file(target_dir: Union[Path, str]) -> List[Path]:
     return search_files(".pt.trace.json", target_dir)
 
 
-def search_files(pattern: str, target_dir: Union[Path, str]) -> List[Path]:
+def search_files(
+    pattern: str, target_dir: Union[Path, str], fuzz: bool = True
+) -> List[Path]:
     return [
-        Path(file_path) for file_path in filter_files(pattern, target_dir, fuzz=True)
+        Path(file_path) for file_path in filter_files(pattern, target_dir, fuzz=fuzz)
     ]
 
 
@@ -32,7 +34,7 @@ def get_nvml_result(nvml_json: Union[str, Path]) -> dict:
     _gpu_memory_usage = {}
     start_memory = {}
     for index, gpu_metric in enumerate(_data["records"]):
-        gpu_data = gpu_metric["hostgpus"]
+        gpu_data = gpu_metric["HostGPUs"]
         for device_id, data in gpu_data.items():
             if index == 0:
                 start_memory[device_id] = data["memory"]["used"]

@@ -94,8 +94,8 @@ class DataAggregation:
             print(record)
         self.results = [EstimatedMemoryRecord(**record) for record in data]
 
-    def process(self, processor: DataProcessorInterface):
-        self.results = processor.get_data()
+    def process(self, processor: DataProcessorInterface, **kwargs):
+        self.results = processor.get_data(**kwargs)
 
     def to_dict(self) -> List[dict]:
         return [data.model_dump() for data in self.results]

@@ -1,0 +1,1146 @@
+{
+  "interval": 1,
+  "makespan": 97.31,
+  "num": 17,
+  "records": [
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 8055619584,
+            "total": 8585740288,
+            "used": 530120704,
+            "utilisation": 6.17
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616609.3
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 8030453760,
+            "total": 8585740288,
+            "used": 555286528,
+            "utilisation": 6.47
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616613.53
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 8024162304,
+            "total": 8585740288,
+            "used": 561577984,
+            "utilisation": 6.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616617.88
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 8001093632,
+            "total": 8585740288,
+            "used": 584646656,
+            "utilisation": 6.81
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616622.09
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7959150592,
+            "total": 8585740288,
+            "used": 626589696,
+            "utilisation": 7.3
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616629.99
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616634.5
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616639.31
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616643.63
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616648.18
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616652.34
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616656.71
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616660.79
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7938179072,
+            "total": 8585740288,
+            "used": 647561216,
+            "utilisation": 7.54
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616665.21
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7915110400,
+            "total": 8585740288,
+            "used": 670629888,
+            "utilisation": 7.81
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616669.66
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7330004992,
+            "total": 8585740288,
+            "used": 1255735296,
+            "utilisation": 14.63
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616677.18
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 51
+          },
+          "memory": {
+            "free": 7330004992,
+            "total": 8585740288,
+            "used": 1255735296,
+            "utilisation": 14.63
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616682.47
+    },
+    {
+      "HostGPUs": {
+        "0": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 210,
+            "memory_clock": 405,
+            "sm_clock": 210
+          },
+          "info": {
+            "fan_speed": 0,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 37
+          },
+          "memory": {
+            "free": 12071141376,
+            "total": 12878610432,
+            "used": 807469056,
+            "utilisation": 6.27
+          },
+          "name": "NVIDIA GeForce RTX 4070 Ti",
+          "pci_info": {
+            "bus": 1,
+            "bus_id": "00000000:01:00.0",
+            "bus_id_legacy": "0000:01:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 662835422,
+            "pci_sub_id": 2297040963
+          },
+          "uuid": "GPU-951402d1-5d3a-dde1-364b-bab1657940b5"
+        },
+        "1": {
+          "arch": "ADA",
+          "clock": {
+            "graphics_clock": 2505,
+            "memory_clock": 8500,
+            "sm_clock": 2505
+          },
+          "info": {
+            "fan_speed": 30,
+            "gpu_utilisation": 0,
+            "memory_utilisation": 0,
+            "temperature": 50
+          },
+          "memory": {
+            "free": 7330004992,
+            "total": 8585740288,
+            "used": 1255735296,
+            "utilisation": 14.63
+          },
+          "name": "NVIDIA GeForce RTX 4060",
+          "pci_info": {
+            "bus": 8,
+            "bus_id": "00000000:08:00.0",
+            "bus_id_legacy": "0000:08:00.0",
+            "device": 0,
+            "domain": 0,
+            "pci_id": 679612638,
+            "pci_sub_id": 2298679363
+          },
+          "uuid": "GPU-5ef76a37-9cfe-10e7-533f-e40d599f9226"
+        }
+      },
+      "timestamp": 1732691616706.61
+    }
+  ]
+}
