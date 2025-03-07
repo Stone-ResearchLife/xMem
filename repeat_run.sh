@@ -22,7 +22,8 @@ MODELS=(
 )
 
 optimizers=("SGD" "Adam" "RMSprop" "Adagrad" "AdamW")
-optimizers=("SGD" "RMSprop" "Adagrad")
+optimizers=("Adam" "AdamW")
+
 
 total_models="${#MODELS[@]}"
 model_count=0

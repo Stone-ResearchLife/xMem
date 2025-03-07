@@ -41,7 +41,7 @@ class TrainerComparsion(DataProcessorInterface):
         tprofiler_dir_name_format = "tprofiler-{}-{}-batch-{}-Nvidia"
         return (
             self.data_dir
-            / "002-GPU-profiling"
+            / "004-GPU-profiling-local"
             / tprofiler_dir_name_format.format(model, optimizer, batch)
         )
 
@@ -86,20 +86,29 @@ class TrainerComparsion(DataProcessorInterface):
             raise FileNotFoundError(
                 f"No ground truth json file for {model}/{batch}/{optimizer}"
             )
-
-        unified_data = self.data_dir.joinpath("001-CPU-profiling", "output.json")
-        if unified_data.exists() is False:
-            raise FileNotFoundError(
-                f"No output json file for {model}/{batch}/{optimizer}"
-            )
-
-        with open(str(unified_data), "r") as f:
-            unified_data = json.load(f)
-
         ground_truth_data = get_nvml_result(ground_truth_json[-1])
-        estimated_data = unified_data[model][optimizer][str(batch)]["huggingface"][
-            "estimated"
-        ]
+
+        # unified_data = self.data_dir.joinpath("001-CPU-profiling", "output.json")
+        # if unified_data.exists() is False:
+        #     raise FileNotFoundError(
+        #         f"No output json file for {model}/{batch}/{optimizer}"
+        #     )
+        #
+        # with open(str(unified_data), "r") as f:
+        #     unified_data = json.load(f)
+        # estimated_data = unified_data[model][optimizer][str(batch)]["huggingface"]["estimated"]
+
+        profile_files = search_profiler_file(
+            target_dir=self.get_trainer_cpu_dir(
+                model=model, batch=batch, optimizer=optimizer
+            )
+        )
+        estimated_data = get_profiler_result(
+            profile_file=profile_files[-1],
+            batch_size=batch,
+            gpu_capacity=8,
+            huggingface_enabled=True,
+        )
 
         est = EstimatedMemoryRecord(
             tool="xMem",
@@ -108,11 +117,11 @@ class TrainerComparsion(DataProcessorInterface):
             model=model,
             batch_size=batch,
             optimizer=optimizer,
-            gpu_capacity=estimated_data["Max GPU Memory"],
+            gpu_capacity=estimated_data.allowed_memory_maximum,
             runtime=-1,
-            est_memory=estimated_data["memory"]["segment"],
-            gt_memory=max(ground_truth_data["0"]),
-            est_oom=estimated_data["OOM"],
+            est_memory=max(estimated_data._trace.max_segment_changes),
+            gt_memory=max(ground_truth_data["1"]),
+            est_oom=estimated_data.oom,
             oom=False,
             accuracy_mode=False,
         )
@@ -145,7 +154,7 @@ class TrainerComparsion(DataProcessorInterface):
                         paper_record = self._get_paper_data(
                             model=model, batch=batch, optimizer=opt
                         )
-                    except Exception:
+                    except Exception as e:
                         print(f"No paper json file for {model}/{batch}/{opt}")
                         continue
                     else:
