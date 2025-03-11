@@ -38,7 +38,12 @@ class XMem:
     def conf(self) -> Config:
         return self._config
 
-    def estimate(self, profiler_file: str, output_only: bool = False, trainer_enable: bool = False) -> dict:
+    def estimate(
+        self,
+        profiler_file: str,
+        output_only: bool = False,
+        trainer_enable: bool = False,
+    ) -> dict:
         iteration = 2  # default value, better to keep it as default
         before_run = time.time()
         if trainer_enable:
@@ -55,8 +60,9 @@ class XMem:
                 max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
                 config=self.conf,
             )
-        _, estimation_result = estimator.estimate(target_iteration=iteration)
+        allocator, estimation_result = estimator.estimate(target_iteration=iteration)
         after_run = time.time()
+        allocator.plot_memory_change()
         estimation_result.update({"runtime": round(after_run - before_run, 2)})
         if not output_only:
             estimation_result = self.display_output(estimation_result)
