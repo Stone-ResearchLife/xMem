@@ -11,6 +11,8 @@ class DatasetConfig(BaseModel):
 class TrainerConfig(BaseModel):
     lr: float = Field(default=0.001, description="Learning Rate")
     epochs: int = Field(default=1, description="Number of Epochs")
+    huggingface_enable: bool = Field(default=True, description="HuggingFace Enable")
+    huggingface_model_name: str = Field(default=None, description="HuggingFace Model")
 
 
 class Config(BaseModel):

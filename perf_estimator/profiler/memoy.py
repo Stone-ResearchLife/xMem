@@ -69,7 +69,7 @@ class MemoryBlock(AbstractMemoryBlock):
             _mem_type = "backward"
         else:
             _mem_type = "other"
-        return f"Memory({_mem_type}|{self.address}|{'free' if self.is_freed else 'persis'}): Bytes:{self.bytes}, Start:{self.alloc_time}, End:{self.free_time}, Comments: {' '.join(self.comments)}"
+        return f"Memory({_mem_type}|{self.address}|{'free' if self.is_freed else 'persis'}): Bytes:{self.bytes}, Start:{self.alloc_time}, Dur:{self.duration}, Comments: {' '.join(self.comments)}"
 
     def set_forward(self):
         self._forward = True

@@ -3,6 +3,7 @@ import logging
 import sys
 import copy
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from sortedcontainers import SortedSet
 from typing import List, Optional, Dict, Union, Set
 from pydantic import BaseModel, Field
@@ -795,10 +796,36 @@ class CachingAllocator:
     def plot_memory_change(self):
         tensor_trace = self._trace.max_usage_changes
         segment_trace = self._trace.max_segment_changes
-        fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-        ax.plot(tensor_trace, label="Tensor Memory")
-        ax.plot(segment_trace, label="Segment Memory")
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Memory Usage")
-        ax.legend()
-        plt.show()
+
+        # Create a new figure
+        fig = go.Figure()
+
+        # Add traces for tensor and segment memory usage
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(len(tensor_trace))),
+                y=tensor_trace,
+                mode="lines",
+                name="Tensor Memory",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(len(segment_trace))),
+                y=segment_trace,
+                mode="lines",
+                name="Segment Memory",
+            )
+        )
+
+        # Update the layout with axis labels and title
+        fig.update_layout(
+            title="Memory Usage Over Time",
+            xaxis_title="Time",
+            yaxis_title="Memory Usage",
+            width=1000,
+            height=500,
+        )
+
+        # Display the figure
+        fig.show()

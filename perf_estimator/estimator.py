@@ -2,6 +2,9 @@ import torch
 import copy
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Union, Optional, Dict
+
+from sympy.printing.cxx import reserved
+
 from .profiler import ProfilerDataProcessing, MemoryBlock, CpuInstantNode
 from .allocator import AllocatorSim, CachingAllocator
 from .config import Config
@@ -15,10 +18,11 @@ class _Estimator(ABC):
         max_gpu_memory_in_gb: int = 8,
         config: Optional[Config] = None,
     ):
+        self.config = config or Config()
         self.dataloader = dataloader
         self.profiler = ProfilerDataProcessing(profiler_file)
         self.allocator_sim = AllocatorSim(
-            max_allocated_memory_gb=max_gpu_memory_in_gb, config=config
+            max_allocated_memory_gb=max_gpu_memory_in_gb, config=self.config
         )
         self._model_memory: Optional[List[MemoryBlock]] = None
 
@@ -250,23 +254,45 @@ class TrainerEstimator(_Estimator):
         self, iteration_index: int, reset: bool = False, *args, **kwargs
     ) -> List[MemoryBlock]:
         if reset or self._model_memory is None:
-            zero_time = self.profiler.get_iteration(iteration_index).zero_grad_time
-            # process the memory blocks of the model
-            layers_memory = self.training_memory(iteration_index, zero_grad=False)
-            layers_memory = copy.deepcopy(layers_memory)
-            layers_memory.reverse()
             model_blocks = []
-            for index, memory in enumerate(layers_memory):
-                if (
-                    memory.is_backward
-                    and zero_time[0] < memory.free_time < zero_time[1]
-                ):
-                    _memory = copy.deepcopy(memory)
-                    _memory_start_instant = _memory._start
-                    _memory_start_instant._value["ts"] = index
-                    # Force to set the end of the memory block to None, treating it as persistent memory
-                    _memory._end = None
-                    model_blocks.append(_memory)
+            if (
+                self.config.trainer.huggingface_enable
+                and self.config.trainer.huggingface_model_name is not None
+            ):
+                from transformers import AutoConfig, AutoModelForCausalLM
+
+                config = AutoConfig.from_pretrained(
+                    self.config.trainer.huggingface_model_name
+                )  # load config; do NOT load pretrained weights
+                model = AutoModelForCausalLM.from_config(
+                    config
+                )  # randomly initialized model
+
+                parameters_list = list(model.parameters())
+                parameters_list.reverse()
+                for index, tensor in enumerate(parameters_list):
+                    para_size = tensor.nelement() * tensor.element_size()
+                    parameter_memory_block = self.create_memory_block(
+                        byte=para_size, timestamp=index
+                    )
+                    model_blocks.append(parameter_memory_block)
+            else:
+                zero_time = self.profiler.get_iteration(iteration_index).zero_grad_time
+                # process the memory blocks of the model
+                layers_memory = self.training_memory(iteration_index, zero_grad=False)
+                layers_memory = copy.deepcopy(layers_memory)
+                layers_memory.reverse()
+                for index, memory in enumerate(layers_memory):
+                    if (
+                        memory.is_backward
+                        and zero_time[0] < memory.free_time < zero_time[1]
+                    ):
+                        _memory = copy.deepcopy(memory)
+                        _memory_start_instant = _memory._start
+                        _memory_start_instant._value["ts"] = index
+                        # Force to set the end of the memory block to None, treating it as persistent memory
+                        _memory._end = None
+                        model_blocks.append(_memory)
             self._model_memory = model_blocks
         return copy.deepcopy(self._model_memory)
 
