@@ -50,7 +50,7 @@ def display_memory_lifecycle(memory_blocks):
 
         # Annotate the memory size in the middle of the rectangle
         ax.text((alloc + free) / 2, i + rect_height / 2, f"Size: {format_memory(size)}",
-                ha='center', va='center', fontsize=10, color='black')
+                ha='left', va='center', fontsize=10, color='black')
 
     # Set the x-axis range
     ax.set_xlim(0, max_time)
