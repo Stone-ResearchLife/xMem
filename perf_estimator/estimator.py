@@ -270,12 +270,26 @@ class TrainerEstimator(_Estimator):
 
                 parameters_list = list(model.parameters())
                 parameters_list.reverse()
+                global_index = 0
                 for index, tensor in enumerate(parameters_list):
+                    global_index += 1
                     para_size = tensor.nelement() * tensor.element_size()
                     parameter_memory_block = self.create_memory_block(
-                        byte=para_size, timestamp=index
+                        byte=para_size, timestamp=global_index
                     )
                     model_blocks.append(parameter_memory_block)
+
+                buffer_list = list(model.buffers())
+                buffer_list.reverse()
+                for index, buffer in enumerate(buffer_list):
+                    global_index += 1
+                    buffer_size = buffer.nelement() * buffer.element_size()
+                    block = self.create_memory_block(
+                        byte=buffer_size,
+                        timestamp=global_index
+                    )
+                    model_blocks.append(block)
+
             else:
                 zero_time = self.profiler.get_iteration(iteration_index).zero_grad_time
                 # process the memory blocks of the model
