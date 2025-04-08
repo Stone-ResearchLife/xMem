@@ -260,14 +260,20 @@ class TrainerEstimator(_Estimator):
                 self.config.trainer.huggingface_enable
                 and self.config.trainer.huggingface_model_name is not None
             ):
-                from transformers import AutoConfig, AutoModelForCausalLM
+                from transformers import AutoConfig, AutoModelForCausalLM, DataCollatorForLanguageModeling, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM, AutoModelForMaskedLM
 
+                model_name = self.config.trainer.huggingface_model_name
                 config = AutoConfig.from_pretrained(
-                    self.config.trainer.huggingface_model_name
+                    model_name
                 )  # load config; do NOT load pretrained weights
-                model = AutoModelForCausalLM.from_config(
-                    config
-                )  # randomly initialized model
+                if model_name == "t5-base":
+                    model = AutoModelForSeq2SeqLM.from_config(config)
+                elif model_name == "microsoft/deberta-base":
+                    model = AutoModelForMaskedLM.from_config(config)
+                else:
+                    model = AutoModelForCausalLM.from_config(
+                        config
+                    )  # randomly initialized model
 
                 parameters_list = list(model.parameters())
                 parameters_list.reverse()
