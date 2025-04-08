@@ -118,7 +118,7 @@ class StackNode(ProfilerNode):
         It can help us rapidly locate the module layer in the stack tree.
         """
         # return "_call_impl" in self.function_name
-        return "nn.Module" in self.namespace_name
+        return "nn.Module" in self.namespace_name or "transformers/loss/loss_utils.py" in self.namespace_name
 
     @property
     def is_getattr(self) -> bool:

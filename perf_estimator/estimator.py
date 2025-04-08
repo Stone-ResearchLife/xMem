@@ -25,6 +25,7 @@ class _Estimator(ABC):
             max_allocated_memory_gb=max_gpu_memory_in_gb, config=self.config
         )
         self._model_memory: Optional[List[MemoryBlock]] = None
+        self._optimiser_memory: Optional[List[MemoryBlock]] = None
 
     @abstractmethod
     def model_memory(
@@ -349,3 +350,42 @@ class TrainerEstimator(_Estimator):
             mem.set_free_node(end_mem_cpu_instant)
             data_memory.append(mem)
         return data_memory
+    
+    def optimiser_memory(
+        self, iteration_index: int, persist_required: bool = True, *args, **kwargs
+    ) -> List[MemoryBlock]:
+        iteration_data = self.profiler.get_iteration(iteration_index)
+        ops_memory = iteration_data.optimiser_memory()
+        model_mem = [
+            mem.bytes
+            for mem in self.model_memory(iteration_index=iteration_index, reset=False)
+        ]
+        filter_ops_memory = []
+        for mem in ops_memory:
+            if mem.bytes in model_mem:
+                new_mem = copy.deepcopy(mem)
+                filter_ops_memory.append(new_mem)
+        if iteration_index == 1:
+            self._optimiser_memory = copy.deepcopy(filter_ops_memory)
+        new_filter_ops_memory = copy.deepcopy(self._optimiser_memory)[::2]
+
+        if persist_required:
+            for mem in filter_ops_memory:
+                # set end time to None as it is a persistent memory
+                mem._end = None
+
+        if iteration_index == 1:
+            last_start_timepoint = max([mem.alloc_time for mem in filter_ops_memory])
+        else:
+            filter_ops_memory = []
+            last_start_timepoint = iteration_data.optimiser_step[0]
+
+        max_length = len(new_filter_ops_memory)
+        for index, mem in enumerate(new_filter_ops_memory[::2]):
+            start_time = last_start_timepoint + index + 1
+            end_time = start_time + (max_length - index)
+            mem._start._value["ts"] = start_time
+            mem._end._value["ts"] = end_time
+            filter_ops_memory.append(mem)
+
+        return filter_ops_memory
