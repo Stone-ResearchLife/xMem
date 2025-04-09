@@ -76,9 +76,7 @@ class Configs:
                 "timm==1.0.11",
             ],
             sys_dependencies=["vim"],
-            labels=[
-                ("VENUE", "ICDCS2025"),
-            ],
+            labels=[],
             copies=[
                 {
                     "src": "experiments",
@@ -90,6 +88,53 @@ class Configs:
                 },
                 {
                     "src": "experiments/evaluation.py",
+                    "dest": "evaluation.py",
+                },
+            ],
+            entrypoint=["python", "evaluation.py"],
+            context_dir=Path(__file__).parent.parent,
+        )
+        return _config
+
+    def llm_experiments_config(self) -> BuildConfig:
+        _config = BuildConfig(
+            base_image="pytorch/pytorch:2.6.0-cuda12.6-cudnn9-devel",
+            # base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
+            python_dependencies=[
+                "datasets",
+                "ures",
+                "transformers",
+                "pynvml",
+                "sortedcontainers",
+                "matplotlib",
+                "plotly",
+                "pydantic",
+                "docker",
+                "fire",
+                "scikit-learn",
+                "numpy",
+            ],
+            sys_dependencies=["vim"],
+            labels=[],
+            copies=[
+                {
+                    "src": "experiments",
+                    "dest": "experiments",
+                },
+                {
+                    "src": "utility",
+                    "dest": "utility",
+                },
+                {
+                    "src": "experiments_llm",
+                    "dest": "experiments_llm",
+                },
+                {
+                    "src": "perf_estimator",
+                    "dest": "perf_estimator",
+                },
+                {
+                    "src": "experiments_llm/evaluation.py",
                     "dest": "evaluation.py",
                 },
             ],

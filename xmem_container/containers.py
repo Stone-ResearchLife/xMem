@@ -86,6 +86,19 @@ class ContainersReady:
         return self._image_manager.images[full_name]
 
     @property
+    def llm_experiment_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
+        image_name = "xmem-experiments-llm"
+        tag = "latest"
+        full_name = f"{image_name}:{tag}"
+        if full_name not in self._image_manager.images.keys():
+            self._add_image(
+                image_name=image_name,
+                tag=tag,
+                config=self._configs.llm_experiments_config(),
+            )
+        return self._image_manager.images[full_name]
+
+    @property
     def images(self) -> List[Dict[str, Union[Optional[Image], BuildConfig, str]]]:
         return list(self._image_manager.images.values())
 
@@ -100,6 +113,9 @@ class ContainersReady:
         self._image_manager.add_image(image=_image, config=config, base=base)
         return _image
 
+    def build(self):
+        self._image_manager.build_all()
+
     def build_images(self):
         # call image functions for inserting images into the manager
         _ = self.base_image
@@ -107,4 +123,5 @@ class ContainersReady:
         _ = self.tprofiler_image
         _ = self.tprofiler_image_nvidia_version
         _ = self.experiment_image
+        _ = self.llm_experiment_image
         self._image_manager.build_all()

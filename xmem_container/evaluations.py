@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Tuple, Optional
 from ures.docker.containers import Containers
 from .apps import AbcExecutor, RuntimeConfig, unique_id
@@ -111,6 +112,82 @@ class HFTComparsion(AbcExecutor):
                         run_id=run_id,
                         gpu_id=1,
                         memory_capacity=None,
+                    )
+
+        self._execute()
+        
+        
+        
+class LLMExperiment(AbcExecutor):
+    def __init__(self):
+        super().__init__()
+        self._llm_containers = Containers(
+            image=self._images.llm_experiment_image["image"],
+            client=self._client,
+        )
+
+    @property
+    def image(self):
+        return self._images.llm_experiment_image['image']
+
+    def prepare(self):
+        print("Building all images.")
+        _ = self._images.llm_experiment_image
+        self._images.build()
+
+    def _add_container(
+        self,
+        model: str = "VGG16",
+        optimizer: str = "SGD",
+        batch_size: int = 200,
+        device_id: int = 0,
+        target_iteration = 2
+    ):
+        command = [
+            "--model", model,
+            "--optimiser", str(optimizer),
+            "--batch", str(batch_size),
+            "--device_id", device_id, 
+            "--target_iteration", target_iteration
+        ]
+        run_id = f"llm-{model.replace('/', '-')}-{optimizer}-b-{batch_size}_{uuid.uuid4().hex[:8]}"
+        runtime_conf = RuntimeConfig(
+            name=f"{run_id.lower()}-{unique_id()[:8]}", command=command
+        )
+        runtime_conf.gpus = [str(0), str(1)]
+        self._add_pytorch_dataset_volume(config=runtime_conf)
+        self._add_cache_volume(config=runtime_conf)
+        self._add_huggingface_cache_volume(config=runtime_conf)
+        self._llm_containers.create(**runtime_conf.model_dump())
+
+    def _execute(self, **kwargs):
+        print(
+            f"=============== Start massively run for GPU train ======================"
+        )
+        self._llm_containers.run()
+
+    def execute(
+        self,
+        input_size: int = 86,
+    ):
+        models = [
+            "EleutherAI/gpt-neo-125M",
+            "facebook/opt-125m",
+            "cerebras/Cerebras-GPT-111M",
+            "t5-base",
+            "microsoft/deberta-base"
+        ]
+        batch_size = range(10, 50, 40)
+        # optimizers = ["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"]
+        optimizers = ["SGD", "AdamW"]
+        for model in models:
+            for optimizer in optimizers:
+                for batch in batch_size:
+                    self._add_container(
+                        model=model,
+                        optimizer=optimizer,
+                        batch_size=batch,
+                        device_id=1,
                     )
 
         self._execute()

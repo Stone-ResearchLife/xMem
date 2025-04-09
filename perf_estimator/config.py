@@ -1,6 +1,7 @@
 import uuid
 from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path, time_now
 
 
@@ -25,6 +26,7 @@ class Config(BaseModel):
         default=f"{time_now(iso8601=False)}-{str(uuid.uuid4().hex)[:4]}",
         description="Run ID",
     )
+    task_id: Optional[str] = Field(default=None, description="This is a subtask id, that is used to identify the task in the same run_id")
     dataset: DatasetConfig = DatasetConfig()
     trainer: TrainerConfig = TrainerConfig()
 
@@ -37,7 +39,10 @@ class Config(BaseModel):
         if self.save2tmp:
             _base_dir = Path(temp_dir_with_specific_path(self.name, self.run_id))
         else:
-            _base_dir = Path().home().joinpath(self.name, self.run_id)
+            if self.task_id is None:
+                _base_dir = Path().home().joinpath(self.name, self.run_id)
+            else:
+                _base_dir = Path().home().joinpath(self.name, self.run_id, self.task_id)
         _base_dir.mkdir(parents=True, exist_ok=True)
         return _base_dir
 

@@ -1,10 +1,8 @@
 import torch
 import copy
+from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Union, Optional, Dict
-
-from sympy.printing.cxx import reserved
-
 from .profiler import ProfilerDataProcessing, MemoryBlock, CpuInstantNode
 from .allocator import AllocatorSim, CachingAllocator
 from .config import Config
@@ -14,7 +12,7 @@ class _Estimator(ABC):
     def __init__(
         self,
         dataloader: torch.utils.data.DataLoader,
-        profiler_file: str,
+        profiler_file: Union[str, Path],
         max_gpu_memory_in_gb: int = 8,
         config: Optional[Config] = None,
     ):
@@ -251,6 +249,51 @@ class Estimator(_Estimator):
 
 
 class TrainerEstimator(_Estimator):
+    def suggest_automodel_class(self, model_name: str):
+        from huggingface_hub import model_info
+        from transformers import (
+            AutoModelForCausalLM,
+            AutoModelForSeq2SeqLM,
+            AutoModelForMaskedLM,
+            AutoModel
+        )
+
+        try:
+            info = model_info(model_name)
+            pipeline_tag = info.pipeline_tag
+
+            if pipeline_tag:
+                if pipeline_tag == "feature-extraction":
+                    return AutoModel
+                elif pipeline_tag == "fill-mask":
+                    return AutoModelForMaskedLM
+                elif pipeline_tag == "sentiment-analysis" or pipeline_tag == "text-classification":
+                    return AutoModelForCausalLM
+                elif pipeline_tag == "text2text-generation":
+                    return AutoModelForSeq2SeqLM
+                elif pipeline_tag == "summarization":
+                    return AutoModelForSeq2SeqLM
+                elif pipeline_tag == "translation":
+                    return AutoModelForSeq2SeqLM
+                elif pipeline_tag == "text-generation":
+                    return AutoModelForCausalLM
+                else:
+                    return AutoModel  # Default if pipeline_tag is unknown
+            else:
+                # Fallback based on model name keywords (less reliable)
+                model_name_lower = model_name.lower()
+                if "gpt" in model_name_lower or "llama" in model_name_lower or "codegen" in model_name_lower:
+                    return AutoModelForCausalLM
+                elif "bert" in model_name_lower or "roberta" in model_name_lower or "distilbert" in model_name_lower or "albert" in model_name_lower:
+                    return AutoModel
+                elif "t5" in model_name_lower or "bart" in model_name_lower or "mt5" in model_name_lower:
+                    return AutoModelForSeq2SeqLM
+                else:
+                    return AutoModel  # More generic fallback
+        except Exception as e:
+            print(f"Could not retrieve model info for {model_name}: {e}")
+            return AutoModel  # Fallback to a generic AutoModel
+
     def model_memory(
         self, iteration_index: int, reset: bool = False, *args, **kwargs
     ) -> List[MemoryBlock]:
@@ -260,20 +303,13 @@ class TrainerEstimator(_Estimator):
                 self.config.trainer.huggingface_enable
                 and self.config.trainer.huggingface_model_name is not None
             ):
-                from transformers import AutoConfig, AutoModelForCausalLM, DataCollatorForLanguageModeling, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM, AutoModelForMaskedLM
-
+                from transformers import AutoConfig
                 model_name = self.config.trainer.huggingface_model_name
                 config = AutoConfig.from_pretrained(
                     model_name
                 )  # load config; do NOT load pretrained weights
-                if model_name == "t5-base":
-                    model = AutoModelForSeq2SeqLM.from_config(config)
-                elif model_name == "microsoft/deberta-base":
-                    model = AutoModelForMaskedLM.from_config(config)
-                else:
-                    model = AutoModelForCausalLM.from_config(
-                        config
-                    )  # randomly initialized model
+                model_class = self.suggest_automodel_class(model_name)
+                model = model_class.from_config(config)
 
                 parameters_list = list(model.parameters())
                 parameters_list.reverse()

@@ -52,6 +52,14 @@ class AbcExecutor(ABC):
             host_path=str(dir_in_host), container_path=str(dir_in_container), mode="rw"
         )
 
+    def _add_huggingface_cache_volume(self, config: RuntimeConfig):
+        dir_in_host = Path().home().joinpath(".cache", "huggingface")
+        dir_in_host.mkdir(exist_ok=True, parents=True)
+        dir_in_container = self._home_in_container().joinpath(".cache", "huggingface")
+        config.add_volume(
+            host_path=str(dir_in_host), container_path=str(dir_in_container), mode="rw"
+        )
+
     def _execute(self, **kwargs):
         runtime_config: RuntimeConfig = kwargs.pop("config")
         print(
