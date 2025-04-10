@@ -82,7 +82,7 @@ class Layer:
                 range=[min_y, max_y], showticklabels=False
             ),  # Setting the range for y-axis and hiding labels
             showlegend=False,
-            height=max_y * 50,
+            height=max_y * 100,
             width=800,
             margin=dict(l=50, r=50, t=50, b=50),  # Adjust margins for better visibility
         )
@@ -247,7 +247,7 @@ class IterationData:
     def layer_summary(self) -> List[Dict[str, Any]]:
         layer_dict = []
         for name, layer in self.get_layers().items():
-            if "loss" in name.lower():
+            if "loss" in name.lower() or "cross" in name.lower():
                 forward_mem = layer.forward_memory
                 backward_mem = layer.backward_memory
             else:

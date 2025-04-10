@@ -25,7 +25,11 @@ class AbcExecutor(ABC):
         pass
 
     def _home_in_container(self) -> Path:
-        return Path(f"/home/{self._images._configs.user()}")
+        user_name = self.user_name
+        if user_name == 'root':
+            return Path("/root")
+        else:
+            return Path(f"/home/{self.user_name}")
 
     def prepare(self):
         print("Building all images.")

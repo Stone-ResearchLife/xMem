@@ -130,6 +130,10 @@ class LLMExperiment(AbcExecutor):
     def image(self):
         return self._images.llm_experiment_image['image']
 
+    @property
+    def user_name(self):
+        return "root"
+
     def prepare(self):
         print("Building all images.")
         _ = self._images.llm_experiment_image
@@ -152,7 +156,7 @@ class LLMExperiment(AbcExecutor):
         ]
         run_id = f"llm-{model.replace('/', '-')}-{optimizer}-b-{batch_size}_{uuid.uuid4().hex[:8]}"
         runtime_conf = RuntimeConfig(
-            name=f"{run_id.lower()}-{unique_id()[:8]}", command=command
+            name=f"{run_id.lower()}-{unique_id()[:8]}", command=command, user='root'
         )
         runtime_conf.gpus = [str(0), str(1)]
         self._add_pytorch_dataset_volume(config=runtime_conf)
@@ -172,14 +176,12 @@ class LLMExperiment(AbcExecutor):
     ):
         models = [
             "EleutherAI/gpt-neo-125M",
-            "facebook/opt-125m",
-            "cerebras/Cerebras-GPT-111M",
-            "t5-base",
-            "microsoft/deberta-base"
+            # "facebook/opt-125m",
+            # "cerebras/Cerebras-GPT-111M",
         ]
         batch_size = range(10, 50, 40)
         # optimizers = ["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"]
-        optimizers = ["SGD", "AdamW"]
+        optimizers = ["AdamW"]
         for model in models:
             for optimizer in optimizers:
                 for batch in batch_size:

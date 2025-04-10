@@ -19,6 +19,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from experiments.trainer.plugins import ProfilerPlugin, HostMonitorPlugin, SnapshotPlugin
 from perf_estimator.config import Config
+from ures.string import format_memory
 from typing import Optional
 from utility import search_profiler_file, search_nvml_file
 
@@ -128,6 +129,8 @@ class LLMTrainer:
             config=_plugin_config
         )
 
+        snap.start()
+        profiler.start()
         host_monitor.start()
         time.sleep(2)
 
@@ -138,8 +141,6 @@ class LLMTrainer:
         optimizer = getattr(optim, self.optimizer, optim.AdamW)(model.parameters(), lr=5e-5)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
-        snap.start()
-        profiler.start()
         try:
             model.to(device)
             epochs = 1
@@ -154,17 +155,19 @@ class LLMTrainer:
                         optimizer.step()
                         optimizer.zero_grad()
                         logger.info(f"Epoch {epoch}, Loss: {loss.item()}")
-                        if index == 3:
-                            break
+                    if index == 3:
+                        break
                     scheduler.step()
+            logger.info("Train Finsihed！")
         except Exception as e:
             logger.error("Exception occurred during training.")
             logger.error(e)
+            raise RuntimeError(f"Training failed: {e}") from e
         finally:
             host_monitor.stop()
             profiler.stop()
             snap.stop()
-            logger.info("Train Finsihed！")
+            logger.info("Post-action finished!")
 
 
 class LLMEvaluator:
@@ -222,42 +225,44 @@ class LLMEvaluator:
         else:
             raise ValueError("No GPU device found")
 
+
         return torch.cuda.get_device_properties(devide_id).total_memory, devide_id
 
-    def set_fraction_gpu_memory(self, gpu_memory_in_gb: Optional[float] = 8.0):
+    def set_fraction_gpu_memory(self, gpu_memory_in_bytes: Optional[int] = 8*1024**3):
         total_gpu_memory, devide_id = self.get_total_gpu_memory()
-        if gpu_memory_in_gb is None:
+        if gpu_memory_in_bytes is None:
             gpu_memory = total_gpu_memory
         else:
-            gpu_memory = gpu_memory_in_gb * 1024**3
+            gpu_memory = gpu_memory_in_bytes
 
-        fraction = gpu_memory / total_gpu_memory
+        fraction = round(gpu_memory / total_gpu_memory, 2)
 
         if fraction > 1:
             logger.warning(
-                f"The limit is over the total GPU memory, set to 1. input max: {gpu_memory_in_gb}GB, total: {total_gpu_memory/1024**3}GB"
+                f"The limit is over the total GPU memory, set to 1. input max: {format_memory(gpu_memory_in_bytes)}, total: {format_memory(total_gpu_memory)}"
             )
             fraction = 1
         logger.info(
-            f"Set GPU Memory Fraction: {round(fraction, 2)*100}%, limit: {gpu_memory_in_gb}GB"
+            f"Set GPU Memory Fraction: {round(fraction, 2)*100}%, limit: {format_memory(gpu_memory_in_bytes)}"
         )
+        print(f"Set GPU Memory Fraction: {round(fraction, 2)*100}%, limit: {format_memory(gpu_memory_in_bytes)}")
         torch.cuda.set_per_process_memory_fraction(
             round(fraction, 2), device=torch.device(f"cuda:{devide_id}")
         )
 
-    def train_on_gpu(self, gpu_memory_in_gb: Optional[float] = None, config: Config = None) -> Config:
+    def train_on_gpu(self, gpu_memory_in_bytes: Optional[int] = None, config: Config = None) -> Config:
         if config is None:
             _config = self.config.model_copy(deep=True)
-            if gpu_memory_in_gb is None:
+            if gpu_memory_in_bytes is None:
                 task_id = "GPU"
             else:
-                task_id = f"GPU-{gpu_memory_in_gb}GB"
+                task_id = f"GPU-{format_memory(gpu_memory_in_bytes)}"
             _config.task_id = task_id
             config = _config
 
         torch.cuda.empty_cache()
         time.sleep(1)  # wait for the memory to be released
-        self.set_fraction_gpu_memory(gpu_memory_in_gb)
+        self.set_fraction_gpu_memory(gpu_memory_in_bytes)
         time.sleep(1)  # wait for the memory to be released
         return self._train(on_cpu=False, config=config)
 
@@ -279,10 +284,11 @@ class LLMEvaluator:
 
         from perf_estimator.estimator import TrainerEstimator
         from perf_estimator.dataset import image_dataset
+        max_m_in_bytes, _ = self.get_total_gpu_memory()
         estimator = TrainerEstimator(
-            dataloader=image_dataset(batch=100),
+            dataloader=image_dataset(batch=10),
             profiler_file=p_files[-1],
-            max_gpu_memory_in_gb=64,
+            max_gpu_memory_in_gb=round(max_m_in_bytes/1024**3, 2),
             config=config,
         )
         return estimator.estimate()
@@ -313,7 +319,7 @@ class LLMEvaluator:
         c_est, c_result = self.get_estimate_max_gpu(c_config)
         estimate_max_gpu = c_result["memory"]["segment"]
         est_oom = c_result["OOM"]
-
+        gpu_id = self.g_id
         time.sleep(5)
         try:
             g_config = self.train_on_gpu()
@@ -322,14 +328,16 @@ class LLMEvaluator:
         except Exception as e:
             logger.warning(f"OOM occur, error: {e}")
             real_oom = True
-            ground = self.get_total_gpu_memory()
+            ground, _ = self.get_total_gpu_memory()
         else:
             real_oom = False
-            ground = max(g_nvml[str(self.g_id)])
+            ground = max(g_nvml[str(gpu_id)])
 
-
+        import GPUtil
+        framework_memory_usage = GPUtil.getGPUs()[gpu_id].memoryUsed
+        total_gpu = estimate_max_gpu + framework_memory_usage*1024**2
         try:
-            g_config_2nd = self.train_on_gpu(gpu_memory_in_gb=estimate_max_gpu/1024**3)
+            g_config_2nd = self.train_on_gpu(gpu_memory_in_bytes=total_gpu)
             g_nvml_2nd = self.get_truth_ground_max_gpu(g_config_2nd)
         except Exception as e:
             logger.warning(f"OOM occur, error: {e}")
@@ -358,13 +366,12 @@ class LLMEvaluator:
         report_dir = self.config.base_dir
         with open(os.path.join(report_dir, "evaluation_result.json"), "w") as f:
             json.dump(self.all_result, f, indent=4)
-
-
         return self.all_result
 
+
 def main(
-    model: str,
-    device_id: int = 0,
+    model: str = "EleutherAI/gpt-neo-125M",
+    device_id: int = 1,
     batch: int = 10,
     target_iteration: int = 2,
     optimiser: str = "AdamW",
@@ -376,8 +383,8 @@ def main(
         gpu_id=device_id,
         iterations=target_iteration
     )
-    eva.eva()
-    torch.cuda.empty_cache()
+    # eva.eva()
+    eva.train_on_cpu()
     time.sleep(5)
 
 

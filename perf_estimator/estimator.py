@@ -416,18 +416,22 @@ class TrainerEstimator(_Estimator):
                 # set end time to None as it is a persistent memory
                 mem._end = None
 
-        if iteration_index == 1:
-            last_start_timepoint = max([mem.alloc_time for mem in filter_ops_memory])
-        else:
-            filter_ops_memory = []
-            last_start_timepoint = iteration_data.optimiser_step[0]
+        if len(filter_ops_memory) > 0:
+            if iteration_index == 1:
+                if len(filter_ops_memory) == 0:
+                    last_start_timepoint = iteration_data.optimiser_step[0]
+                else:
+                    last_start_timepoint = max([mem.alloc_time for mem in filter_ops_memory])
+            else:
+                filter_ops_memory = []
+                last_start_timepoint = iteration_data.optimiser_step[0]
 
-        max_length = len(new_filter_ops_memory)
-        for index, mem in enumerate(new_filter_ops_memory[::2]):
-            start_time = last_start_timepoint + index + 1
-            end_time = start_time + (max_length - index)
-            mem._start._value["ts"] = start_time
-            mem._end._value["ts"] = end_time
-            filter_ops_memory.append(mem)
+            max_length = len(new_filter_ops_memory)
+            for index, mem in enumerate(new_filter_ops_memory[::2]):
+                start_time = last_start_timepoint + index + 1
+                end_time = start_time + (max_length - index)
+                mem._start._value["ts"] = start_time
+                mem._end._value["ts"] = end_time
+                filter_ops_memory.append(mem)
 
         return filter_ops_memory

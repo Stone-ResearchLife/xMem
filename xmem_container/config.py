@@ -113,8 +113,12 @@ class Configs:
                 "fire",
                 "scikit-learn",
                 "numpy",
+                "gputil"
             ],
             sys_dependencies=["vim"],
+            run_commands=[
+                "pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128"
+            ],
             labels=[],
             copies=[
                 {
