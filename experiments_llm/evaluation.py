@@ -129,9 +129,9 @@ class LLMTrainer:
             config=_plugin_config
         )
 
-        snap.start()
         profiler.start()
         host_monitor.start()
+        snap.start()
         time.sleep(2)
 
         device = self.get_device()
@@ -147,6 +147,8 @@ class LLMTrainer:
             for epoch in range(epochs):
                 for index, batch in enumerate(dataloader):
                     profiler.step()
+                    host_monitor.step()
+                    snap.step()
                     with torch.set_grad_enabled(True):
                         batch = {k: v.to(device) for k, v in batch.items()}
                         outputs = model(**batch)
@@ -154,7 +156,6 @@ class LLMTrainer:
                         loss.backward()
                         optimizer.step()
                         optimizer.zero_grad()
-                        logger.info(f"Epoch {epoch}, Loss: {loss.item()}")
                     if index == 3:
                         break
                     scheduler.step()
@@ -164,8 +165,8 @@ class LLMTrainer:
             logger.error(e)
             raise RuntimeError(f"Training failed: {e}") from e
         finally:
-            host_monitor.stop()
             profiler.stop()
+            host_monitor.stop()
             snap.stop()
             logger.info("Post-action finished!")
 
@@ -181,10 +182,14 @@ class LLMEvaluator:
             tool_name: str = "xMem",
             iterations: int = 2,
     ):
-        os.environ["NCCL_P2P_DISABLE"] = "1"
-        os.environ["NCCL_IB_DISABLE"] = "1"
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        if torch.cuda.device_count() > 1:
+            os.environ["NCCL_P2P_DISABLE"] = "1"
+            os.environ["NCCL_IB_DISABLE"] = "1"
+            os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":0:0"
+        torch.backends.cuda.cufft_plan_cache.max_size = 1
         os.environ["CUDA_VISIBLE_DEVICES"] = f"{gpu_id}"
+
         self.tool_name = tool_name
         self.model_name: str = model_name
         self.optimizer: str = optimizer
@@ -219,17 +224,15 @@ class LLMEvaluator:
     def get_total_gpu_memory(self):
         no_devices = torch.cuda.device_count()
         if no_devices > 1:
-            devide_id = self.g_id
+            device_id = self.g_id
         elif no_devices == 1:
-            devide_id = 0
+            device_id = 0
         else:
             raise ValueError("No GPU device found")
-
-
-        return torch.cuda.get_device_properties(devide_id).total_memory, devide_id
+        return torch.cuda.get_device_properties(device_id).total_memory, device_id
 
     def set_fraction_gpu_memory(self, gpu_memory_in_bytes: Optional[int] = 8*1024**3):
-        total_gpu_memory, devide_id = self.get_total_gpu_memory()
+        total_gpu_memory, device_id = self.get_total_gpu_memory()
         if gpu_memory_in_bytes is None:
             gpu_memory = total_gpu_memory
         else:
@@ -247,16 +250,17 @@ class LLMEvaluator:
         )
         print(f"Set GPU Memory Fraction: {round(fraction, 2)*100}%, limit: {format_memory(gpu_memory_in_bytes)}")
         torch.cuda.set_per_process_memory_fraction(
-            round(fraction, 2), device=torch.device(f"cuda:{devide_id}")
+            round(fraction, 2), device=torch.device(f"cuda:{device_id}")
         )
 
     def train_on_gpu(self, gpu_memory_in_bytes: Optional[int] = None, config: Config = None) -> Config:
         if config is None:
             _config = self.config.model_copy(deep=True)
+            _id = str(uuid.uuid4())[:4]
             if gpu_memory_in_bytes is None:
-                task_id = "GPU"
+                task_id = f"GPU-{_id}"
             else:
-                task_id = f"GPU-{format_memory(gpu_memory_in_bytes)}"
+                task_id = f"GPU-{format_memory(gpu_memory_in_bytes)}-{_id}"
             _config.task_id = task_id
             config = _config
 
@@ -265,7 +269,6 @@ class LLMEvaluator:
         self.set_fraction_gpu_memory(gpu_memory_in_bytes)
         time.sleep(1)  # wait for the memory to be released
         return self._train(on_cpu=False, config=config)
-
 
     def _train(self, on_cpu: bool = False, config: Config = None) -> Config:
         evaluation = LLMTrainer(
@@ -276,10 +279,12 @@ class LLMEvaluator:
             config=config or self.config,
         )
         evaluation.train()
+        time.sleep(1)
         return config
 
     def get_estimate_max_gpu(self, config: Config):
         result_dir = config.result_dir
+        print(result_dir)
         p_files = search_profiler_file(result_dir)
 
         from perf_estimator.estimator import TrainerEstimator
@@ -296,6 +301,7 @@ class LLMEvaluator:
     def get_truth_ground_max_gpu(self, config: Config):
         result_dir = config.result_dir
         n_files = search_nvml_file(result_dir)
+        print(n_files[-1])
 
         with open(n_files[-1], "r") as f:
             _data = json.load(f)
@@ -306,7 +312,6 @@ class LLMEvaluator:
             for device_id, data in gpu_data.items():
                 if index == 0:
                     start_memory[device_id] = data["memory"]["used"]
-
                 if device_id not in _gpu_memory_usage:
                     _gpu_memory_usage[device_id] = []
                 _gpu_memory_usage[device_id].append(
@@ -315,58 +320,74 @@ class LLMEvaluator:
         return _gpu_memory_usage
 
     def eva(self):
+        import GPUtil
+        import json
+        # Get Estimated GPU Memory
         c_config = self.train_on_cpu()
         c_est, c_result = self.get_estimate_max_gpu(c_config)
-        estimate_max_gpu = c_result["memory"]["segment"]
-        est_oom = c_result["OOM"]
-        gpu_id = self.g_id
-        time.sleep(5)
+        est_seg = max(c_est._trace.max_segment_changes)
+        est_oom  = c_est.oom
+
+        # Get Truth Ground GPU Memory
         try:
             g_config = self.train_on_gpu()
             g_nvml = self.get_truth_ground_max_gpu(g_config)
-
         except Exception as e:
-            logger.warning(f"OOM occur, error: {e}")
+            print(e)
             real_oom = True
-            ground, _ = self.get_total_gpu_memory()
+            ground = None
         else:
             real_oom = False
-            ground = max(g_nvml[str(gpu_id)])
+            ground = max(g_nvml[str(self.g_id)])
 
-        import GPUtil
-        framework_memory_usage = GPUtil.getGPUs()[gpu_id].memoryUsed
-        total_gpu = estimate_max_gpu + framework_memory_usage*1024**2
-        try:
-            g_config_2nd = self.train_on_gpu(gpu_memory_in_bytes=total_gpu)
-            g_nvml_2nd = self.get_truth_ground_max_gpu(g_config_2nd)
-        except Exception as e:
-            logger.warning(f"OOM occur, error: {e}")
-            real_oom_2nd = True
-            ground_2nd = None
-        else:
-            real_oom_2nd = False
-            ground_2nd = max(g_nvml_2nd[str(self.g_id)])
+        # Get Framework GPU Memory
+        torch.cuda.empty_cache()
+        time.sleep(3)
+        framework_memory_usage = GPUtil.getGPUs()[self.g_id].memoryUsed * 1024**2
+        total_memory_used = est_seg + framework_memory_usage
 
-
-        self.all_result[self.tool_name] = {
+        # Record Results
+        all_info = self.all_result
+        all_info[self.tool_name] = {
             "ground": ground,
-            "memory": estimate_max_gpu,
+            "framework": framework_memory_usage,
+            "memory": est_seg,
             "oom": est_oom,
             "real_oom": real_oom,
-            "error": abs(estimate_max_gpu - ground) / ground,
+            "error": None if real_oom else abs(est_seg - ground) / ground,
             "correct_estimation": est_oom == real_oom,
-            "2nd verification": {
+            "2nd verification": {}
+        }
+        
+        # 2nd verification
+
+        if real_oom is False and all_info[self.tool_name]["correct_estimation"]:
+            try:
+                print(f"The max memory set to {format_memory(est_seg)}(Est) + {format_memory(framework_memory_usage)}(Framework)")
+                g_config_2nd = self.train_on_gpu(gpu_memory_in_bytes=total_memory_used)
+                g_nvml_2nd = self.get_truth_ground_max_gpu(g_config_2nd)
+            except Exception as e:
+                print(f"2nd verification run error: {e}")
+                real_oom_2nd = True
+                ground_2nd = None
+            else:
+                real_oom_2nd = False
+                ground_2nd = max(g_nvml_2nd[str(self.g_id)])
+
+            torch.cuda.empty_cache()
+            time.sleep(3)
+            tool_data = all_info[self.tool_name]
+            tool_data["2nd verification"] = {
                 "oom": real_oom_2nd,
                 "ground": ground_2nd,
-                "error": None if real_oom_2nd else abs(estimate_max_gpu - ground_2nd) / ground_2nd,
+                "error": None if real_oom_2nd else abs(est_seg - ground_2nd) / ground_2nd,
             }
-        }
 
-        self.all_result["config"] = self.config.model_dump()
+
+        all_info["config"] = self.config.model_dump()
         report_dir = self.config.base_dir
-        with open(os.path.join(report_dir, "evaluation_result.json"), "w") as f:
-            json.dump(self.all_result, f, indent=4)
-        return self.all_result
+        with open(report_dir.joinpath(f"evaluation_result.json"), "w") as f:
+            json.dump(all_info, f, indent=4)
 
 
 def main(
@@ -383,8 +404,7 @@ def main(
         gpu_id=device_id,
         iterations=target_iteration
     )
-    # eva.eva()
-    eva.train_on_cpu()
+    eva.eva()
     time.sleep(5)
 
 

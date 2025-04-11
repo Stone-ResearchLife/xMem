@@ -96,10 +96,9 @@ class Configs:
         )
         return _config
 
-    def llm_experiments_config(self) -> BuildConfig:
+    def llm_experiments_base_config(self) -> BuildConfig:
         _config = BuildConfig(
             base_image="pytorch/pytorch:2.6.0-cuda12.6-cudnn9-devel",
-            # base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
             python_dependencies=[
                 "datasets",
                 "ures",
@@ -119,7 +118,38 @@ class Configs:
             run_commands=[
                 "pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128"
             ],
-            labels=[],
+            # labels=[],
+            # copies=[
+            #     {
+            #         "src": "experiments",
+            #         "dest": "experiments",
+            #     },
+            #     {
+            #         "src": "utility",
+            #         "dest": "utility",
+            #     },
+            #     {
+            #         "src": "experiments_llm",
+            #         "dest": "experiments_llm",
+            #     },
+            #     {
+            #         "src": "perf_estimator",
+            #         "dest": "perf_estimator",
+            #     },
+            #     {
+            #         "src": "experiments_llm/evaluation.py",
+            #         "dest": "evaluation.py",
+            #     },
+            # ],
+            # entrypoint=["python", "evaluation.py"],
+            context_dir=Path(__file__).parent.parent,
+            user=self.user(),
+            uid=os.getuid(),
+        )
+        return _config
+    
+    def llm_experiments_config(self) -> BuildConfig:
+        _config = BuildConfig(
             copies=[
                 {
                     "src": "experiments",

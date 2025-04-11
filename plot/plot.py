@@ -47,7 +47,7 @@ class ExperimentPlot:
 
     def data_processing(self, data_dir: Union[str, Path]) -> pd.DataFrame:
         if str(data_dir) not in self._cache.keys():
-            evaluates_files = filter_files("evaluation_result.json", data_dir, False)
+            evaluates_files = filter_files("evaluation_result", data_dir, True)
             random_result = []
             for eva_file in evaluates_files:
                 with open(eva_file, "r") as f:

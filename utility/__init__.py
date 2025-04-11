@@ -1,4 +1,5 @@
 import json
+import os.path
 from typing import Union, List
 from pathlib import Path
 from ures.files import filter_files
@@ -23,9 +24,10 @@ def search_profiler_file(target_dir: Union[Path, str]) -> List[Path]:
 def search_files(
     pattern: str, target_dir: Union[Path, str], fuzz: bool = True
 ) -> List[Path]:
-    return [
+    files = [
         Path(file_path) for file_path in filter_files(pattern, target_dir, fuzz=fuzz)
     ]
+    return sorted(files, key=lambda path: os.path.getctime(path))
 
 
 def get_nvml_result(nvml_json: Union[str, Path]) -> dict:

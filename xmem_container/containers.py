@@ -86,6 +86,19 @@ class ContainersReady:
         return self._image_manager.images[full_name]
 
     @property
+    def llm_experiment_base_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
+        image_name = "xmem-experiments-llm-base"
+        tag = "latest"
+        full_name = f"{image_name}:{tag}"
+        if full_name not in self._image_manager.images.keys():
+            self._add_image(
+                image_name=image_name,
+                tag=tag,
+                config=self._configs.llm_experiments_base_config(),
+            )
+        return self._image_manager.images[full_name]
+
+    @property
     def llm_experiment_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
         image_name = "xmem-experiments-llm"
         tag = "latest"
@@ -95,6 +108,7 @@ class ContainersReady:
                 image_name=image_name,
                 tag=tag,
                 config=self._configs.llm_experiments_config(),
+                base=self.llm_experiment_base_image["image"],
             )
         return self._image_manager.images[full_name]
 
