@@ -671,6 +671,285 @@ class ExperimentPlot:
                 height=default_height,
             )
         return fig
+    
+    def llm_plot_relative_error_in_box_diagram_with_verification_data(
+        self,
+        title: str,
+        data_dir: Union[str, Path],
+        optimiser: Optional[str] = None,
+        yrange=(0, 250),
+        image_size=(2000, 450),
+        overall_median: bool = False,
+        font_size=20,
+        legend_font_size=18,
+        tickfont_size: int = 22,
+        view_mode: bool = False,
+    ):
+        if view_mode:
+            image_size = (1200, 350)
+            font_size = 15
+            legend_font_size = 12
+            tickfont_size = 15
+
+        self.font.update(dict(size=font_size))
+        self.legend_font.update(dict(size=legend_font_size))
+        df = self.data_processing(data_dir)
+        if optimiser is not None:
+            df = df[df["optimiser"] == optimiser]
+        model_order = sorted(df["model"].unique())
+        df["error"] = df["error"] * 100
+
+        # Create a box plot grouped by 'Category'
+        fig = px.box(
+            df,
+            x="tool",
+            y="error",
+            color="model",
+            category_orders={"model": model_order},
+            labels={"tool": "Estimator", "error": "Error", "model": "Model"},
+            boxmode="group",
+            color_discrete_map=self._color_scheme,
+        )
+
+        # Draw a triangle-up to exhibit that there is a outlier excess the 250%
+        y_max = yrange[1]
+        models_with_outliers = df[df["error"] > y_max]
+
+        # for _, row in models_with_outliers.iterrows():
+        #     model = row["model"]
+        #     name = row["tool"]
+        #     x_offset_mapping = {
+        #         "xMem (this paper)": -30,
+        #         "DNNMem": -15,
+        #         "SchedTune": 15,
+        #         "LLMem": 30,
+        #     }
+        #
+        #     fig.add_annotation(
+        #         x=model,
+        #         y=y_max,
+        #         text="▲",
+        #         showarrow=False,
+        #         font={**self.font, "color": self._color_scheme.get(name)},
+        #         xanchor="center",
+        #         yanchor="bottom",
+        #         align="center",
+        #         yshift=-20,
+        #         xshift=x_offset_mapping.get(name, 0),
+        #     )
+        if overall_median:
+            y_offset = 0.92
+            for i, name in enumerate(df["tool"].unique()):
+                # Filter data for each 'name'
+                name_filtered_df = df[df["tool"] == name]
+
+                if not name_filtered_df.empty:
+                    overall_median = name_filtered_df[
+                        "error"
+                    ].median()  # Calculate the overall median for this name
+
+                    # Add annotation at the top-left of the plot, vertically stacked
+                    fig.add_annotation(
+                        x=0.82,  # Place near the left of the plot (use paper coordinates)
+                        y=y_offset
+                        - (
+                            i * 0.08
+                        ),  # Decrease y position for each annotation to vertically stack
+                        text=f"{round(overall_median, 2)}%",
+                        showarrow=False,
+                        xref="paper",  # Use 'paper' coordinates for relative positioning
+                        yref="paper",
+                        font=dict(**self.font, color=self._color_scheme[name]),
+                        xanchor="left",
+                        yanchor="top",
+                    )
+
+        fig.update_traces(marker=dict(size=3))
+        fig.update_xaxes(tickangle=15)
+
+        default_width = image_size[0]
+        default_height = image_size[1]
+        fig.update_layout(
+            font=self.font,
+            xaxis_title=None,
+            yaxis_title="Relative Error (%)",
+            legend=dict(
+                title=None,
+                orientation="v",
+                yanchor="bottom",
+                y=0.58,
+                xanchor="center",
+                x=0.95,
+                bgcolor="rgba(255,255,255,0.8)",  # Semi-transparent background
+                bordercolor="Black",
+                borderwidth=2,
+                font=self.legend_font,
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor="LightGray",
+                zeroline=False,
+                titlefont=self.font,
+                range=yrange,
+                tickfont=dict(size=tickfont_size),
+            ),
+            xaxis=dict(
+                showgrid=False, titlefont=self.font, tickfont=dict(size=tickfont_size)
+            ),
+            title_x=0.5,
+            plot_bgcolor="white",
+            width=default_width,  # Adjust width
+            height=default_height,  # Adjust height
+            template=self._plotly_template,
+            margin=dict(l=60, r=20, t=20, b=50, pad=4),
+        )
+        if view_mode is False:
+            # Show the plot
+            fig.write_image(
+                file=self.get_image_dir(title),
+                width=default_width,
+                height=default_height,
+            )
+        return fig
+
+
+    def llm_plot_probability_estimation_vs_error_scatter_diagram_model_base(
+            self,
+            title: str,
+            data_dir: Union[str, Path],
+            optimiser: Optional[str] = None,
+            group_by_list: tuple = ("model", "tool"),
+            accurate_estimation_mode: bool = True,
+            image_size=(500, 500),
+            title_font_size=35,
+            legend_font_size=22,
+            tickfont_size=25,
+            marker_size=25,
+            quadrant_font_size=45,
+            view_mode: bool = False,
+    ):
+        if view_mode:
+            image_size = (600, 600)
+            title_font_size = 20
+            legend_font_size = 12
+            tickfont_size = 20
+            quadrant_font_size = 20
+            marker_size = 12
+
+        self.font.update(dict(size=title_font_size))
+        self.legend_font.update(dict(size=legend_font_size))
+        df = self.data_processing(data_dir)
+        df["error"] = df["error"] * 100
+        group_by_list = list(group_by_list)
+        if optimiser is not None:
+            df = df[df["optimiser"] == optimiser]
+        # Step 1: Create oom_counts with OOM counts and probability
+        result_field = "correct_estimation"
+        if accurate_estimation_mode:
+            result_field = "accurate_estimation"
+        correctness_counts = (
+            df.groupby(group_by_list)[result_field]
+            .value_counts()
+            .unstack(fill_value=0)
+            .reset_index()
+        )
+        if True not in correctness_counts.columns:
+            correctness_counts[True] = 0
+        if False not in correctness_counts.columns:
+            correctness_counts[False] = 0
+
+        correctness_counts.columns = group_by_list + [
+            "Correct_Estimation_False_Count",
+            "Correct_Estimation_True_Count",
+        ]
+        correctness_counts["probability"] = (
+                                                    correctness_counts["Correct_Estimation_False_Count"]
+                                                    / (
+                                                            correctness_counts["Correct_Estimation_False_Count"]
+                                                            + correctness_counts["Correct_Estimation_True_Count"]
+                                                    )
+                                            ) * 100
+
+        # Step 2: Aggregate 'error' by mean
+        error_agg = df.groupby(group_by_list)["error"].median().reset_index()
+        error_agg.rename(columns={"error": "Mean_Error"}, inplace=True)
+        error_agg["Mean_Error"] = round(error_agg["Mean_Error"], 2)
+
+        # Step 3: Merge the aggregated error data with oom_counts
+        correctness_counts = correctness_counts.merge(
+            error_agg, on=group_by_list, how="left"
+        )
+        fig = px.scatter(
+            correctness_counts,
+            x="probability",  # Probability of successful estimation on X-axis
+            y="Mean_Error",  # Relative error on Y-axis
+            labels={
+                "probability": "Failed Estimation Probability  (%)",
+                "Mean_Error": "Relative Error (%)",
+                "name": "Estimator",
+            },
+            color="model",  # Differentiates points by 'name' using color
+            symbol="model",  # Differentiates points by 'name' using marker symbols
+            hover_data=[
+                "Correct_Estimation_False_Count",
+                "Correct_Estimation_True_Count",
+                "Mean_Error",
+            ],  # Additional info on hover
+            color_discrete_map=self._color_scheme,
+        )
+
+        # Update all markers to have the same size
+        fig.update_traces(marker=dict(size=marker_size))  # Set a fixed size, e.g., 12
+
+        fig = self._add_four_quadrant(
+            fig,
+            (20, 20),
+            100,
+            font_size=quadrant_font_size,
+        )
+
+        # Customize the layout for better aesthetics
+        default_width = image_size[0]
+        default_height = image_size[1]
+        fig.update_layout(
+            font=self.font,
+            legend=dict(
+                title=None,
+                orientation="v",
+                yanchor="bottom",
+                y=0.7,
+                xanchor="center",
+                x=0.5,
+                bgcolor="rgba(255,255,255,0.5)",  # Semi-transparent background
+                bordercolor="Black",
+                borderwidth=2,
+                font=self.legend_font,
+            ),
+            xaxis=dict(
+                title="Failed Estimation Probability (%)",
+                titlefont=self.font,
+                tickfont=dict(size=tickfont_size),
+                range=(0, 100),
+            ),
+            yaxis=dict(
+                title="Median of Relative Errors (%)",
+                titlefont=self.font,
+                tickfont=dict(size=tickfont_size),
+                range=(0, 100),
+            ),
+            width=default_width,
+            height=default_height,
+            template=self._plotly_template,
+            margin=dict(l=20, r=10, t=30, b=50),
+        )
+        if view_mode is False:
+            # Show the plot
+            fig.write_image(
+                file=self.get_image_dir(title),
+                width=default_width,
+                height=default_height,
+            )
+        return fig
 
     def plot_probability_estimation_vs_error_scatter_diagram_model_base(
         self,

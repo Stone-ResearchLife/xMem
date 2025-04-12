@@ -3,10 +3,15 @@
 # shellcheck disable=SC2054,SC2086
 
 MODELS=(
-#    "EleutherAI/gpt-neo-125M"
-#    "facebook/opt-125m"
-#    "cerebras/Cerebras-GPT-111M"
-    "bigscience/bloom-560m"
+    "EleutherAI/gpt-neo-125M"
+    "facebook/opt-125m"
+#    "facebook/opt-350m"
+    "cerebras/Cerebras-GPT-111M"
+#    "microsoft/deberta-base"
+    "T5-small"
+#    "t5-base"
+    "distilbert/distilgpt2"
+    "openai-community/gpt2"
 )
 
 optimizers=("AdamW")
@@ -19,7 +24,7 @@ for MODEL in "${MODELS[@]}"; do
   model_count=$((model_count + 1))
   echo "Processing model: $MODEL ($model_count/$total_models)"
 
-  for b in $(seq 5 5 20); do
+  for b in $(seq 5 10 65); do
     echo "  Batch size: $b"
     for optimize in "${optimizers[@]}"; do
       echo "    Optimizer: $optimize"

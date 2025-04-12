@@ -65,6 +65,47 @@ class LLMTrainer:
                     return AutoModelForCausalLM
                 else:
                     return AutoModel  # Default if pipeline_tag is unknown
+            
+            # if pipeline_tag == "feature-extraction":
+            #     return AutoModel
+            # elif pipeline_tag == "fill-mask":
+            #     return AutoModelForMaskedLM
+            # elif pipeline_tag == "question-answering":
+            #     return AutoModelForQuestionAnswering
+            # elif pipeline_tag == "sentiment-analysis" or pipeline_tag == "text-classification":
+            #     return AutoModelForSequenceClassification
+            # elif pipeline_tag == "token-classification":
+            #     return AutoModelForTokenClassification
+            # elif pipeline_tag == "text-generation":
+            #     return AutoModelForCausalLM
+            # elif pipeline_tag == "text2text-generation":
+            #     return AutoModelForSeq2SeqLM
+            # elif pipeline_tag == "zero-shot-classification":
+            #     return AutoModelForSequenceClassification  # Or potentially AutoModel
+            # elif pipeline_tag == "table-question-answering":
+            #     return AutoModelForQuestionAnswering # May need a specific class
+            # elif pipeline_tag == "visual-question-answering":
+            #     return AutoModelForQuestionAnswering # May need a specific class
+            # elif pipeline_tag == "image-classification":
+            #     return AutoModelForImageClassification
+            # elif pipeline_tag == "object-detection":
+            #     return AutoModelForObjectDetection
+            # elif pipeline_tag == "semantic-segmentation":
+            #     return AutoModelForSemanticSegmentation
+            # elif pipeline_tag == "audio-classification":
+            #     return AutoModelForAudioClassification
+            # elif pipeline_tag == "automatic-speech-recognition":
+            #     return AutoModelForSpeechRecognition
+            # elif pipeline_tag == "summarization":
+            #     return AutoModelForSeq2SeqLM
+            # elif pipeline_tag == "translation":
+            #     return AutoModelForSeq2SeqLM
+            # elif pipeline_tag == "text-to-speech":
+            #     # No direct AutoModel yet, might need to use specific model class
+            #     return None # Or suggest a base AutoModel
+            # else:
+            #     return AutoModel  # Default if pipeline_tag is unknown
+            
             else:
                 # Fallback based on model name keywords (less reliable)
                 model_name_lower = model_name.lower()
@@ -346,6 +387,13 @@ class LLMEvaluator:
         framework_memory_usage = GPUtil.getGPUs()[self.g_id].memoryUsed * 1024**2
         total_memory_used = est_seg + framework_memory_usage
 
+        if est_oom is False:
+            # todo: Some works should be done in the future
+            # As estimation program only consider the GPU memory changes during the training, it misses
+            # the framework memory usage. Therefore, OOM should be re-evaluated.
+            total_gpu_memory, _ = self.get_total_gpu_memory()
+            est_oom = True if total_memory_used > total_gpu_memory else False
+
         # Record Results
         all_info = self.all_result
         all_info[self.tool_name] = {
@@ -405,7 +453,7 @@ def main(
         iterations=target_iteration
     )
     eva.eva()
-    time.sleep(5)
+    time.sleep(10)
 
 
 if __name__ == '__main__':
