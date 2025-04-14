@@ -136,7 +136,7 @@ class GPUMetric:
     def get_info(self):
         return {
             "temperature": self.get_temperature(),
-            "fan_speed": self.get_fan_speed(),
+            # "fan_speed": self.get_fan_speed(),
             "gpu_utilisation": self.get_gpu_utilisation(),
             "memory_utilisation": self.get_memory_utilisation(),
         }

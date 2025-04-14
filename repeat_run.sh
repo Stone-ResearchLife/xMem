@@ -3,15 +3,15 @@
 # shellcheck disable=SC2054,SC2086
 
 MODELS=(
-    "EleutherAI/gpt-neo-125M"
-    "facebook/opt-125m"
-#    "facebook/opt-350m"
-    "cerebras/Cerebras-GPT-111M"
-#    "microsoft/deberta-base"
-    "T5-small"
-#    "t5-base"
-    "distilbert/distilgpt2"
-    "openai-community/gpt2"
+#    "EleutherAI/gpt-neo-125M"
+#    "facebook/opt-125m"
+    "facebook/opt-350m"
+#    "cerebras/Cerebras-GPT-111M"
+    "microsoft/deberta-base"
+#    "T5-small"
+    "t5-base"
+#    "distilbert/distilgpt2"
+#    "openai-community/gpt2"
 )
 
 optimizers=("AdamW")
