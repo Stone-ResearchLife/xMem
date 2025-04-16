@@ -472,7 +472,7 @@ class FXAnalyser:
         loss_name = self._loss.__class__.__name__
         model.add_module(loss_name, self._loss)
         graph = model.graph
-        with graph.inserting_after(next(iter(graph.nodes))):  # 在图的最前面插入占位符
+        with graph.inserting_after(next(iter(graph.nodes))):
             target_placeholder = graph.create_node("placeholder", target="y", name="y")
         for node in graph.nodes:
             if node.op == "output":

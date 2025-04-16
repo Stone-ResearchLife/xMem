@@ -48,7 +48,7 @@ class XMem:
         before_run = time.time()
         if trainer_enable:
             estimator = TrainerEstimator(
-                dataloader=copy.deepcopy(self._data_loader),
+                dataloader=copy.deepcopy(self._data_loader), # dataloader will be removed in the future
                 profiler_file=profiler_file,
                 max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
                 config=self.conf,
