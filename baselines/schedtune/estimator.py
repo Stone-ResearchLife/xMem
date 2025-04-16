@@ -33,7 +33,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # '''
 
 
-class Schedtune:
+class Estimate:
     def __init__(
         self,
         jobname: str,
@@ -69,6 +69,7 @@ class Schedtune:
         gpu_3090 = [5120, 900, 1752, 640, 80]
         gpu_4070ti = [7680, 504, 21000, 240, 60]
         gpu_4060 = [3072, 272, 17000, 96, 24]
+        gpu_5080 = [10752, 960, 30000, 336, 84]
 
         _gpu = None
         if gpu == "2070s":
@@ -83,6 +84,8 @@ class Schedtune:
             _gpu = gpu_4070ti
         elif gpu == "4060":
             _gpu = gpu_4060
+        elif gpu == "5080":
+            _gpu = gpu_5080
         return _gpu
 
     def estimate(self):

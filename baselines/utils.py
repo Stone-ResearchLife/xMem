@@ -1,8 +1,8 @@
 import torch
 import time
-from typing import Optional, Union
+import copy
+from typing import Optional, Union, Dict
 from perf_estimator.profiler.memoy import MemoryBlock, CpuInstantNode
-from perf_estimator.allocator import AllocatorSim, CachingAllocator
 
 
 class _SimulatorTensor:
@@ -51,20 +51,18 @@ class _SimulatorTensor:
         self._called.append(time.time_ns())
 
 
-class Estimator:
+class GenComputationalGraph:
     def __init__(
             self,
             model: torch.nn.Module,
             dataloader: torch.utils.data.DataLoader,
-            max_est_memory_in_bytes: int,
             optimizer: Optional[type(torch.optim.Optimizer)] = None,
     ):
         self.model = model
         self.dataloader = dataloader
         self.op = optimizer or torch.optim.SGD
-        self.max_est_memory_in_bytes = max_est_memory_in_bytes
-        self.tensor_dict: dict = {}
-    
+        self.tensor_dict: Dict[str, _SimulatorTensor] = {}
+
     def create_memory_block(
             self,
             byte: Union[int, float],
@@ -111,10 +109,10 @@ class Estimator:
             memory_block.set_free_node(cpu_instant_node_end)
         return memory_block
 
-    def _gen_memory_blocks(self):
+    def gen_memory_blocks(self):
         memory_blocks = []
         for t_id, tensor in self.tensor_dict.items():
-            b_mem= self.create_memory_block(
+            b_mem = self.create_memory_block(
                 byte=tensor.bytes,
                 start=tensor.start,
                 end=tensor.end
@@ -122,60 +120,50 @@ class Estimator:
             memory_blocks.append(b_mem)
         return memory_blocks
 
-    def _prepare_computational_graph_data(self):
+    def _add_tensor_to_dict(self, tensor: torch.Tensor):
+        if isinstance(tensor, torch.Tensor):
+            _tensor = _SimulatorTensor(tensor)
+            _tensor.is_forward = True
+            _tensor.is_backward = False
+            _tensor.is_output = False
+            if _tensor.id not in self.tensor_dict.keys():
+                self.tensor_dict[_tensor.id] = _tensor
+            else:
+                _tensor = self.tensor_dict[_tensor.id]
+            _tensor.record_time()
+
+    def _gen_model_memory_block(self):
+        model = self.model
+        parameters_list = list(model.parameters())
+        for index, tensor in enumerate(parameters_list):
+            self._add_tensor_to_dict(tensor)
+
+        buffer_list = list(model.buffers())
+        for index, buffer in enumerate(buffer_list):
+            self._add_tensor_to_dict(buffer)
+
+    def _gen_input_memory_block(self):
+        ld = copy.deepcopy(self.dataloader)
+        ld1 = next(iter(ld))
+        for key, tensor in ld1.items():
+            self._add_tensor_to_dict(tensor)
+
+    def prepare_computational_graph_data(self):
+        self._gen_model_memory_block()
+        self._gen_input_memory_block()
         def forward_hook(module, inputs, output):
             # Optionally: print or log details
             for ten in inputs:
-                if not isinstance(ten, torch.Tensor):
-                    continue
-                _tensor = _SimulatorTensor(ten)
-                _tensor.is_forward = True
-                _tensor.is_backward = False
-                _tensor.is_output = False
-                if _tensor.id not in self.tensor_dict.keys():
-                    self.tensor_dict[_tensor.id] = _tensor
-                else:
-                    _tensor = self.tensor_dict[_tensor.id]
-                _tensor.record_time()
-
-            if isinstance(output, torch.Tensor):
-                _tensor = _SimulatorTensor(output)
-                _tensor.is_forward = True
-                _tensor.is_backward = False
-                _tensor.is_output = True
-                if _tensor.id not in self.tensor_dict.keys():
-                    self.tensor_dict[_tensor.id] = _tensor
-                else:
-                    _tensor = self.tensor_dict[_tensor.id]
-                _tensor.record_time()
+                self._add_tensor_to_dict(ten)
+            self._add_tensor_to_dict(output)
 
         def backward_hook(module, grad_inputs, grad_outputs):
             # Save gradients coming into (grad_inputs) and going out (grad_outputs) of the module.
             for ten in grad_inputs:
-                if not isinstance(ten, torch.Tensor):
-                    continue
-                _tensor = _SimulatorTensor(ten)
-                _tensor.is_forward = False
-                _tensor.is_backward = True
-                _tensor.is_output = False
-                if _tensor.id not in self.tensor_dict.keys():
-                    self.tensor_dict[_tensor.id] = _tensor
-                else:
-                    _tensor = self.tensor_dict[_tensor.id]
-                _tensor.record_time()
+                self._add_tensor_to_dict(ten)
 
             for ten in grad_outputs:
-                if not isinstance(ten, torch.Tensor):
-                    continue
-                _tensor = _SimulatorTensor(ten)
-                _tensor.is_forward = False
-                _tensor.is_backward = True
-                _tensor.is_output = True
-                if _tensor.id not in self.tensor_dict.keys():
-                    self.tensor_dict[_tensor.id] = _tensor
-                else:
-                    _tensor = self.tensor_dict[_tensor.id]
-                _tensor.record_time()
+                self._add_tensor_to_dict(ten)
 
         model = self.model
         dataloader = self.dataloader
@@ -185,7 +173,6 @@ class Estimator:
             if len(list(module.children())) == 0:
                 module.register_forward_hook(forward_hook)
                 module.register_full_backward_hook(backward_hook)
-
 
         device = torch.device("cpu")
         for epoch in range(1):
@@ -197,15 +184,9 @@ class Estimator:
                     loss.backward()
                     optimizer.step()
                     optimizer.zero_grad()
-                    if index == 0:
-                        break
 
-    def est(self):
-        self._prepare_computational_graph_data()
-        _sim = AllocatorSim(self.max_est_memory_in_bytes)
-        _cache_alloc = _sim.simulate(
-            data_analysis=self._gen_memory_blocks(),
-            segment_plot=False,
-        )
-        return _cache_alloc
+                if index == 0:
+                    break
+
+
 
