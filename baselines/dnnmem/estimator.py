@@ -56,10 +56,12 @@ class Estimator:
             self,
             model: torch.nn.Module,
             dataloader: torch.utils.data.DataLoader,
-            max_est_memory_in_bytes: int
+            max_est_memory_in_bytes: int,
+            optimizer: Optional[type(torch.optim.Optimizer)] = None,
     ):
         self.model = model
         self.dataloader = dataloader
+        self.op = optimizer or torch.optim.SGD
         self.max_est_memory_in_bytes = max_est_memory_in_bytes
         self.tensor_dict: dict = {}
     
@@ -124,7 +126,7 @@ class Estimator:
         def forward_hook(module, inputs, output):
             # Optionally: print or log details
             for ten in inputs:
-                if ten is None:
+                if not isinstance(ten, torch.Tensor):
                     continue
                 _tensor = _SimulatorTensor(ten)
                 _tensor.is_forward = True
@@ -136,7 +138,7 @@ class Estimator:
                     _tensor = self.tensor_dict[_tensor.id]
                 _tensor.record_time()
 
-            if output is not None:
+            if isinstance(output, torch.Tensor):
                 _tensor = _SimulatorTensor(output)
                 _tensor.is_forward = True
                 _tensor.is_backward = False
@@ -150,7 +152,7 @@ class Estimator:
         def backward_hook(module, grad_inputs, grad_outputs):
             # Save gradients coming into (grad_inputs) and going out (grad_outputs) of the module.
             for ten in grad_inputs:
-                if ten is None:
+                if not isinstance(ten, torch.Tensor):
                     continue
                 _tensor = _SimulatorTensor(ten)
                 _tensor.is_forward = False
@@ -163,7 +165,7 @@ class Estimator:
                 _tensor.record_time()
 
             for ten in grad_outputs:
-                if ten is None:
+                if not isinstance(ten, torch.Tensor):
                     continue
                 _tensor = _SimulatorTensor(ten)
                 _tensor.is_forward = False
@@ -177,6 +179,7 @@ class Estimator:
 
         model = self.model
         dataloader = self.dataloader
+        optimizer = self.op(model.parameters(), lr=1e-5)
         for name, module in model.named_modules():
             # Only attach hooks to leaf modules (modules without children)
             if len(list(module.children())) == 0:
@@ -192,6 +195,8 @@ class Estimator:
                     outputs = model(**batch)
                     loss = outputs.loss
                     loss.backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
                     if index == 0:
                         break
 
