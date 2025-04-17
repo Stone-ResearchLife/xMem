@@ -11,13 +11,11 @@ from .config import Config
 class _Estimator(ABC):
     def __init__(
         self,
-        dataloader: torch.utils.data.DataLoader,
         profiler_file: Union[str, Path],
         max_gpu_memory_in_gb: int = 8,
         config: Optional[Config] = None,
     ):
         self.config = config or Config()
-        self.dataloader = dataloader
         self.profiler = ProfilerDataProcessing(profiler_file)
         self.allocator_sim = AllocatorSim(
             max_allocated_memory_gb=max_gpu_memory_in_gb, config=self.config
@@ -31,11 +29,45 @@ class _Estimator(ABC):
     ) -> List[MemoryBlock]:
         pass
 
-    @abstractmethod
     def data_memory(
         self, iteration_index: int, need_released: bool = False, *args, **kwargs
     ) -> List[MemoryBlock]:
-        pass
+        assert isinstance(iteration_index, int)
+        assert iteration_index > 0
+        cpu_ops = self.profiler.get_iteration(iteration_index).cpu_ops
+        selected_op = []
+        for start, op in cpu_ops:
+            if op.function_name == "to":
+                concrete_inputs = "|".join(
+                    [
+                        f"{_in['index']}-{_in['concrete_input']}"
+                        for _in in op.concrete_inputs
+                    ]
+                )
+                expect_concrete_inputs = [
+                    "1-6|2-0|5-False|6-False",
+                    "1-4|2-0|5-False|6-False",
+                ]
+                if concrete_inputs in expect_concrete_inputs:
+                    selected_op.append(op)
+        selected_op = selected_op[:-1]
+        data_memory = []
+        for op in selected_op:
+            start_time = op.start_time
+            bytes = sum([int(arg["bytes"]) for arg in op.input_args])
+            mem = self.create_memory_block(bytes, start_time)
+            if iteration_index == self.profiler.max_iterations:
+                end_time = self.profiler.get_iteration(iteration_index).end
+            else:
+                # todo: the end time of the memory block should be after the next batch of data is loaded
+                end_time = self.profiler.get_iteration(iteration_index + 1).start
+            end_bytes = -1 * bytes
+            end_mem = self.create_memory_block(end_bytes, end_time)
+            end_mem_cpu_instant = end_mem._start
+            end_mem_cpu_instant._value["args"]["Addr"] = mem._start.address
+            mem.set_free_node(end_mem_cpu_instant)
+            data_memory.append(mem)
+        return data_memory
 
     def training_memory(
         self, iteration_index: int, zero_grad: bool = False, *args, **kwargs
@@ -92,6 +124,23 @@ class _Estimator(ABC):
     def optimiser_memory(
         self, iteration_index: int, persist_required: bool = True, *args, **kwargs
     ) -> List[MemoryBlock]:
+        # ==================== Previous version ====================
+        # iteration_data = self.profiler.get_iteration(iteration_index)
+        # ops_memory = iteration_data.optimiser_memory()
+        # model_mem = [
+        #     mem.bytes
+        #     for mem in self.model_memory(iteration_index=iteration_index, reset=False)
+        # ]
+        # filter_ops_memory = []
+        # for mem in ops_memory:
+        #     if mem.bytes in model_mem:
+        #         new_mem = copy.deepcopy(mem)
+        #         if persist_required:
+        #             new_mem._end = None
+        #         filter_ops_memory.append(new_mem)
+        # return filter_ops_memory
+
+        # ==================== New version, resolving memory issues in Adam-like Optimizers ====================
         iteration_data = self.profiler.get_iteration(iteration_index)
         ops_memory = iteration_data.optimiser_memory()
         model_mem = [
@@ -102,9 +151,34 @@ class _Estimator(ABC):
         for mem in ops_memory:
             if mem.bytes in model_mem:
                 new_mem = copy.deepcopy(mem)
-                if persist_required:
-                    new_mem._end = None
                 filter_ops_memory.append(new_mem)
+        if iteration_index == 1:
+            self._optimiser_memory = copy.deepcopy(filter_ops_memory)
+        new_filter_ops_memory = copy.deepcopy(self._optimiser_memory)[::2]
+
+        if persist_required:
+            for mem in filter_ops_memory:
+                # set end time to None as it is a persistent memory
+                mem._end = None
+
+        if len(filter_ops_memory) > 0:
+            if iteration_index == 1:
+                if len(filter_ops_memory) == 0:
+                    last_start_timepoint = iteration_data.optimiser_step[0]
+                else:
+                    last_start_timepoint = max([mem.alloc_time for mem in filter_ops_memory])
+            else:
+                filter_ops_memory = []
+                last_start_timepoint = iteration_data.optimiser_step[0]
+
+            max_length = len(new_filter_ops_memory)
+            for index, mem in enumerate(new_filter_ops_memory[::2]):
+                start_time = last_start_timepoint + index + 1
+                end_time = start_time + (max_length - index)
+                mem._start._value["ts"] = start_time
+                mem._end._value["ts"] = end_time
+                filter_ops_memory.append(mem)
+
         return filter_ops_memory
 
     def construct_memory_sequence(self, target_iteration: int = 2) -> List[MemoryBlock]:
@@ -219,84 +293,12 @@ class Estimator(_Estimator):
             self._model_memory = model_blocks
         return copy.deepcopy(self._model_memory)
 
-    def data_memory(
-        self, iteration_index: int, need_released: bool = False, *args, **kwargs
-    ) -> List[MemoryBlock]:
-        assert iteration_index > 0
-        assert isinstance(iteration_index, int)
-
-        data = next(iter(self.dataloader))
-        dataset_memory = [
-            self.create_memory_block(tensor.nbytes)
-            for tensor in data
-            if isinstance(tensor, torch.Tensor)
-        ]
-
-        memory_activity: List[MemoryBlock] = []
-        iteration = self.profiler.get_iteration(iteration_index)
-        loading_time = iteration.dataset_load_time
-        for index, mem in enumerate(dataset_memory):
-            mem._start._value["ts"] = loading_time[index]
-            if need_released:
-                end_mem = self.create_memory_block((-1 * mem.bytes))
-                end_mem_cpu_instant = end_mem._start
-                end_mem_cpu_instant._value["ts"] = iteration.end
-                end_mem_cpu_instant._value["args"]["Addr"] = mem._start.address
-                mem.set_free_node(end_mem_cpu_instant)
-        ## calculate amount of memory size of the dataset
-        memory_activity.extend(dataset_memory)
-        return memory_activity
-
 
 class TrainerEstimator(_Estimator):
-    def suggest_automodel_class(self, model_name: str):
-        from huggingface_hub import model_info
-        from transformers import (
-            AutoModelForCausalLM,
-            AutoModelForSeq2SeqLM,
-            AutoModelForMaskedLM,
-            AutoModel
-        )
-
-        try:
-            info = model_info(model_name)
-            pipeline_tag = info.pipeline_tag
-
-            if pipeline_tag:
-                if pipeline_tag == "feature-extraction":
-                    return AutoModel
-                elif pipeline_tag == "fill-mask":
-                    return AutoModelForMaskedLM
-                elif pipeline_tag == "sentiment-analysis" or pipeline_tag == "text-classification":
-                    return AutoModelForCausalLM
-                elif pipeline_tag == "text2text-generation":
-                    return AutoModelForSeq2SeqLM
-                elif pipeline_tag == "summarization":
-                    return AutoModelForSeq2SeqLM
-                elif pipeline_tag == "translation":
-                    return AutoModelForSeq2SeqLM
-                elif pipeline_tag == "text-generation":
-                    return AutoModelForCausalLM
-                else:
-                    return AutoModel  # Default if pipeline_tag is unknown
-            else:
-                # Fallback based on model name keywords (less reliable)
-                model_name_lower = model_name.lower()
-                if "gpt" in model_name_lower or "llama" in model_name_lower or "codegen" in model_name_lower:
-                    return AutoModelForCausalLM
-                elif "bert" in model_name_lower or "roberta" in model_name_lower or "distilbert" in model_name_lower or "albert" in model_name_lower:
-                    return AutoModel
-                elif "t5" in model_name_lower or "bart" in model_name_lower or "mt5" in model_name_lower:
-                    return AutoModelForSeq2SeqLM
-                else:
-                    return AutoModel  # More generic fallback
-        except Exception as e:
-            print(f"Could not retrieve model info for {model_name}: {e}")
-            return AutoModel  # Fallback to a generic AutoModel
-
     def model_memory(
         self, iteration_index: int, reset: bool = False, *args, **kwargs
     ) -> List[MemoryBlock]:
+        from utils.huggingface import suggest_automodel_class
         if reset or self._model_memory is None:
             model_blocks = []
             if (
@@ -308,7 +310,7 @@ class TrainerEstimator(_Estimator):
                 config = AutoConfig.from_pretrained(
                     model_name
                 )  # load config; do NOT load pretrained weights
-                model_class = self.suggest_automodel_class(model_name)
+                model_class = suggest_automodel_class(model_name)
                 model = model_class.from_config(config)
 
                 parameters_list = list(model.parameters())
@@ -352,86 +354,3 @@ class TrainerEstimator(_Estimator):
                         model_blocks.append(_memory)
             self._model_memory = model_blocks
         return copy.deepcopy(self._model_memory)
-
-    def data_memory(
-        self, iteration_index: int, need_released: bool = False, *args, **kwargs
-    ) -> List[MemoryBlock]:
-        assert isinstance(iteration_index, int)
-        assert iteration_index > 0
-        cpu_ops = self.profiler.get_iteration(iteration_index).cpu_ops
-        selected_op = []
-        for start, op in cpu_ops:
-            if op.function_name == "to":
-                concrete_inputs = "|".join(
-                    [
-                        f"{_in['index']}-{_in['concrete_input']}"
-                        for _in in op.concrete_inputs
-                    ]
-                )
-                expect_concrete_inputs = [
-                    "1-6|2-0|5-False|6-False",
-                    "1-4|2-0|5-False|6-False",
-                ]
-                if concrete_inputs in expect_concrete_inputs:
-                    selected_op.append(op)
-        selected_op = selected_op[:-1]
-        data_memory = []
-        for op in selected_op:
-            start_time = op.start_time
-            bytes = sum([int(arg["bytes"]) for arg in op.input_args])
-            mem = self.create_memory_block(bytes, start_time)
-            if iteration_index == self.profiler.max_iterations:
-                end_time = self.profiler.get_iteration(iteration_index).end
-            else:
-                # todo: the end time of the memory block should be after the next batch of data is loaded
-                end_time = self.profiler.get_iteration(iteration_index + 1).start
-            end_bytes = -1 * bytes
-            end_mem = self.create_memory_block(end_bytes, end_time)
-            end_mem_cpu_instant = end_mem._start
-            end_mem_cpu_instant._value["args"]["Addr"] = mem._start.address
-            mem.set_free_node(end_mem_cpu_instant)
-            data_memory.append(mem)
-        return data_memory
-    
-    def optimiser_memory(
-        self, iteration_index: int, persist_required: bool = True, *args, **kwargs
-    ) -> List[MemoryBlock]:
-        iteration_data = self.profiler.get_iteration(iteration_index)
-        ops_memory = iteration_data.optimiser_memory()
-        model_mem = [
-            mem.bytes
-            for mem in self.model_memory(iteration_index=iteration_index, reset=False)
-        ]
-        filter_ops_memory = []
-        for mem in ops_memory:
-            if mem.bytes in model_mem:
-                new_mem = copy.deepcopy(mem)
-                filter_ops_memory.append(new_mem)
-        if iteration_index == 1:
-            self._optimiser_memory = copy.deepcopy(filter_ops_memory)
-        new_filter_ops_memory = copy.deepcopy(self._optimiser_memory)[::2]
-
-        if persist_required:
-            for mem in filter_ops_memory:
-                # set end time to None as it is a persistent memory
-                mem._end = None
-
-        if len(filter_ops_memory) > 0:
-            if iteration_index == 1:
-                if len(filter_ops_memory) == 0:
-                    last_start_timepoint = iteration_data.optimiser_step[0]
-                else:
-                    last_start_timepoint = max([mem.alloc_time for mem in filter_ops_memory])
-            else:
-                filter_ops_memory = []
-                last_start_timepoint = iteration_data.optimiser_step[0]
-
-            max_length = len(new_filter_ops_memory)
-            for index, mem in enumerate(new_filter_ops_memory[::2]):
-                start_time = last_start_timepoint + index + 1
-                end_time = start_time + (max_length - index)
-                mem._start._value["ts"] = start_time
-                mem._end._value["ts"] = end_time
-                filter_ops_memory.append(mem)
-
-        return filter_ops_memory

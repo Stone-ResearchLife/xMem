@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 class XMem:
     def __init__(
         self,
-        data_loader: Optional[torch.utils.data.DataLoader] = None,
         batch_size: int = 200,
         input_size: int = 86,
         max_gpu_memory_in_gb: Union[int, float] = 4,
@@ -24,12 +23,6 @@ class XMem:
         run_id: Optional[str] = None,
     ):
         run_id = run_id or f"xMem-{batch_size}-{uuid4().hex[:8]}"
-        if data_loader is None:
-            data_loader = image_dataset(
-                batch=batch_size, image_size=(input_size, input_size)
-            )
-
-        self._data_loader = data_loader
         self._batch_size = batch_size
         self._config = config or Config(run_id=run_id, save2tmp=False)
         self._max_gpu_memory_in_gb = max_gpu_memory_in_gb
@@ -42,20 +35,18 @@ class XMem:
         self,
         profiler_file: str,
         output_only: bool = False,
-        trainer_enable: bool = False,
+        is_transformer: bool = False,
     ) -> dict:
         iteration = 2  # default value, better to keep it as default
         before_run = time.time()
-        if trainer_enable:
+        if is_transformer:
             estimator = TrainerEstimator(
-                dataloader=copy.deepcopy(self._data_loader), # dataloader will be removed in the future
                 profiler_file=profiler_file,
                 max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
                 config=self.conf,
             )
         else:
             estimator = Estimator(
-                dataloader=copy.deepcopy(self._data_loader),
                 profiler_file=profiler_file,
                 max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
                 config=self.conf,
@@ -72,7 +63,6 @@ class XMem:
         _estimated_result = copy.deepcopy(estimated_result)
         print(f"======================== Basic Information ========================")
         print(f"Batch Size: {self._batch_size}")
-        print(f"Input Size: {list(self._data_loader.dataset[0][0].shape)}")
         print(f"Max GPU Memory: {self._max_gpu_memory_in_gb} GB")
         print(f"Runtime: {estimated_result.get('runtime', -1)} s")
         print(f"======================== Estimated Result ========================")
