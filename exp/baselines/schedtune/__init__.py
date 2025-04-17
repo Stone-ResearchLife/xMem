@@ -1,12 +1,12 @@
 import torch
 import copy
 import time
-from typing import Union, Optional
+from typing import Optional
 from pathlib import Path
-from baselines.utils import GenComputationalGraph
-from baselines.fx import FXAnalyser
 from .estimator import Estimate as SchedtuneEstimator
 from ..abc import EstimatorInterface
+from ..utils import GenComputationalGraph
+from ..fx import FXAnalyser
 
 
 class ScheduleTune(EstimatorInterface):

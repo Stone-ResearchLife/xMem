@@ -9,7 +9,6 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
 #
-#
 # parser = argparse.ArgumentParser(description='Loading predictors and returning prediction.')
 # parser.add_argument('-j', '--jobname', help='Job name')
 # parser.add_argument('-o', '--option', help='option either 1 or 2')

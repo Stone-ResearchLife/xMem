@@ -6,7 +6,7 @@ from ures.files import filter_files
 from perf_estimator.estimator import Estimator, TrainerEstimator
 from perf_estimator.dataset import image_dataset
 from experiments.snapshot import SnapshotAnalyser
-from utility.data import DataAggregation, DataProcessorInterface, EstimatedMemoryRecord
+from utils.data import DataAggregation, DataProcessorInterface, EstimatedMemoryRecord
 
 
 def search_nvml_file(target_dir: Union[Path, str]) -> List[Path]:

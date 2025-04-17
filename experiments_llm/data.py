@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 from typing import Union, List
-from utility import *
+from utils import *
 
 
 class TrainerComparsion(DataProcessorInterface):

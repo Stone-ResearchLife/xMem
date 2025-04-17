@@ -60,7 +60,7 @@ if args.option == "1":
     # print("option 1")
     if "batchsize" in args.jobname:
         # print("train job")
-        train_mem_pred = joblib.load("./train_mem_RFR_3params.joblib")
+        train_mem_pred = joblib.load("train_mem_RFR_3params.joblib")
         ##CUDA_cores,MemoryBW_GBps,Memory_clock_speed_MHz,Tensor_cores,SM_count
         # X = df[['activations', 'parameters','input','Memory bandwidth (GB/s)','Pipelines/CUDA cores', 'SM count']]
         tm = train_mem_pred.predict(

@@ -43,7 +43,7 @@ class StrategyGenerator(ABC):
     @property
     def has_bias(self):
         """
-        A utility method to check for the existence of bias operand for convenience.
+        A utils method to check for the existence of bias operand for convenience.
         """
         return "bias" in self.op_data
 
@@ -80,7 +80,7 @@ class StrategyGenerator(ABC):
 
     def to_sharding_spec_mapping(self, mapping: Dict[str, Dict[int, List[int]]]):
         """
-        A utility method to convert the the dim partition dict to a ShardingSpec object.
+        A utils method to convert the the dim partition dict to a ShardingSpec object.
 
         Args:
             mapping (Dict[str, Dict[int, List[int]]]): the key of the mapping is the operation data name and the value is a dim partition dictionary.

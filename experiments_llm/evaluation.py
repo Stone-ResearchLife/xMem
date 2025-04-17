@@ -21,7 +21,7 @@ from experiments.trainer.plugins import ProfilerPlugin, HostMonitorPlugin, Snaps
 from perf_estimator.config import Config
 from ures.string import format_memory
 from typing import Optional
-from utility import search_profiler_file, search_nvml_file
+from utils import search_profiler_file, search_nvml_file
 
 logger = logging.getLogger(__name__)
 

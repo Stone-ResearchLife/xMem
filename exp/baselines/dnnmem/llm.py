@@ -2,8 +2,8 @@ import torch
 import time
 from typing import Optional, Union
 from perf_estimator.allocator import AllocatorSim, CachingAllocator
-from baselines.utils import GenComputationalGraph
-from baselines.abc import EstimatorInterface
+from ..utils import GenComputationalGraph
+from ..abc import EstimatorInterface
 
 
 class Estimator(EstimatorInterface):

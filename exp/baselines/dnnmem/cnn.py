@@ -5,8 +5,8 @@ import plotly.graph_objects as go
 from perf_estimator.data_structure.memory import MemoryBlock
 from perf_estimator.utilis.utilis import format_memory
 from perf_estimator.allocator import AllocatorSim, CachingAllocator
-from baselines.fx import FXAnalyser
-from baselines.abc import EstimatorInterface
+from ..fx import FXAnalyser
+from ..abc import EstimatorInterface
 
 
 class TensorMemoryBlock(MemoryBlock):
@@ -268,7 +268,6 @@ class Estimator(EstimatorInterface):
             width=800,
             margin=dict(l=50, r=50, t=50, b=50),
         )
-
         fig.show()
 
     def estimate(self):

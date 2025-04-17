@@ -125,8 +125,8 @@ class Configs:
             #         "dest": "experiments",
             #     },
             #     {
-            #         "src": "utility",
-            #         "dest": "utility",
+            #         "src": "utils",
+            #         "dest": "utils",
             #     },
             #     {
             #         "src": "experiments_llm",
@@ -156,8 +156,8 @@ class Configs:
                     "dest": "experiments",
                 },
                 {
-                    "src": "utility",
-                    "dest": "utility",
+                    "src": "utils",
+                    "dest": "utils",
                 },
                 {
                     "src": "experiments_llm",
