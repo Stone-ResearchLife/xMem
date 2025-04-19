@@ -1,11 +1,9 @@
 import logging
-import torch
 import copy
 import time
 from typing import Optional, Union
 from uuid import uuid4
 from perf_estimator.config import Config
-from perf_estimator.dataset import image_dataset
 from perf_estimator.estimator import Estimator, TrainerEstimator
 from perf_estimator.utilis.utilis import format_memory
 
@@ -17,7 +15,6 @@ class XMem:
     def __init__(
         self,
         batch_size: int = 200,
-        input_size: int = 86,
         max_gpu_memory_in_gb: Union[int, float] = 4,
         config: Optional[Config] = None,
         run_id: Optional[str] = None,
@@ -35,11 +32,10 @@ class XMem:
         self,
         profiler_file: str,
         output_only: bool = False,
-        is_transformer: bool = False,
     ) -> dict:
         iteration = 2  # default value, better to keep it as default
         before_run = time.time()
-        if is_transformer:
+        if self.conf.trainer.huggingface_enable:
             estimator = TrainerEstimator(
                 profiler_file=profiler_file,
                 max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
@@ -53,10 +49,11 @@ class XMem:
             )
         allocator, estimation_result = estimator.estimate(target_iteration=iteration)
         after_run = time.time()
-        allocator.plot_memory_change()
         estimation_result.update({"runtime": round(after_run - before_run, 2)})
         if not output_only:
+            allocator.plot_memory_change()
             estimation_result = self.display_output(estimation_result)
+
         return estimation_result
 
     def display_output(self, estimated_result: dict) -> dict:

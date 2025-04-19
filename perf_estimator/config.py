@@ -18,7 +18,6 @@ class TrainerConfig(BaseModel):
 
 class Config(BaseModel):
     model_config = ConfigDict()
-
     name: str = Field(default="DL-Estimator", description="Project Name")
     debug: bool = Field(default=False, description="Debug Mode")
     save2tmp: bool = Field(default=True, description="Save to Temp Directory")

@@ -56,6 +56,9 @@ def conv_train_loop(
 
                 if iterations is not None and index >= iterations:
                     break
+    except Exception as e:
+        raise RuntimeError(f"Training failed: {e}") from e
+
     finally:
         for _plugin in plugins:
             print(f"Stop {_plugin.tool_name} plugin")
@@ -74,6 +77,7 @@ def transformer_train_loop(
         plugins: List[InterfacePlugin] = [],
         zero_grad_mode: Optional[int] = None,
 ):
+
 
     [_plugin.start() for _plugin in plugins]
     time.sleep(2)

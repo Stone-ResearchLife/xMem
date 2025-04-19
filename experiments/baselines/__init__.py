@@ -1,4 +1,4 @@
-from exp.baselines.schedtune.estimator import Schedtune
+from experiments.baselines.schedtune_class import Schedtune
 from .LLmem_startup import SizeEstimator as LLmemEstimator
 from .dnnmem import DNNmem
 

@@ -18,7 +18,7 @@ class ModelPreparer:
         self.is_transformer = False
         self.model = self.get_model(model_name)
         self.dl = self.get_dataloader(batch_size)
-        self.optimiser = optimiser or torch.optim.AdamW
+        self.optimiser = getattr(torch.optim, optimiser or "AdamW", None)
 
     def get_model(self, model_name: str) -> torch.nn.Module:
         if getattr(AllModels, model_name, None) is None:
@@ -114,21 +114,43 @@ class ModelTrainer:
         print(f"Directory: {self._config.base_dir}")
         print("================================================")
 
-    def train(self, is_transformer: bool = False):
-        self.show_summary()
+    def train(self, is_transformer: bool = False, display_info: bool = False) -> tuple[Config, bool]:
+        """
+        Train the model on CPU and return the configuration.
+
+        Returns:
+            tuple: A tuple containing the configuration and a boolean indicating if the training occurred OOM.
+
+        """
+        if display_info:
+            self.show_summary()
+
         if is_transformer:
             func = transformer_train_loop
         else:
             func = conv_train_loop
 
-        func(
-            model=self._model,
-            data_loader=self._data_loader,
-            epochs=self._epochs,
-            device=self._device,
-            iterations=self._iterations,
-            lr=self._lr,
-            plugins=self._plugins,
-            optimizer=self._optimiser,
-            zero_grad_mode=self._zero_grad_mode,
-        )
+        try:
+            func(
+                model=self._model,
+                data_loader=self._data_loader,
+                epochs=self._epochs,
+                device=self._device,
+                iterations=self._iterations,
+                lr=self._lr,
+                plugins=self._plugins,
+                optimizer=self._optimiser,
+                zero_grad_mode=self._zero_grad_mode,
+            )
+        except Exception as e:
+            if "CUDA out of memory" in str(e):
+                logger.warning(
+                    f"CUDA out of memory, please check the GPU memory usage."
+                )
+                return self._config, True
+            else:
+                raise RuntimeError(f"Unexpected error: {e}") from e
+        else:
+            logger.info("Training completed successfully.")
+            return self._config, False
+

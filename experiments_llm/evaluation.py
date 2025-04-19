@@ -332,7 +332,6 @@ class LLMEvaluator:
         from perf_estimator.dataset import image_dataset
         max_m_in_bytes, _ = self.get_total_gpu_memory()
         estimator = TrainerEstimator(
-            dataloader=image_dataset(batch=10),
             profiler_file=p_files[-1],
             max_gpu_memory_in_gb=round(max_m_in_bytes/1024**3, 2),
             config=config,
