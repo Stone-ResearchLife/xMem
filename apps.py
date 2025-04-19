@@ -1,6 +1,6 @@
 import fire
-from xmem_container.apps import XMem, XProfiler, TProfiler
-from xmem_container.evaluations import HFTComparsion, LLMExperiment
+from paper_container.apps import XMem, XProfiler
+from paper_container.evaluations import Experiments
 
 
 class APPs:
@@ -17,9 +17,7 @@ class APPs:
     def __init__(self):
         self.xmem = XMem()
         self.xprofiler = XProfiler()
-        self.tprofiler = TProfiler()
-        self.hftcomp = HFTComparsion()
-        self.llmexp = LLMExperiment()
+        self.experiments = Experiments()
 
 
 if __name__ == "__main__":

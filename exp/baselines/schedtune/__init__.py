@@ -59,7 +59,7 @@ class ScheduleTune(EstimatorInterface):
 
     @property
     def estimate_memory(self):
-        return self._memory
+        return float(self._memory)
 
     def estimate(self, *args, **kwargs) -> None:
         s_time = time.time_ns()

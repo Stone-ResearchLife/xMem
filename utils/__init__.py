@@ -5,7 +5,7 @@ from pathlib import Path
 from ures.files import filter_files
 from perf_estimator.estimator import Estimator, TrainerEstimator
 from perf_estimator.dataset import image_dataset
-from experiments.snapshot import SnapshotAnalyser
+from exp.snapshot import SnapshotAnalyser
 from utils.data import DataAggregation, DataProcessorInterface, EstimatedMemoryRecord
 
 

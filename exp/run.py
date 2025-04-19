@@ -1,6 +1,8 @@
 import copy
 import time
 import uuid
+
+import fire
 import torch
 import json
 import tqdm
@@ -13,9 +15,7 @@ from ures.string import format_memory
 from ures.files import filter_files
 from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file
-# from .config import ExperimentConfig
-# from .trainer.trainer import ModelPreparer
-from exp.config import ExperimentConfig
+from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments
 from exp.trainer.trainer import ModelPreparer
 
 
@@ -100,6 +100,9 @@ class _ExperimentExecutor:
             dict: The summary data.
 
         """
+        if not self.summary_json_path.parent.is_dir():
+            self.summary_json_path.parent.mkdir(parents=True, exist_ok=True)
+
         if self.summary_json_path.is_file():
             with open(self.summary_json_path) as f:
                 summary_data = json.load(f)
@@ -129,13 +132,30 @@ class _ExperimentExecutor:
             max_est_memory_in_bytes=self.gpu_total_memory,
         )
         dnn.estimate()
-        _result = self._unified_format(
+        return self._unified_format(
             name=SummarySectionName.DNNmem,
             memory=dnn.estimate_memory,
             runtime=dnn.execute_time,
             oom=dnn.estimate_memory > self.gpu_total_memory
         )
-        return _result
+
+    def run_schedtune(self):
+        from exp.baselines.schedtune import ScheduleTune
+        model_p = self._get_model_p_instance()
+        schedtune = ScheduleTune(
+            model= model_p.model,
+            dataloader= model_p.dl,
+            optimizer=model_p.optimiser,
+            is_transformer=model_p.is_transformer,
+            device_id=self.gpu_id
+        )
+        schedtune.estimate()
+        return self._unified_format(
+            name=SummarySectionName.schedtune,
+            memory=schedtune.estimate_memory,
+            runtime=schedtune.execute_time,
+            oom=schedtune.estimate_memory > self.gpu_total_memory
+        )
 
 
     def run_solution(self):
@@ -187,9 +207,6 @@ class _ExperimentExecutor:
         return g_config
 
     def _unified_format(self, name: SummarySectionName, memory: int, oom: bool, runtime: int):
-        memory = copy.deepcopy(memory)
-        oom = copy.deepcopy(oom)
-        runtime = copy.deepcopy(runtime)
         _formatted_data ={
             "tool": name.value,
             "memory": memory,
@@ -294,6 +311,9 @@ class ExperimentRun:
             else:
                 task_id = f"{'-'.join(indices)}-{uuid.uuid4().hex[:3]}"
         else:
+            # Ensure task_id is a string
+            # task_is is treated as an int when task_id consists of digits
+            task_id = str(task_id)
             # The code provides a capability to restore the model name
             formatted_model_name = model_name
             task_id_pieces = task_id.split("-")
@@ -310,7 +330,7 @@ class ExperimentRun:
             run_id=run_id,
             save2tmp=False
         )
-        _exe_config.debug = True
+        # _exe_config.debug = True
 
         _exe_instance = _ExperimentExecutor(
             model_name=model_name,
@@ -356,7 +376,7 @@ class ExperimentRun:
 
     def run_group_truth(self):
         """
-        Run the experiment.
+        Run the experiment to get the ground truth.
         """
         if len(self._job_list) == 0:
             self.prepare_regular_experiments_data()
@@ -364,43 +384,121 @@ class ExperimentRun:
             task.run_ground_truth()
             time.sleep(1)
 
-    def run_estimation(self, estimators: list[SummarySectionName]):
+    def run_estimation(
+            self,
+            estimators: list[SummarySectionName],
+            force: bool = False,
+            in_docker: bool = False
+    ) -> Optional[dict]:
         """
-        Run the experiment.
+        Run the experiment to get the estimated results.
         """
-        if len(self._job_list) > 0:
+        if len(self._job_list) == 0 or force:
             self._job_list: list[_ExperimentExecutor] = []
-        self.load_from_exist_data()
-            
-        for index, task in enumerate(tqdm.tqdm(self._job_list)):
-            summary_data = task.load_json()
-            for est in estimators:
-                if est.value not in summary_data.keys():
-                    print(f"{task.model_name} estimated by {est.value}")
-                    try:
-                        if est == SummarySectionName.solution:
-                            task.run_solution()
-                        elif est == SummarySectionName.DNNmem:
-                            task.run_ddnmem()
-                        elif est == SummarySectionName.schedtune:
-                            pass
-                        elif est == SummarySectionName.LLmem:
-                            pass
+            self.load_from_exist_data()
+
+        if in_docker:
+            from paper_container.evaluations import Experiments
+            exp = Experiments()
+            containers = []
+            print("================== Create docker containers ==================")
+            for index, task in enumerate(tqdm.tqdm(self._job_list)):
+                run_id = str(task.config.run_id).split('/')[0]
+                task_id = str(run_id).split("_")[-1]
+                formatted_model_name = run_id.split("_")[0]
+                args = {
+                    "model": formatted_model_name,
+                    "batch": task.batch_size,
+                    "optimizer": task.optimiser,
+                    "gpu_id": task.gpu_id,
+                    "task_id": task_id,
+                    "is_transformer": True if isinstance(self._config, TransformerExperiments) else False,
+                }
+                for est in estimators:
+                    if est == SummarySectionName.solution:
+                        args["paper"] = True
+                    elif est == SummarySectionName.DNNmem:
+                        args["dnnmem"] = True
+                    elif est == SummarySectionName.schedtune:
+                        args["schedtune"] = True
+                    elif est == SummarySectionName.LLmem:
+                        args["llmem"] = True
+
+                container = exp.add_container(**args)
+                containers.append(container)
+            print("================== Execute docker containers ==================")
+            exp.execute(manual_container=True)
+            print("================== Statistics ==================")
+            print(f"Run(success/total): {len([(int(cont.exit_code) == 0) is True for cont in containers])}/{len(containers)}")
+
+        else:
+            summary = {}
+            for index, task in enumerate(tqdm.tqdm(self._job_list)):
+                summary_data = task.load_json()
+                results = []
+                for est in estimators:
+                    if est.value not in summary_data.keys():
+                        print(f"{task.model_name} estimated by {est.value}")
+                        try:
+                            if est == SummarySectionName.solution:
+                                result = task.run_solution()
+                            elif est == SummarySectionName.DNNmem:
+                                result = task.run_ddnmem()
+                            elif est == SummarySectionName.schedtune:
+                                result = task.run_schedtune()
+                            elif est == SummarySectionName.LLmem:
+                                result = {}
+                            else:
+                                raise ValueError(f"Unknown estimator: {est.value}")
+                        except Exception as e:
+                            logger.error(f"Error occurred while running {est.value}: {e}")
+                            continue
                         else:
-                            raise ValueError(f"Unknown estimator: {est.value}")
-                    except Exception as e:
-                        logger.error(f"Error occurred while running {est.value}: {e}")
-                        continue
-                    time.sleep(1)
+                            results.append(result)
+                        time.sleep(1)
+                if not in_docker:
+                    summary[task.config.run_id] = results
+            return summary
+
+
+def estimate(
+        model: str,
+        batch: int,
+        optimizer: str,
+        gpu_id: int,
+        task_id: Optional[str] = None,
+        is_transformer: bool = True,
+        dnnmem: bool = False,
+        llmem: bool = False,
+        schedtune: bool = False,
+        paper: bool = False,
+):
+    if not any([llmem, schedtune, paper, dnnmem]):
+        raise ValueError(f"At least one estimator should be selected.(DNNmem, LLmem, SchedTune, Paper)")
+    else:
+        estimate_list = []
+        if dnnmem:
+            estimate_list.append(SummarySectionName.DNNmem)
+        if llmem:
+            estimate_list.append(SummarySectionName.LLmem)
+        if schedtune:
+            estimate_list.append(SummarySectionName.schedtune)
+        if paper:
+            estimate_list.append(SummarySectionName.solution)
+
+    conf = TransformerExperiments() if is_transformer else CNNExperiments()
+    exp = ExperimentRun(config=conf)
+    exp.add_task(
+        model_name=model,
+        batch_size=batch,
+        optimizer=optimizer,
+        gpu_id=gpu_id,
+        task_id=task_id,
+    )
+    results = exp.run_estimation(estimators=estimate_list)
+    print(results)
+
 
 
 if __name__ == '__main__':
-    from exp.config import TransformerExperiments
-    config = TransformerExperiments()
-    exp = ExperimentRun(config=config)
-    est_list = [SummarySectionName.DNNmem]
-    exp.run_estimation(estimators=est_list)
-
-
-
-
+    fire.Fire(estimate)
