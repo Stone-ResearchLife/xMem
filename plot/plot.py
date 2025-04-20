@@ -702,9 +702,9 @@ class ExperimentPlot:
         # Create a box plot grouped by 'Category'
         fig = px.box(
             df,
-            x="tool",
+            x="model",
             y="error",
-            color="model",
+            color="tool",
             category_orders={"model": model_order},
             labels={"tool": "Estimator", "error": "Error", "model": "Model"},
             boxmode="group",

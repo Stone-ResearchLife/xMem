@@ -403,6 +403,7 @@ class ExperimentRun:
             containers = []
             print("================== Create docker containers ==================")
             for index, task in enumerate(tqdm.tqdm(self._job_list)):
+                summary_data = task.load_json()
                 run_id = str(task.config.run_id).split('/')[0]
                 task_id = str(run_id).split("_")[-1]
                 formatted_model_name = run_id.split("_")[0]
@@ -413,8 +414,16 @@ class ExperimentRun:
                     "gpu_id": task.gpu_id,
                     "task_id": task_id,
                     "is_transformer": True if isinstance(self._config, TransformerExperiments) else False,
+                    "paper": False,
+                    "dnnmem": False,
+                    "schedtune": False,
+                    "llmem": False,
                 }
                 for est in estimators:
+                    if est.value in summary_data.keys():
+                        # Skip the task if the estimator is already present in the summary
+                        continue
+
                     if est == SummarySectionName.solution:
                         args["paper"] = True
                     elif est == SummarySectionName.DNNmem:
@@ -424,13 +433,14 @@ class ExperimentRun:
                     elif est == SummarySectionName.LLmem:
                         args["llmem"] = True
 
-                container = exp.add_container(**args)
-                containers.append(container)
+                # Only add the container if at least one estimator is selected
+                if any([args["paper"], args["dnnmem"], args["schedtune"], args["llmem"]]):
+                    container = exp.add_container(**args)
+                    containers.append(container)
             print("================== Execute docker containers ==================")
             exp.execute(manual_container=True)
             print("================== Statistics ==================")
             print(f"Run(success/total): {len([(int(cont.exit_code) == 0) is True for cont in containers])}/{len(containers)}")
-
         else:
             summary = {}
             for index, task in enumerate(tqdm.tqdm(self._job_list)):
@@ -459,6 +469,120 @@ class ExperimentRun:
                 if not in_docker:
                     summary[task.config.run_id] = results
             return summary
+
+    def statistics(self):
+        from ures.tools.enum import EnumManipulator
+        key_section_enum = EnumManipulator(SummarySectionName)
+        key_list = key_section_enum.fetch_keys()
+        self._job_list: list[_ExperimentExecutor] = []
+        self.load_from_exist_data()
+        summary = {
+            "total": len(self._job_list),
+        }
+        for index, task in enumerate(tqdm.tqdm(self._job_list)):
+            summary_data = task.load_json()
+            for key_name in key_list:
+                if key_name not in summary:
+                    summary[key_name] = 0
+                if key_section_enum.fetch_value(key_name) in summary_data.keys():
+                    summary[key_name] += 1
+
+        print(f"=============== Statistics for {self._config.run_id} ==================")
+        for key_name in key_list:
+            print(f"{key_name}: {summary[key_name]}/{summary['total']}")
+
+    def to_evaluation_result(self):
+        """
+        In order to reduce redundant work for ploting diagram, the function is used to
+        convert the summary.json file to the old form of the evaluation result.
+        """
+        self._job_list: list[_ExperimentExecutor] = []
+        self.load_from_exist_data()
+        pandas_list = []
+        for index, task in enumerate(tqdm.tqdm(self._job_list)):
+            summary_data = task.load_json()
+            old_evaluation_json_path = task.summary_json_path.parent.joinpath("evaluation_result.json")
+            old_summary_data = {
+                SummarySectionName.train.value: copy.deepcopy(summary_data[SummarySectionName.train.value]),
+                SummarySectionName.config.value: copy.deepcopy(summary_data[SummarySectionName.config.value]),
+            }
+            # get groundtruth
+            if SummarySectionName.groundtruth.value not in summary_data.keys():
+                logger.warning(f"Ground truth not found for {task.config.run_id}")
+                continue
+
+            gt_data = summary_data[SummarySectionName.groundtruth.value]
+            gt_mem_1st = gt_data["memory"]
+            gt_oom_1st = gt_data["oom"]
+
+            # Get DNNmem
+            if SummarySectionName.DNNmem.value in summary_data.keys():
+                formatted_data = self.format_old_json_data(
+                    memory=summary_data[SummarySectionName.DNNmem.value]["memory"],
+                    oom=summary_data[SummarySectionName.DNNmem.value]["oom"],
+                    runtime=summary_data[SummarySectionName.DNNmem.value]["runtime"],
+                    ground=gt_mem_1st,
+                    real_oom=gt_oom_1st,
+                )
+                old_summary_data["dnnmem"] = formatted_data
+                formatted_data['tool'] = "DNNmem"
+                pandas_list.append(formatted_data)
+
+            # Get SchedTune
+            if SummarySectionName.schedtune.value in summary_data.keys():
+                formatted_data = self.format_old_json_data(
+                    memory=summary_data[SummarySectionName.schedtune.value]["memory"],
+                    oom=summary_data[SummarySectionName.schedtune.value]["oom"],
+                    runtime=summary_data[SummarySectionName.schedtune.value]["runtime"],
+                    ground=gt_mem_1st,
+                    real_oom=gt_oom_1st,
+                )
+                formatted_data['tool'] = "SchedTune"
+                old_summary_data["schedtune"] = formatted_data
+                pandas_list.append(formatted_data)
+
+            # Get Solution
+            if SummarySectionName.solution.value in summary_data.keys():
+                formatted_data = self.format_old_json_data(
+                    memory=summary_data[SummarySectionName.solution.value]["memory"],
+                    oom=summary_data[SummarySectionName.solution.value]["oom"],
+                    runtime=summary_data[SummarySectionName.solution.value]["runtime"],
+                    ground=gt_mem_1st,
+                    real_oom=gt_oom_1st,
+                )
+                formatted_data['tool'] = "Solution"
+                old_summary_data["solution"] = formatted_data
+                pandas_list.append(formatted_data)
+
+            with open(old_evaluation_json_path, 'w') as f:
+                json.dump(old_summary_data, f, indent=4)
+
+        return pandas_list
+
+    def format_old_json_data(
+            self,
+            memory: int,
+            oom: bool,
+            runtime: int,
+            ground: int,
+            real_oom: bool,
+            verification_error: Optional[str] = None,
+            verification_oom: bool = True,
+    ):
+        _data = {
+            "memory": memory,
+            "oom": oom,
+            "runtime": runtime,
+            "ground": ground,
+            "error": abs(memory - ground) / ground,
+            "real_oom": real_oom,
+            "correct_estimation": oom == real_oom,
+            "2nd verification": {
+                "oom": verification_oom,
+                "error": verification_error
+            }
+        }
+        return _data
 
 
 def estimate(
