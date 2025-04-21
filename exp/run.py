@@ -620,61 +620,82 @@ class ExperimentRun:
             gt_mem_1st = gt_data["memory"]
             gt_oom_1st = gt_data["oom"]
 
-            # Get DNNmem
-            if SummarySectionName.DNNmem.value in summary_data.keys():
-                formatted_data = self.format_old_json_data(
-                    memory=summary_data[SummarySectionName.DNNmem.value]["memory"],
-                    oom=summary_data[SummarySectionName.DNNmem.value]["oom"],
-                    runtime=summary_data[SummarySectionName.DNNmem.value]["runtime"],
-                    ground=gt_mem_1st,
-                    real_oom=gt_oom_1st,
-                )
-                old_summary_data["dnnmem"] = formatted_data
-                formatted_data['tool'] = "DNNmem"
-                pandas_list.append(formatted_data)
-
-            # Get SchedTune
-            if SummarySectionName.schedtune.value in summary_data.keys():
-                formatted_data = self.format_old_json_data(
-                    memory=summary_data[SummarySectionName.schedtune.value]["memory"],
-                    oom=summary_data[SummarySectionName.schedtune.value]["oom"],
-                    runtime=summary_data[SummarySectionName.schedtune.value]["runtime"],
-                    ground=gt_mem_1st,
-                    real_oom=gt_oom_1st,
-                )
-                formatted_data['tool'] = "SchedTune"
-                old_summary_data["schedtune"] = formatted_data
-                pandas_list.append(formatted_data)
-
-            # Get Solution
-            if SummarySectionName.solution.value in summary_data.keys():
-                formatted_data = self.format_old_json_data(
-                    memory=summary_data[SummarySectionName.solution.value]["memory"],
-                    oom=summary_data[SummarySectionName.solution.value]["oom"],
-                    runtime=summary_data[SummarySectionName.solution.value]["runtime"],
-                    ground=gt_mem_1st,
-                    real_oom=gt_oom_1st,
-                )
-                formatted_data['tool'] = "Solution"
-                old_summary_data["solution"] = formatted_data
-                pandas_list.append(formatted_data)
+            for est in [SummarySectionName.schedtune, SummarySectionName.solution, SummarySectionName.DNNmem]:
+                if est.value in summary_data.keys():
+                    est_data = summary_data[est.value]
+                    formatted_data = self.format_old_json_data(
+                        name=est_data["tool"],
+                        memory=est_data["memory"],
+                        oom=est_data["oom"],
+                        runtime=est_data["runtime"],
+                        ground=gt_mem_1st,
+                        real_oom=gt_oom_1st,
+                        verification_oom=est_data.get("verification", {}).get("oom", None),
+                        verification_ground=est_data.get("verification", {}).get("ground", None),
+                    )
+                    old_summary_data[est.value] = formatted_data
+                    pandas_list.append(formatted_data)
 
             with open(old_evaluation_json_path, 'w') as f:
                 json.dump(old_summary_data, f, indent=4)
+
+            # # Get DNNmem
+            # if SummarySectionName.DNNmem.value in summary_data.keys():
+            #     formatted_data = self.format_old_json_data(
+            #         memory=summary_data[SummarySectionName.DNNmem.value]["memory"],
+            #         oom=summary_data[SummarySectionName.DNNmem.value]["oom"],
+            #         runtime=summary_data[SummarySectionName.DNNmem.value]["runtime"],
+            #         ground=gt_mem_1st,
+            #         real_oom=gt_oom_1st,
+            #     )
+            #     old_summary_data["dnnmem"] = formatted_data
+            #     formatted_data['tool'] = "DNNmem"
+            #     pandas_list.append(formatted_data)
+            #
+            # # Get SchedTune
+            # if SummarySectionName.schedtune.value in summary_data.keys():
+            #     formatted_data = self.format_old_json_data(
+            #         memory=summary_data[SummarySectionName.schedtune.value]["memory"],
+            #         oom=summary_data[SummarySectionName.schedtune.value]["oom"],
+            #         runtime=summary_data[SummarySectionName.schedtune.value]["runtime"],
+            #         ground=gt_mem_1st,
+            #         real_oom=gt_oom_1st,
+            #     )
+            #     formatted_data['tool'] = "SchedTune"
+            #     old_summary_data["schedtune"] = formatted_data
+            #     pandas_list.append(formatted_data)
+            #
+            # # Get Solution
+            # if SummarySectionName.solution.value in summary_data.keys():
+            #     formatted_data = self.format_old_json_data(
+            #         memory=summary_data[SummarySectionName.solution.value]["memory"],
+            #         oom=summary_data[SummarySectionName.solution.value]["oom"],
+            #         runtime=summary_data[SummarySectionName.solution.value]["runtime"],
+            #         ground=gt_mem_1st,
+            #         real_oom=gt_oom_1st,
+            #     )
+            #     formatted_data['tool'] = ""
+            #     old_summary_data["solution"] = formatted_data
+            #     pandas_list.append(formatted_data)
+
 
         return pandas_list
 
     def format_old_json_data(
             self,
+            name: str,
             memory: int,
             oom: bool,
             runtime: int,
             ground: int,
             real_oom: bool,
-            verification_error: Optional[str] = None,
+            verification_ground: Optional[int] = None,
             verification_oom: bool = True,
     ):
+        if verification_oom is True:
+            verification_ground = None
         _data = {
+            "tool": name,
             "memory": memory,
             "oom": oom,
             "runtime": runtime,
@@ -684,7 +705,7 @@ class ExperimentRun:
             "correct_estimation": oom == real_oom,
             "2nd verification": {
                 "oom": verification_oom,
-                "error": verification_error
+                "error": abs(verification_ground - memory) / ground if verification_ground is not None else None,
             }
         }
         return _data

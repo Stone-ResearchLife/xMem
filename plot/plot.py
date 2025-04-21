@@ -888,7 +888,7 @@ class ExperimentPlot:
                 "Mean_Error": "Relative Error (%)",
                 "name": "Estimator",
             },
-            color="model",  # Differentiates points by 'name' using color
+            color="tool",  # Differentiates points by 'name' using color
             symbol="model",  # Differentiates points by 'name' using marker symbols
             hover_data=[
                 "Correct_Estimation_False_Count",
