@@ -28,7 +28,7 @@ class TransformerExperiments(ExperimentConfig):
     run_id: str = Field(default="Transformer-Exp", description="Run ID for the experiment.")
     models: list[str] = Field(
         default=[
-            "EleutherAI/gpt-neo-125M",
+            "EleutherAI/gpt-Vneo-125M",
             "facebook/opt-125m",
             "facebook/opt-350m",
             "cerebras/Cerebras-GPT-111M",

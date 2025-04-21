@@ -34,7 +34,7 @@ class XMem:
         output_only: bool = False,
     ) -> dict:
         iteration = 2  # default value, better to keep it as default
-        before_run = time.time()
+        before_run = time.time_ns()
         if self.conf.trainer.huggingface_enable:
             estimator = TrainerEstimator(
                 profiler_file=profiler_file,
@@ -48,7 +48,7 @@ class XMem:
                 config=self.conf,
             )
         allocator, estimation_result = estimator.estimate(target_iteration=iteration)
-        after_run = time.time()
+        after_run = time.time_ns()
         estimation_result.update({"runtime": round(after_run - before_run, 2)})
         if not output_only:
             allocator.plot_memory_change()

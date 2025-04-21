@@ -91,7 +91,15 @@ class FastRunner:
             ProfilerPlugin(config=cpu_config),
         ]
         if self.config.debug:
-            profilers.append(HostMonitorPlugin(config=cpu_config))
+            profilers.append(
+                HostMonitorPlugin(
+                    interval_ms = 1,
+                    config=cpu_config,
+                    gpu_enable=True,
+                    cpu_enable=False,
+                    network_enable=False
+                )
+            )
             profilers.append(SnapshotPlugin(config=cpu_config))
         trainer = ModelTrainer(
             model=copy.deepcopy(self.model_preparer.model),

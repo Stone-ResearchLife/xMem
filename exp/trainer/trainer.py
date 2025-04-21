@@ -78,7 +78,7 @@ class ModelTrainer:
         gpu_id: int = 0,
         iterations: Optional[int] = 1,
         zero_grad_mode: int = 1,
-        plugins: List["InterfacePlugin"] = None,
+        plugins: List["AbcPlugin"] = None,
         optimiser: Optional[torch.optim.Optimizer] = None,
         config: Config = default_setting,
     ):
@@ -130,6 +130,7 @@ class ModelTrainer:
         else:
             func = conv_train_loop
 
+        _conf = self._config.model_copy(deep=True)
         try:
             func(
                 model=self._model,
@@ -147,10 +148,10 @@ class ModelTrainer:
                 logger.warning(
                     f"CUDA out of memory, please check the GPU memory usage."
                 )
-                return self._config, True
+                return _conf, True
             else:
                 raise RuntimeError(f"Unexpected error: {e}") from e
         else:
             logger.info("Training completed successfully.")
-            return self._config, False
+            return _conf, False
 

@@ -66,7 +66,7 @@ class ContainersReady:
         return self._image_manager.images[full_name]
 
     @property
-    def estimate_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
+    def paper_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
         image_name = "paper-estimator"
         tag = "latest"
         full_name = f"{image_name}:{tag}"
@@ -74,8 +74,22 @@ class ContainersReady:
             self._add_image(
                 image_name=image_name,
                 tag=tag,
-                config=self._configs.exp_config(),
+                config=self._configs.paper_config(),
                 base=self.new_experiment_base_image["image"],
+            )
+        return self._image_manager.images[full_name]
+
+    @property
+    def schedtun_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
+        image_name = "schedtun-estimator"
+        tag = "latest"
+        full_name = f"{image_name}:{tag}"
+        if full_name not in self._image_manager.images.keys():
+            self._add_image(
+                image_name=image_name,
+                tag=tag,
+                config=self._configs.schedtune_config(),
+                base=self.experiment_image["image"],
             )
         return self._image_manager.images[full_name]
 

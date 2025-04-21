@@ -218,7 +218,7 @@ class LLMEvaluator:
             model_name,
             optimizer: str = "AdamW",
             batch_size: int = 10,
-            gpu_id: int = 1,
+            gpu_id: int = 0,
             config: Config = None,
             tool_name: str = "xMem",
             iterations: int = 2,

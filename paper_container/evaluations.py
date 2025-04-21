@@ -12,14 +12,19 @@ class Experiments(AbcExecutor):
             image=self.image,
             client=self._client,
         )
+        self._schedtune_containers = Containers(
+            image=self._images.schedtun_image["image"],
+            client=self._client,
+        )
 
     @property
     def image(self):
-        return self._images.estimate_image['image']
+        return self._images.paper_image['image']
 
     def prepare(self):
         print("Building images.")
-        _ = self._images.estimate_image
+        _ = self._images.schedtun_image
+        _ = self._images.paper_image
         self._images.build()
 
     def add_container(
@@ -34,6 +39,7 @@ class Experiments(AbcExecutor):
             llmem: bool = False,
             schedtune: bool = False,
             paper: bool = False,
+            ground: bool = False,
     ):
         command = [
             "--model", model,
@@ -45,18 +51,22 @@ class Experiments(AbcExecutor):
             "--llmem", llmem,
             "--schedtune", schedtune,
             "--paper", paper,
+            "--ground", ground,
 
         ]
         if task_id is not None:
             command += ["--task_id", task_id]
 
-
         run_id = f"llm-{model.replace('/', '-')}-{optimizer}-{batch}_{uuid.uuid4().hex[:8]}"
         runtime_conf = RuntimeConfig(
-            name=f"{run_id.lower()}-{unique_id()[:8]}",
+            name=f"{run_id.lower()}",
             command=command,
         )
-        runtime_conf.gpus = [str(0), str(1)]
+        if isinstance(gpu_id, int):
+            import torch
+            numer_gpu = torch.cuda.device_count()
+            runtime_conf.gpus = [str(i) for i in range(numer_gpu)]
+
         self._add_pytorch_dataset_volume(config=runtime_conf)
         self._add_huggingface_cache_volume(config=runtime_conf)
         if is_transformer:
@@ -70,13 +80,22 @@ class Experiments(AbcExecutor):
             container_path=str(dest_container),
             mode="rw",
         )
-        return self._containers.create(**runtime_conf.model_dump())
+        containers = []
+        if schedtune:
+            runtime_conf.name = f"schedtune-{runtime_conf.name}"
+            containers.append(self._schedtune_containers.create(**runtime_conf.model_dump()))
+        
+        if paper or dnnmem or ground:
+            containers.append(self._containers.create(**runtime_conf.model_dump()))
+
+        return containers
 
     def _execute(self, **kwargs):
         print(
             f"=============== Start massively run for GPU train ======================"
         )
         self._containers.run()
+        self._schedtune_containers.run()
 
     def execute(
             self,

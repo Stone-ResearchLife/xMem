@@ -1,13 +1,13 @@
 import copy
 import time
 import uuid
-
 import fire
 import torch
 import json
 import tqdm
 import re
 import logging
+import os
 from enum import Enum
 from pathlib import Path
 from typing import Optional
@@ -17,9 +17,17 @@ from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file
 from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments
 from exp.trainer.trainer import ModelPreparer
-
+from paper_container.evaluations import Experiments
+from ures.docker.container import Container
 
 logger = logging.getLogger(__name__)
+
+if torch.cuda.device_count() > 1:
+    os.environ["NCCL_P2P_DISABLE"] = "1"
+    os.environ["NCCL_IB_DISABLE"] = "1"
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":0:0"
+torch.backends.cuda.cufft_plan_cache.max_size = 1
 
 
 # =============== If Multiprocessing Needed =============== #
@@ -66,6 +74,7 @@ class _ExperimentExecutor:
         }
         # supplement run_id with gpu name
         config.run_id = f"{config.run_id}/{str(gpu_info.name).replace(' ', '-')}"
+        config.trainer.huggingface_model_name = model_name
         self.config = config
 
     @property
@@ -91,6 +100,11 @@ class _ExperimentExecutor:
     @property
     def summary_json_path(self) -> Path:
         return self.config.base_dir.joinpath("summary.json")
+
+    @property
+    def _get_framework_mem(self) -> Optional[int]:
+        ground_data = self.load_json()
+        return int(ground_data.get(SummarySectionName.groundtruth.value, {}).get("framework_mem", 0))
 
     def load_json(self) -> dict:
         """
@@ -134,7 +148,7 @@ class _ExperimentExecutor:
         dnn.estimate()
         return self._unified_format(
             name=SummarySectionName.DNNmem,
-            memory=dnn.estimate_memory,
+            memory=dnn.estimate_memory + self._get_framework_mem,
             runtime=dnn.execute_time,
             oom=dnn.estimate_memory > self.gpu_total_memory
         )
@@ -173,11 +187,12 @@ class _ExperimentExecutor:
             raise RuntimeError(f"Non OOM error occurred: {e}") from e
         time.sleep(1)
 
-        self._get_solution_est(c_config)
+        result = self._get_solution_est(c_config)
 
-        return c_config
+        return result
 
     def run_ground_truth(self):
+        import GPUtil
         from exp.trainer import FastRunner
         s_time = time.time_ns()
         runner = FastRunner(
@@ -191,22 +206,62 @@ class _ExperimentExecutor:
             g_config, oom = runner.train_on_gpu()
         except Exception as e:
             raise RuntimeError(f"Non OOM error occurred: {e}") from e
-        finally:
-            e_time = time.time_ns()
-            torch.cuda.empty_cache()
 
+        e_time = time.time_ns()
+        torch.cuda.empty_cache()
         time.sleep(2)
+        frame_mem = GPUtil.getGPUs()[self.gpu_id].memoryUsed * 1024**2
         ground_truth = self._get_ground_truth(g_config)
-        self._unified_format(
+        result = self._unified_format(
             name=SummarySectionName.groundtruth,
             memory=ground_truth,
             oom=oom,
             runtime= e_time - s_time,
+            verify=False,
+            framework_mem=frame_mem
         )
+        return result
 
-        return g_config
+    def _get_mem_fraction(self, mem_in_bytes: float) -> float:
+        return round(mem_in_bytes/self.gpu_total_memory, 2)
 
-    def _unified_format(self, name: SummarySectionName, memory: int, oom: bool, runtime: int):
+    def _verify_est_mem(self, mem_fraction: float) -> tuple[int, bool]:
+        from exp.trainer import FastRunner
+        mem_fraction = 1. if mem_fraction > 1 else mem_fraction
+        runner = FastRunner(
+            model_name=self.model_name,
+            batch_size=self.batch_size,
+            optimiser=self.optimiser,
+            gpu_id=self.gpu_id,
+            config=self.config,
+        )
+        try:
+            g_config, oom = runner.train_on_gpu(fraction_gpu=mem_fraction)
+        except Exception as e:
+            raise RuntimeError(f"Non OOM error occurred: {e}") from e
+
+        torch.cuda.empty_cache()
+        # system take time writing data into fs, so waiting here for a while
+        time.sleep(3)
+        ground_truth = self._get_ground_truth(g_config)
+        logger.warning(f"GPU {self.gpu_id}'s memory fraction: restore to {mem_fraction * 100}%")
+        torch.cuda.set_per_process_memory_fraction(
+            1., device=torch.device(f"cuda:{self.gpu_id}")
+        )
+        return ground_truth, oom
+
+
+    def _unified_format(
+            self,
+            name: SummarySectionName,
+            memory: int,
+            oom: bool,
+            runtime: int,
+            verify: bool = True,
+            **kwargs
+    ):
+        if memory > self.gpu_total_memory and oom is False:
+            oom = True
         _formatted_data ={
             "tool": name.value,
             "memory": memory,
@@ -214,7 +269,17 @@ class _ExperimentExecutor:
             "oom": oom,
             "runtime": runtime,
             "runtime_str": f"{runtime/10**9:.2f} seconds",
+            "verification": {}
         }
+        _formatted_data.update(kwargs)
+        if verify and not oom:
+            mem_fraction = self._get_mem_fraction(memory)
+            ground, oom = self._verify_est_mem(mem_fraction=mem_fraction)
+            _formatted_data["verification"] = {
+                "ground": ground,
+                "ground_str": format_memory(ground),
+                "oom": oom,
+            }
         self.write_data2json(name.value, _formatted_data)
         return _formatted_data
 
@@ -251,17 +316,19 @@ class _ExperimentExecutor:
 
         solution = MySolution(
             batch_size=self.batch_size,
-            max_gpu_memory_in_gb=self.gpu_total_memory,
+            max_gpu_memory_in_gb=self.gpu_total_memory/1024**3,
             config=config,
             profiler_file=p_files[-1],
         )
         solution.estimate()
-        return self._unified_format(
+        est_date = self._unified_format(
             name=SummarySectionName.solution,
-            memory=solution.estimate_memory,
+            memory=solution.estimate_memory + self._get_framework_mem,
             oom=solution.oom,
             runtime=solution.execute_time
         )
+
+        return est_date
 
     def _get_model_p_instance(self) -> ModelPreparer:
         return ModelPreparer(
@@ -269,6 +336,7 @@ class _ExperimentExecutor:
             batch_size=self.batch_size,
             optimiser=self.optimiser
         )
+
 
 
 class ExperimentRun:
@@ -374,15 +442,61 @@ class ExperimentRun:
                 task_id=name_pieces[4],
             )
 
-    def run_group_truth(self):
+    def run_group_truth(self, in_docker: bool = False):
         """
         Run the experiment to get the ground truth.
         """
         if len(self._job_list) == 0:
             self.prepare_regular_experiments_data()
-        for index, task in enumerate(tqdm.tqdm(self._job_list)):
-            task.run_ground_truth()
-            time.sleep(1)
+
+        if in_docker:
+            exp = Experiments()
+            for index, task in enumerate(tqdm.tqdm(self._job_list)):
+                self._build_container(
+                    container_manager=exp,
+                    task=task,
+                    ground=True
+                )
+            exp.execute(manual_container=True)
+        else:
+            for index, task in enumerate(tqdm.tqdm(self._job_list)):
+                task.run_ground_truth()
+                time.sleep(1)
+
+
+    def _build_container(
+            self,
+            container_manager: Experiments,
+            task: _ExperimentExecutor,
+            dnnmem: bool = False,
+            schedtune: bool = False,
+            llmem: bool = False,
+            paper: bool = False,
+            ground: bool = False,
+    ) -> Optional[Container]:
+        run_id = str(task.config.run_id).split('/')[0]
+        task_id = str(run_id).split("_")[-1]
+        formatted_model_name = run_id.split("_")[0]
+        args = {
+            "model": formatted_model_name,
+            "batch": task.batch_size,
+            "optimizer": task.optimiser,
+            "gpu_id": task.gpu_id,
+            "task_id": task_id,
+            "is_transformer": True if isinstance(self._config, TransformerExperiments) else False,
+            "paper": paper,
+            "dnnmem": dnnmem,
+            "schedtune": schedtune,
+            "llmem": llmem,
+            "ground": ground,
+        }
+
+        # Only add the container if at least one estimator is selected
+        if any([args["paper"], args["dnnmem"], args["schedtune"], args["llmem"], args["ground"]]):
+            containers = container_manager.add_container(**args)
+        else:
+            containers = None
+        return containers
 
     def run_estimation(
             self,
@@ -393,37 +507,29 @@ class ExperimentRun:
         """
         Run the experiment to get the estimated results.
         """
-        if len(self._job_list) == 0 or force:
+        if len(self._job_list) == 0:
             self._job_list: list[_ExperimentExecutor] = []
             self.load_from_exist_data()
 
         if in_docker:
-            from paper_container.evaluations import Experiments
             exp = Experiments()
             containers = []
             print("================== Create docker containers ==================")
             for index, task in enumerate(tqdm.tqdm(self._job_list)):
                 summary_data = task.load_json()
-                run_id = str(task.config.run_id).split('/')[0]
-                task_id = str(run_id).split("_")[-1]
-                formatted_model_name = run_id.split("_")[0]
                 args = {
-                    "model": formatted_model_name,
-                    "batch": task.batch_size,
-                    "optimizer": task.optimiser,
-                    "gpu_id": task.gpu_id,
-                    "task_id": task_id,
-                    "is_transformer": True if isinstance(self._config, TransformerExperiments) else False,
+                    "container_manager": exp,
+                    "task": task,
                     "paper": False,
                     "dnnmem": False,
                     "schedtune": False,
                     "llmem": False,
+                    "ground": False,
                 }
                 for est in estimators:
-                    if est.value in summary_data.keys():
+                    if est.value in summary_data.keys() and force is False:
                         # Skip the task if the estimator is already present in the summary
                         continue
-
                     if est == SummarySectionName.solution:
                         args["paper"] = True
                     elif est == SummarySectionName.DNNmem:
@@ -433,10 +539,9 @@ class ExperimentRun:
                     elif est == SummarySectionName.LLmem:
                         args["llmem"] = True
 
-                # Only add the container if at least one estimator is selected
-                if any([args["paper"], args["dnnmem"], args["schedtune"], args["llmem"]]):
-                    container = exp.add_container(**args)
-                    containers.append(container)
+                container = self._build_container(**args)
+                if container is not None:
+                    containers.extend(container)
             print("================== Execute docker containers ==================")
             exp.execute(manual_container=True)
             print("================== Statistics ==================")
@@ -447,7 +552,7 @@ class ExperimentRun:
                 summary_data = task.load_json()
                 results = []
                 for est in estimators:
-                    if est.value not in summary_data.keys():
+                    if est.value not in summary_data.keys() or force is True:
                         print(f"{task.model_name} estimated by {est.value}")
                         try:
                             if est == SummarySectionName.solution:
@@ -584,7 +689,6 @@ class ExperimentRun:
         }
         return _data
 
-
 def estimate(
         model: str,
         batch: int,
@@ -596,9 +700,10 @@ def estimate(
         llmem: bool = False,
         schedtune: bool = False,
         paper: bool = False,
+        ground: bool = False,
 ):
-    if not any([llmem, schedtune, paper, dnnmem]):
-        raise ValueError(f"At least one estimator should be selected.(DNNmem, LLmem, SchedTune, Paper)")
+    if not any([llmem, schedtune, paper, dnnmem, ground]):
+        raise ValueError(f"At least one estimator should be selected.(dnnmem, llmem, schedtune, paper, ground)")
     else:
         estimate_list = []
         if dnnmem:
@@ -610,6 +715,7 @@ def estimate(
         if paper:
             estimate_list.append(SummarySectionName.solution)
 
+
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
     exp = ExperimentRun(config=conf)
     exp.add_task(
@@ -619,9 +725,14 @@ def estimate(
         gpu_id=gpu_id,
         task_id=task_id,
     )
+    if ground:
+        exp.run_group_truth()
+        time.sleep(2)
+        torch.cuda.empty_cache()
+        time.sleep(2)
+
     results = exp.run_estimation(estimators=estimate_list)
     print(results)
-
 
 
 if __name__ == '__main__':

@@ -24,7 +24,8 @@ class Configs:
         root_path = Path(__file__).parent.parent
         mandatory_requirements = root_path.joinpath("requirement.txt")
         _config = BuildConfig(
-            base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
+            base_image="pytorch/pytorch:2.3.1-cuda11.8-cudnn8-devel",
+            # base_image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
             python_deps_manager="pip",
             sys_dependencies=["vim"],
             sys_deps_manager="apt",
@@ -56,24 +57,24 @@ class Configs:
                     _config.add_python_dependency(line)
         return _config
 
+    # for experiments of recent version
     def exp_base_config(self) -> BuildConfig:
         _config = BuildConfig(
-            base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
+            # base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
+            base_image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
             python_dependencies=[
-                "transformers==4.39.3",
-                "pynvml==11.5.3",
+                "transformers==4.51.3",
+                "pynvml==12.0.0",
                 "sortedcontainers==2.4.0",
-                "matplotlib~=3.9.2",
+                "matplotlib~=3.10.1",
                 "plotly==5.24.0",
                 "pydantic==2.9.2",
+                "tqdm==4.67.1",
                 "docker==7.1.0",
                 "fire~=0.7.0",
-                "colossalai==0.4.5",
-                "joblib==1.4.2",
-                "scikit-learn==1.1.1",
-                "numpy==1.26.4",
+                "datasets==3.5.0",
                 "gputil==1.4.0",
-                "timm==1.0.11",
+                "pandas==2.2.3",
             ],
             sys_dependencies=["vim"],
             labels=[],
@@ -83,16 +84,12 @@ class Configs:
         )
         return _config
 
-    def exp_config(self) -> BuildConfig:
+    def paper_config(self) -> BuildConfig:
         _config = BuildConfig(
             python_dependencies=[
                 "ures==1.9.0",
-                "pandas",
-                "datasets"
             ],
             labels=[
-                ("Name", "Experiments"),
-                ("Purpose", "Estimation Experiments"),
                 ("Platform", "PyTorch"),
             ],
             copies=[
@@ -109,6 +106,10 @@ class Configs:
                     "dest": "perf_estimator",
                 },
                 {
+                    "src": "paper_container",
+                    "dest": "paper_container",
+                },
+                {
                     "src": "exp/run.py",
                     "dest": "run.py",
                 },
@@ -118,9 +119,47 @@ class Configs:
         )
         return _config
 
+    def schedtune_config(self) -> BuildConfig:
+        _config = BuildConfig(
+            python_dependencies=[
+                "ures==1.9.0",
+                "pandas==2.2.3",
+                "datasets==3.5.0",
+            ],
+            labels=[
+                ("Platform", "PyTorch"),
+            ],
+            copies=[
+                {
+                    "src": "exp",
+                    "dest": "exp",
+                },
+                {
+                    "src": "utils",
+                    "dest": "utils",
+                },
+                {
+                    "src": "perf_estimator",
+                    "dest": "perf_estimator",
+                },
+                {
+                    "src": "paper_container",
+                    "dest": "paper_container",
+                },
+                {
+                    "src": "exp/run.py",
+                    "dest": "run.py",
+                },
+            ],
+            entrypoint=["python", "run.py"],
+            context_dir=Path(__file__).parent.parent,
+        )
+        return _config
+
+    # for previous version of experiments
     def experiments_config(self) -> BuildConfig:
         _config = BuildConfig(
-            base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
+            base_image="pytorch/pytorch:2.3.1-cuda11.8-cudnn8-devel",
             python_dependencies=[
                 "transformers==4.39.3",
                 "pynvml==11.5.3",
@@ -155,6 +194,8 @@ class Configs:
             ],
             entrypoint=["python", "evaluation.py"],
             context_dir=Path(__file__).parent.parent,
+            user=self.user(),
+            uid=os.getuid(),
         )
         return _config
 
