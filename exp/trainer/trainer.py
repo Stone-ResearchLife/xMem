@@ -29,6 +29,7 @@ class ModelPreparer:
             config = AutoConfig.from_pretrained(
                 model_name
             )  # load config; do NOT load pretrained weights
+            config.torch_dtype = torch.float32
             model = model_class.from_config(config)
             self.is_transformer = True
             model.train()

@@ -48,7 +48,7 @@ class ScheduleTune(EstimatorInterface):
         self.parameter_size = parameter_size
         self.activation_size = activation_size
         self.input_size = input_size
-        self.gpu_name = "5080" if device_id == 0 else "4060"
+        self.gpu_name = "4060" if device_id == 0 else "3060"
         self.conf_dir = Path(__file__).parent.joinpath("src")
         self._memory = None
         self._execute_time = None

@@ -185,7 +185,7 @@ class _ExperimentExecutor:
             c_config, oom = runner.train_on_cpu()
         except Exception as e:
             raise RuntimeError(f"Non OOM error occurred: {e}") from e
-        time.sleep(1)
+        time.sleep(5)
 
         result = self._get_solution_est(c_config)
 
@@ -350,6 +350,8 @@ class ExperimentRun:
         Returns: Path point to the base directory for the experiment.
         """
         _path = Path().home() / self._config.run_id
+        if not _path.is_dir():
+            _path.mkdir(parents=True, exist_ok=True)
         return _path
 
     def _model_name_split(self, model_name: str) -> tuple[str, list[str]]:
@@ -375,9 +377,9 @@ class ExperimentRun:
         if task_id is None:
             formatted_model_name, indices = self._model_name_split(model_name)
             if len(indices) == 0:
-                task_id = uuid.uuid4().hex[:3]
+                task_id = uuid.uuid4().hex[:4]
             else:
-                task_id = f"{'-'.join(indices)}-{uuid.uuid4().hex[:3]}"
+                task_id = f"{'-'.join(indices)}-{uuid.uuid4().hex[:4]}"
         else:
             # Ensure task_id is a string
             # task_is is treated as an int when task_id consists of digits
@@ -415,7 +417,7 @@ class ExperimentRun:
         Run CNN experiments with the given configuration.
         """
         conf = self._config
-        gpu_id = 0
+        gpu_id = conf.gpu_id
         for model in conf.models:
             for opt in conf.optimisers:
                 for batch_number in range(conf.batch_range[0], conf.batch_range[1], conf.batch_range[2]):
@@ -440,7 +442,7 @@ class ExperimentRun:
                 batch_size=int(name_pieces[2]),
                 optimizer=name_pieces[1],
                 gpu_id=int(name_pieces[3]),
-                task_id=name_pieces[4],
+                task_id=str(name_pieces[4]),
             )
 
     def run_group_truth(self, in_docker: bool = False):
@@ -456,13 +458,16 @@ class ExperimentRun:
                 self._build_container(
                     container_manager=exp,
                     task=task,
-                    ground=True
+                    ground=True,
+                    paper=True
                 )
             exp.execute(manual_container=True)
         else:
             for index, task in enumerate(tqdm.tqdm(self._job_list)):
                 task.run_ground_truth()
-                time.sleep(1)
+                torch.cuda.empty_cache()
+                time.sleep(2)
+
 
 
     def _build_container(
@@ -476,7 +481,7 @@ class ExperimentRun:
             ground: bool = False,
     ) -> Optional[Container]:
         run_id = str(task.config.run_id).split('/')[0]
-        task_id = str(run_id).split("_")[-1]
+        task_id = str(str(run_id).split("_")[-1])
         formatted_model_name = run_id.split("_")[0]
         args = {
             "model": formatted_model_name,
@@ -543,6 +548,7 @@ class ExperimentRun:
                 container = self._build_container(**args)
                 if container is not None:
                     containers.extend(container)
+                time.sleep(2)
             print("================== Execute docker containers ==================")
             exp.execute(manual_container=True)
             print("================== Statistics ==================")
@@ -738,6 +744,7 @@ def estimate(
             estimate_list.append(SummarySectionName.solution)
 
 
+
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
     exp = ExperimentRun(config=conf)
     exp.add_task(
@@ -745,13 +752,16 @@ def estimate(
         batch_size=batch,
         optimizer=optimizer,
         gpu_id=gpu_id,
-        task_id=task_id,
+        task_id=str(task_id),
     )
+
+
     if ground:
         exp.run_group_truth()
         time.sleep(2)
         torch.cuda.empty_cache()
         time.sleep(2)
+
 
     results = exp.run_estimation(estimators=estimate_list)
     print(results)

@@ -63,6 +63,7 @@ class Estimate:
         # GPUs in the cluster
         # CUDA_cores,MemoryBW_GBps,Memory_clock_speed_MHz,Tensor_cores,SM_count
         gpu_2070s = [2560, 448, 14000, 320, 40]
+        gpu_3060 = [3584, 360, 15000, 112, 28]
         gpu_3070 = [5888, 512, 16000, 184, 46]
         gpu_3080 = [8704, 760.3, 19000, 272, 68]
         gpu_3090 = [5120, 900, 1752, 640, 80]
@@ -85,6 +86,8 @@ class Estimate:
             _gpu = gpu_4060
         elif gpu == "5080":
             _gpu = gpu_5080
+        elif gpu == "3060":
+            _gpu = gpu_3060
         return _gpu
 
     def estimate(self):

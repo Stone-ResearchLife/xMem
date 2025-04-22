@@ -889,7 +889,7 @@ class ExperimentPlot:
                 "name": "Estimator",
             },
             color="tool",  # Differentiates points by 'name' using color
-            symbol="model",  # Differentiates points by 'name' using marker symbols
+            symbol="tool",  # Differentiates points by 'name' using marker symbols
             hover_data=[
                 "Correct_Estimation_False_Count",
                 "Correct_Estimation_True_Count",

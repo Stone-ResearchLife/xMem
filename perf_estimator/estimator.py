@@ -310,6 +310,7 @@ class TrainerEstimator(_Estimator):
                 config = AutoConfig.from_pretrained(
                     model_name
                 )  # load config; do NOT load pretrained weights
+                config.torch_dtype = torch.float32
                 model_class = suggest_automodel_class(model_name)
                 model = model_class.from_config(config)
 

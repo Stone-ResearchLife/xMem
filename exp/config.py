@@ -10,6 +10,7 @@ class ExperimentConfig(BaseModel):
     run_id: str = Field(default="default_run", description="Run ID for the experiment.")
     models: list[str] = Field(default=[], description="Models to use.")
     repeats: int = Field(default=1, description="Number of times to run the experiment.")
+    gpu_id: int = Field(default=0, description="GPU ID to use.")
 
 
 class CNNExperiments(ExperimentConfig):
@@ -29,7 +30,7 @@ class TransformerExperiments(ExperimentConfig):
     run_id: str = Field(default="Transformer-Exp", description="Run ID for the experiment.")
     models: list[str] = Field(
         default=[
-            "EleutherAI/gpt-Vneo-125M",
+            "EleutherAI/gpt-neo-125M",
             "facebook/opt-125m",
             "facebook/opt-350m",
             "cerebras/Cerebras-GPT-111M",
