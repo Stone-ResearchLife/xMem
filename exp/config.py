@@ -9,6 +9,7 @@ class ExperimentConfig(BaseModel):
     optimisers: list[str] = Field(default=["AdamW"], description="Optimiser to use for the experiment.")
     run_id: str = Field(default="default_run", description="Run ID for the experiment.")
     models: list[str] = Field(default=[], description="Models to use.")
+    repeats: int = Field(default=1, description="Number of times to run the experiment.")
 
 
 class CNNExperiments(ExperimentConfig):
@@ -24,7 +25,7 @@ class CNNExperiments(ExperimentConfig):
 
 class TransformerExperiments(ExperimentConfig):
     """Configuration for transformer experiments."""
-    batch_range: tuple[int] = Field(default=(10, 70, 10), description="Batch size for the experiment.")
+    batch_range: tuple[int] = Field(default=(5, 70, 5), description="Batch size for the experiment.")
     run_id: str = Field(default="Transformer-Exp", description="Run ID for the experiment.")
     models: list[str] = Field(
         default=[

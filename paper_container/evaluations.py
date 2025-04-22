@@ -1,8 +1,43 @@
 import uuid
+import tqdm
+import time
+import logging
 from pathlib import Path
 from typing import Optional
 from ures.docker.containers import Containers
+from ures.docker.runtime import SimpleRuntime
 from .apps import AbcExecutor, RuntimeConfig, unique_id
+
+
+
+class EvaluateRuntime(SimpleRuntime):
+    def run(self, *args, **kwargs):
+        """
+        Runs each container by calling its run() method. If the container becomes running,
+        wait() is called; otherwise, an error is logged.
+
+        Returns:
+            None
+
+        Example:
+            >>> runtime = SimpleRuntime([container1, container2])
+            >>> runtime.run()
+        """
+        for container in tqdm.tqdm(self._containers):
+            container.run()
+            self._regular_delay()
+            if container.is_running is False:
+                logging.error(f"[Failed] {container.image_name} failed to start")
+                continue
+            else:
+                timeout = 600
+                start_time = time.time()
+                while container.is_running:
+                    time.sleep(5)
+                    c_time = time.time()
+                    if c_time - start_time > timeout:
+                        container.stop()
+                        break
 
 
 class Experiments(AbcExecutor):
@@ -11,10 +46,12 @@ class Experiments(AbcExecutor):
         self._containers = Containers(
             image=self.image,
             client=self._client,
+            runtime=EvaluateRuntime
         )
         self._schedtune_containers = Containers(
             image=self._images.schedtun_image["image"],
             client=self._client,
+            runtime=EvaluateRuntime
         )
 
     @property

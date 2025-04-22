@@ -419,12 +419,13 @@ class ExperimentRun:
         for model in conf.models:
             for opt in conf.optimisers:
                 for batch_number in range(conf.batch_range[0], conf.batch_range[1], conf.batch_range[2]):
-                    self.add_task(
-                        model_name=model,
-                        batch_size=batch_number,
-                        optimizer=opt,
-                        gpu_id=gpu_id,
-                    )
+                    for i in range(conf.repeats):
+                        self.add_task(
+                            model_name=model,
+                            batch_size=batch_number,
+                            optimizer=opt,
+                            gpu_id=gpu_id,
+                        )
 
     def load_from_exist_data(self):
         all_summary_files = filter_files('summary.json', directory=str(self.base_dir), fuzz=False)
