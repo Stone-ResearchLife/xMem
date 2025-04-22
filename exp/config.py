@@ -11,6 +11,7 @@ class ExperimentConfig(BaseModel):
     models: list[str] = Field(default=[], description="Models to use.")
     repeats: int = Field(default=1, description="Number of times to run the experiment.")
     gpu_id: int = Field(default=0, description="GPU ID to use.")
+    debug: bool = Field(default=False, description="Enable debug mode.")
 
 
 class CNNExperiments(ExperimentConfig):

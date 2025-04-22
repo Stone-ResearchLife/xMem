@@ -400,7 +400,7 @@ class ExperimentRun:
             run_id=run_id,
             save2tmp=False
         )
-        # _exe_config.debug = True
+        _exe_config.debug = self._config.debug
 
         _exe_instance = _ExperimentExecutor(
             model_name=model_name,
@@ -729,6 +729,7 @@ def estimate(
         schedtune: bool = False,
         paper: bool = False,
         ground: bool = False,
+        debug: bool = False,
 ):
     if not any([llmem, schedtune, paper, dnnmem, ground]):
         raise ValueError(f"At least one estimator should be selected.(dnnmem, llmem, schedtune, paper, ground)")
@@ -746,6 +747,7 @@ def estimate(
 
 
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
+    conf.debug = debug
     exp = ExperimentRun(config=conf)
     exp.add_task(
         model_name=model,

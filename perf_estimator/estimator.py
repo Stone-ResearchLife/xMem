@@ -154,7 +154,7 @@ class _Estimator(ABC):
                 filter_ops_memory.append(new_mem)
         if iteration_index == 1:
             self._optimiser_memory = copy.deepcopy(filter_ops_memory)
-        new_filter_ops_memory = copy.deepcopy(self._optimiser_memory)[::2]
+        new_filter_ops_memory = copy.deepcopy(self._optimiser_memory)
 
         if persist_required:
             for mem in filter_ops_memory:

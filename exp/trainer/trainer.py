@@ -1,7 +1,6 @@
 from venv import logger
 import torch
 import platform
-import uuid
 from typing import Optional, List, Tuple
 from perf_estimator.config import Config, default_setting
 from perf_estimator.models import AllModels
@@ -15,6 +14,7 @@ class ModelPreparer:
             batch_size: int = 32,
             optimiser: str = None,
     ):
+        self._mlm = False
         self.is_transformer = False
         self.model = self.get_model(model_name)
         self.dl = self.get_dataloader(batch_size)
@@ -22,9 +22,11 @@ class ModelPreparer:
 
     def get_model(self, model_name: str) -> torch.nn.Module:
         if getattr(AllModels, model_name, None) is None:
-            from transformers import AutoConfig
+            from transformers import AutoConfig, AutoModelForMaskedLM
             from utils.huggingface import suggest_automodel_class
             model_class = suggest_automodel_class(model_name)
+            if isinstance(model_class, AutoModelForMaskedLM):
+                self._mlm = True
             logger.info(f"Model class: {model_class.__name__}")
             config = AutoConfig.from_pretrained(
                 model_name
@@ -54,7 +56,7 @@ class ModelPreparer:
             tokenized_datasets = dataset.map(tokenize_function, batched=True, remove_columns=["text"])
 
             # 4. create DataCollatorForLanguageModeling
-            data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+            data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=self._mlm)
 
             # 5. create DataLoader
             tokenized_datasets.set_format("torch")
