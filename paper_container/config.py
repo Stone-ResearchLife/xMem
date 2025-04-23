@@ -118,7 +118,7 @@ class Configs:
             context_dir=Path(__file__).parent.parent,
         )
         return _config
-
+    
     def schedtune_config(self) -> BuildConfig:
         _config = BuildConfig(
             python_dependencies=[
@@ -153,6 +153,27 @@ class Configs:
             ],
             entrypoint=["python", "run.py"],
             context_dir=Path(__file__).parent.parent,
+        )
+        return _config
+
+    def llmem_config(self) -> BuildConfig:
+        _config = BuildConfig(
+            base_image="llmem:latest",
+            python_dependencies=[
+                "ures==1.9.0",
+                "pandas==2.2.3",
+            ],
+            sys_dependencies=["vim"],
+            copies=[
+                {
+                    "src": "exp/baselines/LLmem",
+                    "dest": ".",
+                },
+            ],
+            context_dir=Path(__file__).parent.parent,
+            user=self.user(),
+            uid=os.getuid(),
+            entrypoint=["bash", "run_colo.sh"],
         )
         return _config
 

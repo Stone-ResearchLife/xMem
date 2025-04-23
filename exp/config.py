@@ -27,7 +27,7 @@ class CNNExperiments(ExperimentConfig):
 
 class TransformerExperiments(ExperimentConfig):
     """Configuration for transformer experiments."""
-    batch_range: tuple[int] = Field(default=(5, 70, 5), description="Batch size for the experiment.")
+    batch_range: tuple[int] = Field(default=(10, 40, 10), description="Batch size for the experiment.")
     run_id: str = Field(default="Transformer-Exp", description="Run ID for the experiment.")
     models: list[str] = Field(
         default=[

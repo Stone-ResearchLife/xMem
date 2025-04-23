@@ -26,6 +26,19 @@ class ContainersReady:
         return self._image_manager.images[full_name]
 
     @property
+    def llmem_image(self):
+        image_name = "llmem-estimator"
+        tag = "latest"
+        full_name = f"{image_name}:{tag}"
+        if full_name not in self._image_manager.images.keys():
+            self._add_image(
+                image_name=image_name,
+                tag=tag,
+                config=self._configs.llmem_config(),
+            )
+        return self._image_manager.images[full_name]
+
+    @property
     def xprofiler_image(self) -> Dict[str, Union[Optional[Image], BuildConfig, str]]:
         image_name = "paper-xprofiler"
         tag = "latest"

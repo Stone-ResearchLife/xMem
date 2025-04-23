@@ -171,7 +171,6 @@ class _ExperimentExecutor:
             oom=schedtune.estimate_memory > self.gpu_total_memory
         )
 
-
     def run_solution(self):
         from exp.trainer import FastRunner
         runner = FastRunner(
@@ -484,7 +483,7 @@ class ExperimentRun:
         task_id = str(str(run_id).split("_")[-1])
         formatted_model_name = run_id.split("_")[0]
         args = {
-            "model": formatted_model_name,
+            "model": task.model_name,
             "batch": task.batch_size,
             "optimizer": task.optimiser,
             "gpu_id": task.gpu_id,
@@ -569,7 +568,7 @@ class ExperimentRun:
                             elif est == SummarySectionName.schedtune:
                                 result = task.run_schedtune()
                             elif est == SummarySectionName.LLmem:
-                                result = {}
+                                logger.warning("LLmem Estimator could be only run in-docker mode, skipped")
                             else:
                                 raise ValueError(f"Unknown estimator: {est.value}")
                         except Exception as e:
@@ -603,6 +602,27 @@ class ExperimentRun:
         for key_name in key_list:
             print(f"{key_name}: {summary[key_name]}/{summary['total']}")
 
+
+    def verify_llmem_result(self):
+        if len(self._job_list) == 0:
+            self._job_list: list[_ExperimentExecutor] = []
+            self.load_from_exist_data()
+        for index, task in enumerate(tqdm.tqdm(self._job_list)):
+            llmem_file = task.config.base_dir.joinpath("llmem_result.json")
+            if llmem_file.is_file():
+                with open(llmem_file) as f:
+                    llmem_json = json.load(f)
+                is_supported = llmem_json["support"]
+                task._unified_format(
+                    name=SummarySectionName.LLmem,
+                    memory=llmem_json["memory"],
+                    runtime=llmem_json["time"],
+                    oom=llmem_json["oom"],
+                    version=is_supported
+                )
+
+
+
     def to_evaluation_result(self):
         """
         In order to reduce redundant work for ploting diagram, the function is used to
@@ -627,7 +647,12 @@ class ExperimentRun:
             gt_mem_1st = gt_data["memory"]
             gt_oom_1st = gt_data["oom"]
 
-            for est in [SummarySectionName.schedtune, SummarySectionName.solution, SummarySectionName.DNNmem]:
+            for est in [
+                SummarySectionName.schedtune,
+                SummarySectionName.solution,
+                SummarySectionName.DNNmem,
+                SummarySectionName.LLmem,
+            ]:
                 if est.value in summary_data.keys():
                     est_data = summary_data[est.value]
                     formatted_data = self.format_old_json_data(
@@ -645,46 +670,6 @@ class ExperimentRun:
 
             with open(old_evaluation_json_path, 'w') as f:
                 json.dump(old_summary_data, f, indent=4)
-
-            # # Get DNNmem
-            # if SummarySectionName.DNNmem.value in summary_data.keys():
-            #     formatted_data = self.format_old_json_data(
-            #         memory=summary_data[SummarySectionName.DNNmem.value]["memory"],
-            #         oom=summary_data[SummarySectionName.DNNmem.value]["oom"],
-            #         runtime=summary_data[SummarySectionName.DNNmem.value]["runtime"],
-            #         ground=gt_mem_1st,
-            #         real_oom=gt_oom_1st,
-            #     )
-            #     old_summary_data["dnnmem"] = formatted_data
-            #     formatted_data['tool'] = "DNNmem"
-            #     pandas_list.append(formatted_data)
-            #
-            # # Get SchedTune
-            # if SummarySectionName.schedtune.value in summary_data.keys():
-            #     formatted_data = self.format_old_json_data(
-            #         memory=summary_data[SummarySectionName.schedtune.value]["memory"],
-            #         oom=summary_data[SummarySectionName.schedtune.value]["oom"],
-            #         runtime=summary_data[SummarySectionName.schedtune.value]["runtime"],
-            #         ground=gt_mem_1st,
-            #         real_oom=gt_oom_1st,
-            #     )
-            #     formatted_data['tool'] = "SchedTune"
-            #     old_summary_data["schedtune"] = formatted_data
-            #     pandas_list.append(formatted_data)
-            #
-            # # Get Solution
-            # if SummarySectionName.solution.value in summary_data.keys():
-            #     formatted_data = self.format_old_json_data(
-            #         memory=summary_data[SummarySectionName.solution.value]["memory"],
-            #         oom=summary_data[SummarySectionName.solution.value]["oom"],
-            #         runtime=summary_data[SummarySectionName.solution.value]["runtime"],
-            #         ground=gt_mem_1st,
-            #         real_oom=gt_oom_1st,
-            #     )
-            #     formatted_data['tool'] = ""
-            #     old_summary_data["solution"] = formatted_data
-            #     pandas_list.append(formatted_data)
-
 
         return pandas_list
 

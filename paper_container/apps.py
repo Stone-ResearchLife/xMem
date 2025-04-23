@@ -65,6 +65,14 @@ class AbcExecutor(ABC):
             host_path=str(dir_in_host), container_path=str(dir_in_container), mode="rw"
         )
 
+    def _add_colossalai_cache_volume(self, config: RuntimeConfig):
+        dir_in_host = Path().home().joinpath(".cache", "colossalai")
+        dir_in_host.mkdir(exist_ok=True, parents=True)
+        dir_in_container = self._home_in_container().joinpath(".cache", "colossalai")
+        config.add_volume(
+            host_path=str(dir_in_host), container_path=str(dir_in_container), mode="rw"
+        )
+
     def _execute(self, **kwargs):
         runtime_config: RuntimeConfig = kwargs.pop("config")
         print(
@@ -187,4 +195,42 @@ class XMem(AbcExecutor):
         runtime_conf.entrypoint = entrypoint
         self._add_pytorch_dataset_volume(config=runtime_conf)
         self._add_cache_volume(config=runtime_conf)
+        self._execute(config=runtime_conf)
+
+
+class LLmem(AbcExecutor):
+    @property
+    def image(self) -> Image:
+        return self._images.llmem_image["image"]
+
+    def prepare(self):
+        _ = self._images.llmem_image
+        self._images.build()
+
+    def execute(
+            self,
+            model_name: str,
+            batch: int,
+            gpu_id: int = 0,
+            output_dir: Optional[str] = None,
+    ):
+        run_id = unique_id()
+        runtime_conf = RuntimeConfig(
+            name=f"llmem-{run_id}",
+            gpus=[str(gpu_id)],
+        )
+        runtime_conf.add_env("MODELNAME", model_name)
+        runtime_conf.add_env("BATCH", str(batch))
+        self._add_huggingface_cache_volume(config=runtime_conf)
+        self._add_pytorch_dataset_volume(config=runtime_conf)
+        self._add_colossalai_cache_volume(config=runtime_conf)
+
+        src = output_dir or Path().home().joinpath("DL-Estimator", f"{run_id}")
+        src.mkdir(parents=True, exist_ok=True)
+        dest = self._home_in_container().joinpath("output")
+        runtime_conf.add_volume(
+            host_path=str(src),
+            container_path=str(dest),
+            mode="rw",
+        )
         self._execute(config=runtime_conf)

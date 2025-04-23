@@ -15,8 +15,14 @@ import warnings
 
 warnings.simplefilter("ignore", UserWarning)
 
+import os
+import json
+import uuid
+
+import time
 import copy
 import logging
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
 
@@ -44,6 +50,77 @@ from size_estimator import SizeEstimator
 
 txt_file_name = "temp.txt"
 max_seq_len = 512
+
+
+def suggest_automodel_class(model_name):
+    from huggingface_hub import model_info
+    from transformers import (
+        AutoModel,
+        AutoModelForSequenceClassification,
+        AutoModelForTokenClassification,
+        AutoModelForQuestionAnswering,
+        AutoModelForCausalLM,
+        AutoModelForMaskedLM,
+        AutoModelForSeq2SeqLM,
+        AutoModelForImageClassification,
+        AutoModelForObjectDetection,
+        AutoModelForSemanticSegmentation,
+        AutoModelForAudioClassification,
+    )
+
+    try:
+        info = model_info(model_name)
+        pipeline_tag = info.pipeline_tag
+
+        if pipeline_tag == "feature-extraction":
+            return AutoModel
+        elif pipeline_tag == "fill-mask":
+            return AutoModelForMaskedLM
+        elif pipeline_tag == "question-answering":
+            return AutoModelForQuestionAnswering
+        elif pipeline_tag == "sentiment-analysis" or pipeline_tag == "text-classification":
+            return AutoModelForSequenceClassification
+        elif pipeline_tag == "token-classification":
+            return AutoModelForTokenClassification
+        elif pipeline_tag == "text-generation":
+            return AutoModelForCausalLM
+        elif pipeline_tag == "text2text-generation":
+            return AutoModelForSeq2SeqLM
+        elif pipeline_tag == "zero-shot-classification":
+            return AutoModelForSequenceClassification  # Or potentially AutoModel
+        elif pipeline_tag == "table-question-answering":
+            return AutoModelForQuestionAnswering # May need a specific class
+        elif pipeline_tag == "visual-question-answering":
+            return AutoModelForQuestionAnswering # May need a specific class
+        elif pipeline_tag == "image-classification":
+            return AutoModelForImageClassification
+        elif pipeline_tag == "object-detection":
+            return AutoModelForObjectDetection
+        elif pipeline_tag == "semantic-segmentation":
+            return AutoModelForSemanticSegmentation
+        elif pipeline_tag == "audio-classification":
+            return AutoModelForAudioClassification
+        elif pipeline_tag == "summarization":
+            return AutoModelForSeq2SeqLM
+        elif pipeline_tag == "translation":
+            return AutoModelForSeq2SeqLM
+        elif pipeline_tag == "text-to-speech":
+            # No direct AutoModel yet, might need to use specific model class
+            return None # Or suggest a base AutoModel
+        else:
+            # Fallback based on model name keywords (less reliable)
+            model_name_lower = model_name.lower()
+            if "gpt" in model_name_lower or "llama" in model_name_lower or "codegen" in model_name_lower:
+                return AutoModelForCausalLM
+            elif "bert" in model_name_lower or "roberta" in model_name_lower or "distilbert" in model_name_lower or "albert" in model_name_lower:
+                return AutoModel
+            elif "t5" in model_name_lower or "bart" in model_name_lower or "mt5" in model_name_lower:
+                return AutoModelForSeq2SeqLM
+            else:
+                return AutoModel  # More generic fallback
+    except Exception as e:
+        logger.info(f"Could not retrieve model info for {model_name}: {e}")
+        return AutoModel  # Fallback to a generic AutoModel
 
 
 def move_to_cuda(batch, device):
@@ -170,6 +247,7 @@ class TrainingArguments(transformers.TrainingArguments):
             "help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."
         },
     )
+    device_id: int = field(default=0, metadata={"help": "Device ID"})
 
 
 def _tokenize_fn(
@@ -302,6 +380,7 @@ def get_size(bytes, suffix="B"):
 
 
 def train():
+    s_time = time.time_ns()
     # Launch ColossalAI
     colossalai.launch_from_torch(config={})
 
@@ -326,118 +405,152 @@ def train():
     framework_initial_mem = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
     print_rank_0("[0]Used GPUtil GPU mem: {}".format(framework_initial_mem))
 
-    model = transformers.AutoModelForCausalLM.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=training_args.cache_dir,
-    ).to("cuda")
-    model.half()  # cf. PRECISION_STR_TO_DTYPE = {'fp16': torch.half, 'bf16': torch.bfloat16}
-    torch.cuda.empty_cache()
+    model_name = os.environ.get("MODELNAME", model_args.model_name_or_path)
+    batch_size = int(os.environ.get("BATCH", training_args.per_device_train_batch_size))
+    model_class = suggest_automodel_class(model_name)
 
-    model.gradient_checkpointing_enable()
+    if model_class is transformers.AutoModelForCausalLM:
 
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=training_args.cache_dir,
-        model_max_length=training_args.model_max_length,
-        padding_side="right",
-        use_fast=False,
-    )
+        model = model_class.from_pretrained(
+            model_name,
+            cache_dir=training_args.cache_dir,
+        ).to("cuda")
 
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    elif tokenizer.eos_token is None:  # for bert
-        tokenizer.eos_token = tokenizer.pad_token  #
+        # model.half()  # cf. PRECISION_STR_TO_DTYPE = {'fp16': torch.half, 'bf16': torch.bfloat16}
+        torch.cuda.empty_cache()
 
-    data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
+        model.gradient_checkpointing_enable()
 
-    # Set plugin
-    booster_kwargs = {}
-    plugin = GeminiPlugin(
-        device=get_current_device(),
-        placement_policy="cuda",
-        precision="fp16",
-        pin_memory=False,
-        strict_ddp_mode=False,
-        initial_scale=2**5,
-    )
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=training_args.cache_dir,
+            model_max_length=training_args.model_max_length,
+            padding_side="right",
+            use_fast=False,
+        )
 
-    config = {
-        "batch_size": training_args.per_device_train_batch_size,
-        "lr": training_args.learning_rate,
-        "epochs": int(training_args.num_train_epochs),
-        "warmup_ratio": training_args.warmup_ratio,
-        "weight_decay": training_args.weight_decay,
-    }
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+        elif tokenizer.eos_token is None:  # for bert
+            tokenizer.eos_token = tokenizer.pad_token  #
 
-    dataloader = plugin.prepare_dataloader(
-        data_module["train_dataset"],
-        batch_size=config["batch_size"],
-        shuffle=False,
-        drop_last=True,
-        collate_fn=data_module["data_collator"],
-    )
+        data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
 
-    for batch in dataloader:
-        if batch["input_ids"].size()[1] == max_seq_len:
-            test_long_input = move_to_cuda(batch, torch.cuda.current_device())
-            break
+        # Set plugin
+        booster_kwargs = {}
+        plugin = GeminiPlugin(
+            device=get_current_device(),
+            placement_policy="cuda",
+            precision="fp16",
+            pin_memory=False,
+            strict_ddp_mode=False,
+            initial_scale=2**5,
+        )
 
-    # Set lr scheduler
-    total_steps = len(dataloader) * config["epochs"]
-    num_warmup_steps = int(config["warmup_ratio"] * total_steps)
+        config = {
+            "batch_size": batch_size,
+            "lr": training_args.learning_rate,
+            "epochs": int(training_args.num_train_epochs),
+            "warmup_ratio": training_args.warmup_ratio,
+            "weight_decay": training_args.weight_decay,
+        }
 
-    # Set optimizer
-    optimizer = HybridAdam(model.parameters(), lr=config["lr"], weight_decay=0.0)
+        dataloader = plugin.prepare_dataloader(
+            data_module["train_dataset"],
+            batch_size=config["batch_size"],
+            shuffle=False,
+            drop_last=True,
+            collate_fn=data_module["data_collator"],
+        )
 
-    # Set lr scheduler
-    lr_scheduler = get_cosine_schedule_with_warmup(
-        optimizer,
-        num_warmup_steps=num_warmup_steps,
-        num_training_steps=len(dataloader) * config["epochs"],
-    )
+        for batch in dataloader:
+            if batch["input_ids"].size()[1] == max_seq_len:
+                test_long_input = move_to_cuda(batch, torch.cuda.current_device())
+                break
 
-    # ############################## 1 ##############################
-    # lm_fp32 = False
-    # if ('codegen' in model_args.model_name_or_path) or ('neo' in model_args.model_name_or_path):
-    #     lm_fp32 = True
-    # real_bs = 0 # For batch size search mode
-    # # real_bs = test_long_input["input_ids"].size()[0] # To estimate with specific batch size
-    # se = SizeEstimator(model, test_long_input["input_ids"][0:2], real_bs, bytes=2, bytes_input=8,
-    #                    gpu_n=world_size, tp=0, lm_fp32=lm_fp32, m_total=total_nvml)
-    # torch.cuda.empty_cache()
-    # prev_get_output = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
-    # se.get_output_sizes()
-    # torch.cuda.empty_cache()
-    # after_get_output = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
-    # ###############################################################
+        # Set lr scheduler
+        total_steps = len(dataloader) * config["epochs"]
+        num_warmup_steps = int(config["warmup_ratio"] * total_steps)
 
-    booster = Booster(plugin=plugin, **booster_kwargs)
-    model, optimizer, _, _, _ = booster.boost(model, optimizer)
-    torch.cuda.empty_cache()
+        # Set optimizer
+        optimizer = HybridAdam(model.parameters(), lr=config["lr"], weight_decay=0.0)
 
-    # ############################## 2 ##############################
-    # booster_chunk_mem = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
-    # m_pbase = booster_chunk_mem + cuda_context_mem - (after_get_output - prev_get_output)
-    # print_rank_0('[m_pbase]: {}'.format(m_pbase))
-    # esti_mem, real_bs = se.estimate_size(m_init=m_pbase)
-    # print_rank_0('Estimated memory: {0}, real bs: {1}'.format(esti_mem, real_bs))
-    # import sys
-    # sys.exit()
-    # ###############################################################
+        # Set lr scheduler
+        lr_scheduler = get_cosine_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=num_warmup_steps,
+            num_training_steps=len(dataloader) * config["epochs"],
+        )
+
+        ############################## 1 ##############################
+        lm_fp32 = True
+        # if ('codegen' in model_args.model_name_or_path) or ('neo' in model_args.model_name_or_path):
+        #     lm_fp32 = True
+        # real_bs = 0 # For batch size search mode
+        real_bs = test_long_input["input_ids"].size()[0] # To estimate with specific batch size
+        se = SizeEstimator(model, test_long_input["input_ids"][0:2], real_bs, bytes=2, bytes_input=8,
+                           gpu_n=world_size, tp=0, lm_fp32=lm_fp32, m_total=total_nvml)
+        torch.cuda.empty_cache()
+        prev_get_output = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
+        se.get_output_sizes()
+        torch.cuda.empty_cache()
+        after_get_output = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
+        ###############################################################
+
+        booster = Booster(plugin=plugin, **booster_kwargs)
+        model, optimizer, _, _, _ = booster.boost(model, optimizer)
+        torch.cuda.empty_cache()
+
+        ############################## 2 ##############################
+        booster_chunk_mem = GPUtil.getGPUs()[dist.get_rank()].memoryUsed
+        m_pbase = booster_chunk_mem + cuda_context_mem - (after_get_output - prev_get_output)
+        print_rank_0('[m_pbase]: {}'.format(m_pbase))
+        esti_mem, real_bs = se.estimate_size(m_init=m_pbase)
+        print_rank_0('Estimated memory: {0}, real bs: {1}'.format(esti_mem, real_bs))
+        ###############################################################
+
+        mem = int(esti_mem * 1024**2)
+        json_data = {
+            "name": model_name,
+            "batch": batch_size,
+            "time": time.time_ns() - s_time,
+            "memory": mem,
+            "support": True,
+            "oom": bool(mem > int(total_nvml * 1024**2)),
+        }
+    else:
+        json_data = {
+            "name": model_name,
+            "batch": batch_size,
+            "time": -1,
+            "memory": -1,
+            "support": False,
+            "oom": True
+        }
+
+    home_dir = Path().home()
+    output_dir = home_dir.joinpath("output")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    file_name = f"llmem_result.json"
+    with open(output_dir.joinpath(file_name), "w") as f:
+        json.dump(json_data, f, indent=4)
+
+    time.sleep(1)
+
 
     # with open(txt_file_name, 'a') as f:
     #     f.write('[cuda:{}] Before fine-tuning: {} -> {} -> {}\n'.format(dist.get_rank(),
     #                         framework_initial_mem, load_model_mem, booster_chunk_mem))
 
     # Start finetuning
-    logger.info(f"Start finetuning", ranks=[0])
-    for epoch in range(config["epochs"]):
-        train_epoch(
-            epoch, model, optimizer, lr_scheduler, dataloader, booster, coordinator
-        )
+    # logger.info(f"Start finetuning", ranks=[0])
+    # for epoch in range(config["epochs"]):
+    #     train_epoch(
+    #         epoch, model, optimizer, lr_scheduler, dataloader, booster, coordinator
+    #     )
 
     # Finish training and evaluate
-    logger.info(f"Finish finetuning", ranks=[0])
+    # logger.info(f"Finish finetuning", ranks=[0])
     # booster.save_model(model, training_args.output_dir)
     # logger.info(f"Saving model checkpoint to {training_args.output_dir}")
 

@@ -53,6 +53,11 @@ class Experiments(AbcExecutor):
             client=self._client,
             runtime=EvaluateRuntime
         )
+        self._llmem_containers = Containers(
+            image=self._images.llmem_image["image"],
+            client=self._client,
+            runtime=EvaluateRuntime
+        )
 
     @property
     def image(self):
@@ -62,6 +67,7 @@ class Experiments(AbcExecutor):
         print("Building images.")
         _ = self._images.schedtun_image
         _ = self._images.paper_image
+        _ = self._images.llmem_image
         self._images.build()
 
     def add_container(
@@ -79,13 +85,14 @@ class Experiments(AbcExecutor):
             ground: bool = False,
     ):
         command = [
-            "--model", model,
+            "--model", model.replace("/", "-"),
+            "--batch", str(batch),
+            "--optimizer", optimizer,
             "--batch", str(batch),
             "--optimizer", str(optimizer),
             "--gpu_id", str(gpu_id),
             "--is_transformer", is_transformer,
             "--dnnmem", dnnmem,
-            "--llmem", llmem,
             "--schedtune", schedtune,
             "--paper", paper,
             "--ground", ground,
@@ -119,9 +126,35 @@ class Experiments(AbcExecutor):
         )
         containers = []
         if schedtune:
-            runtime_conf.name = f"schedtune-{runtime_conf.name}"
-            containers.append(self._schedtune_containers.create(**runtime_conf.model_dump()))
-        
+            schedtune_conf = runtime_conf.model_copy(deep=True)
+            schedtune_conf.name = f"schedtune-{runtime_conf.name}"
+            containers.append(self._schedtune_containers.create(**schedtune_conf.model_dump()))
+
+        if llmem:
+            import torch
+            llmem_conf = RuntimeConfig(
+                name=f"llmem-{runtime_conf.name}",
+                gpus=[str(gpu_id)],
+            )
+            llmem_conf.add_env("MODELNAME", model)
+            llmem_conf.add_env("BATCH", str(batch))
+            self._add_huggingface_cache_volume(config=llmem_conf)
+            self._add_pytorch_dataset_volume(config=llmem_conf)
+            self._add_colossalai_cache_volume(config=llmem_conf)
+
+            task_id = f"{model.replace('/', '-')}_{optimizer}_{batch}_{gpu_id}_{task_id}"
+            gpu_name = torch.cuda.get_device_properties(gpu_id).name.replace(" ", "-")
+
+            src = Path().home().joinpath(dir_name, task_id, gpu_name)
+            src.mkdir(parents=True, exist_ok=True)
+            dest = self._home_in_container().joinpath("output")
+            llmem_conf.add_volume(
+                host_path=str(src),
+                container_path=str(dest),
+                mode="rw",
+            )
+            containers.append(self._llmem_containers.create(**llmem_conf.model_dump()))
+
         if paper or dnnmem or ground:
             containers.append(self._containers.create(**runtime_conf.model_dump()))
 
@@ -133,6 +166,7 @@ class Experiments(AbcExecutor):
         )
         self._containers.run()
         self._schedtune_containers.run()
+        self._llmem_containers.run()
 
     def execute(
             self,

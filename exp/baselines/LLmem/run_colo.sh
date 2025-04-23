@@ -26,6 +26,6 @@ torchrun --nproc_per_node 1 dp_real.py \
     --save_total_limit 1 \
     --learning_rate 2e-5 \
     --weight_decay 0. \
-    --warmup_ratio 0.03
+    --warmup_ratio 0.03 \
     # \
     # | tee ./logs/colo_opt-6.7b.log

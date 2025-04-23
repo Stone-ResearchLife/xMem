@@ -1,5 +1,5 @@
 import fire
-from paper_container.apps import XMem, XProfiler
+from paper_container.apps import XMem, XProfiler, LLmem
 from paper_container.evaluations import Experiments
 
 
@@ -17,6 +17,7 @@ class APPs:
     def __init__(self):
         self.xmem = XMem()
         self.xprofiler = XProfiler()
+        self.llmem = LLmem()
         self.experiments = Experiments()
 
 
