@@ -50,6 +50,7 @@ from size_estimator import SizeEstimator
 
 txt_file_name = "temp.txt"
 max_seq_len = 512
+logger = get_dist_logger(__name__)
 
 
 def suggest_automodel_class(model_name):

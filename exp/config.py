@@ -16,7 +16,7 @@ class ExperimentConfig(BaseModel):
 
 class CNNExperiments(ExperimentConfig):
     """Configuration for CNN experiments."""
-    batch_range: tuple[int] = Field(default=(50, 500, 50), description="Batch size for the experiment.")
+    batch_range: tuple[int] = Field(default=(50, 100, 50), description="Batch size for the experiment.")
     run_id: str = Field(default="CNN-Exp", description="Run ID for the experiment.")
     optimisers: list[str] = Field(
         default=["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"],
@@ -27,7 +27,7 @@ class CNNExperiments(ExperimentConfig):
 
 class TransformerExperiments(ExperimentConfig):
     """Configuration for transformer experiments."""
-    batch_range: tuple[int] = Field(default=(10, 40, 10), description="Batch size for the experiment.")
+    batch_range: tuple[int] = Field(default=(5, 70, 5), description="Batch size for the experiment.")
     run_id: str = Field(default="Transformer-Exp", description="Run ID for the experiment.")
     models: list[str] = Field(
         default=[
@@ -35,7 +35,7 @@ class TransformerExperiments(ExperimentConfig):
             "facebook/opt-125m",
             "facebook/opt-350m",
             "cerebras/Cerebras-GPT-111M",
-            "microsoft/deberta-base",
+            # "microsoft/deberta-base",
             "T5-small",
             "t5-base",
             "distilbert/distilgpt2",
