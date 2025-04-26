@@ -494,6 +494,7 @@ class ExperimentRun:
             "schedtune": schedtune,
             "llmem": llmem,
             "ground": ground,
+            "debug": self._config.debug,
         }
 
         # Only add the container if at least one estimator is selected

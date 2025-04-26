@@ -83,6 +83,7 @@ class Experiments(AbcExecutor):
             schedtune: bool = False,
             paper: bool = False,
             ground: bool = False,
+            debug: bool = False,
     ):
         command = [
             "--model", model.replace("/", "-"),
@@ -96,6 +97,7 @@ class Experiments(AbcExecutor):
             "--schedtune", schedtune,
             "--paper", paper,
             "--ground", ground,
+            "--debug", debug,
 
         ]
         if task_id is not None:

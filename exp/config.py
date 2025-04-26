@@ -16,7 +16,7 @@ class ExperimentConfig(BaseModel):
 
 class CNNExperiments(ExperimentConfig):
     """Configuration for CNN experiments."""
-    batch_range: tuple[int] = Field(default=(50, 100, 50), description="Batch size for the experiment.")
+    batch_range: tuple[int] = Field(default=(200, 1000, 100), description="Batch size for the experiment.")
     run_id: str = Field(default="CNN-Exp", description="Run ID for the experiment.")
     optimisers: list[str] = Field(
         default=["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"],

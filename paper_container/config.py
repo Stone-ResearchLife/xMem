@@ -24,7 +24,7 @@ class Configs:
         root_path = Path(__file__).parent.parent
         mandatory_requirements = root_path.joinpath("requirement.txt")
         _config = BuildConfig(
-            base_image="pytorch/pytorch:2.3.1-cuda11.8-cudnn8-devel",
+            base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
             # base_image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
             python_deps_manager="pip",
             sys_dependencies=["vim"],
@@ -180,7 +180,7 @@ class Configs:
     # for previous version of experiments
     def experiments_config(self) -> BuildConfig:
         _config = BuildConfig(
-            base_image="pytorch/pytorch:2.3.1-cuda11.8-cudnn8-devel",
+            base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
             python_dependencies=[
                 "transformers==4.39.3",
                 "pynvml==11.5.3",

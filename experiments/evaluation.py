@@ -196,7 +196,7 @@ class Evaluator:
         self, profiler_file: str, iteration: int = 2
     ) -> Tuple[CachingAllocator, dict]:
         estimator = Estimator(
-            dataloader=copy.deepcopy(self._data_loader),
+            # dataloader=copy.deepcopy(self._data_loader),
             profiler_file=profiler_file,
             max_gpu_memory_in_gb=self._max_gpu_memory_in_gb,
         )
@@ -347,7 +347,7 @@ class Evaluator:
             verification_result["dnnmem"] = {
                 "runtime": after_run - before_run,
                 "memory": max(dnnmem_result._trace.max_segment_changes),
-                "oom": my_result.oom,
+                "oom": dnnmem_result.oom,
             }
 
         logger.info(f"================== Schedtune ==================")
@@ -367,18 +367,25 @@ class Evaluator:
 
         logger.info(f"================== LLmem ==================")
         time.sleep(1)
-        try:
-            before_run = time.time()
-            llmem_result = self.evaluate_llmem(device_id)
-        except Exception as e:
-            logger.error(f"LLmem estimation failed, error: {e}")
-        else:
-            after_run = time.time()
-            verification_result["llmem"] = {
-                "runtime": after_run - before_run,
-                "memory": llmem_result,
-                "oom": bool(llmem_result > self._max_gpu_memory_in_gb * 1024**3),
-            }
+        # try:
+        #     before_run = time.time()
+        #     llmem_result = self.evaluate_llmem(device_id)
+        # except Exception as e:
+        #     logger.error(f"LLmem estimation failed, error: {e}")
+        # else:
+        #     after_run = time.time()
+        #     verification_result["llmem"] = {
+        #         "runtime": after_run - before_run,
+        #         "memory": llmem_result,
+        #         "oom": bool(llmem_result > self._max_gpu_memory_in_gb * 1024**3),
+        #     }
+        # As LLmem does not support CNN models, put -1 for result
+        verification_result["llmem"] = {
+            "runtime": 0,
+            "memory": -1,
+            "oom": True
+        }
+
 
         logger.info(f"================== Initial Validation Round ==================")
         try:
@@ -414,7 +421,7 @@ class Evaluator:
             value["correct_estimation"] = real_oom == value["oom"]
             value["2nd verification"] = {}
             min_runnable_memory = _memory / 1024**3
-            if value["real_oom"] is False and value["oom"] is False:
+            if value["real_oom"] is False:
                 try:
                     test_iteration = iteration * 2
                     if test_iteration < 10:

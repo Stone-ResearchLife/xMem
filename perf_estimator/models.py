@@ -315,6 +315,6 @@ class AllModels(Enum):
     ConvNeXtTiny = torchvision.models.convnext_tiny(weights=None)
     ConvNeXtBase = torchvision.models.convnext_base(weights=None)
     RegNetX400MF = torchvision.models.regnet_x_400mf(weights=None)
-    RegNetX32GF = torchvision.models.regnet_x_32gf(weights=None)
+    # RegNetX32GF = torchvision.models.regnet_x_32gf(weights=None)
     RegNetY400MF = torchvision.models.regnet_y_400mf(weights=None)
-    RegNetY32GF = torchvision.models.regnet_y_32gf(weights=None)
+    # RegNetY32GF = torchvision.models.regnet_y_32gf(weights=None)
