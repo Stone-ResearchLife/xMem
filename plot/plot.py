@@ -26,9 +26,9 @@ class ExperimentPlot:
         }
         self._name_map = {
             "solution": "xMem (this paper)",
-            "dnnmem": "DNNMem",
-            "schedtune": "SchedTune",
-            "llmem": "LLMem",
+            "DNNmem": "DNNMem",
+            "SchedTune": "SchedTune",
+            "LLmem": "LLMem",
         }
         self.font = dict(size=30)
         self.legend_font = dict(size=25)
@@ -671,7 +671,7 @@ class ExperimentPlot:
                 height=default_height,
             )
         return fig
-    
+
     def llm_plot_relative_error_in_box_diagram_with_verification_data(
         self,
         title: str,
@@ -812,21 +812,20 @@ class ExperimentPlot:
             )
         return fig
 
-
     def llm_plot_probability_estimation_vs_error_scatter_diagram_model_base(
-            self,
-            title: str,
-            data_dir: Union[str, Path],
-            optimiser: Optional[str] = None,
-            group_by_list: tuple = ("model", "tool"),
-            accurate_estimation_mode: bool = True,
-            image_size=(500, 500),
-            title_font_size=35,
-            legend_font_size=22,
-            tickfont_size=25,
-            marker_size=25,
-            quadrant_font_size=45,
-            view_mode: bool = False,
+        self,
+        title: str,
+        data_dir: Union[str, Path],
+        optimiser: Optional[str] = None,
+        group_by_list: tuple = ("model", "tool"),
+        accurate_estimation_mode: bool = True,
+        image_size=(500, 500),
+        title_font_size=35,
+        legend_font_size=22,
+        tickfont_size=25,
+        marker_size=25,
+        quadrant_font_size=45,
+        view_mode: bool = False,
     ):
         if view_mode:
             image_size = (600, 600)
@@ -863,12 +862,12 @@ class ExperimentPlot:
             "Correct_Estimation_True_Count",
         ]
         correctness_counts["probability"] = (
-                                                    correctness_counts["Correct_Estimation_False_Count"]
-                                                    / (
-                                                            correctness_counts["Correct_Estimation_False_Count"]
-                                                            + correctness_counts["Correct_Estimation_True_Count"]
-                                                    )
-                                            ) * 100
+            correctness_counts["Correct_Estimation_False_Count"]
+            / (
+                correctness_counts["Correct_Estimation_False_Count"]
+                + correctness_counts["Correct_Estimation_True_Count"]
+            )
+        ) * 100
 
         # Step 2: Aggregate 'error' by mean
         error_agg = df.groupby(group_by_list)["error"].median().reset_index()
@@ -1637,7 +1636,7 @@ class ExperimentPlot:
         # Displaying the result
         merged_df = correctness_counts.merge(median_error, on=groupby_list, how="left")
         merged_df = merged_df.merge(merged_memory, on=groupby_list, how="left")
-        merged_df = merged_df.merge(runtime, on=groupby_list, how="left")
+        # merged_df = merged_df.merge(runtime, on=groupby_list, how="left")
         merged_df = merged_df.merge(first_ps_df, on=groupby_list, how="left")
         merged_df = merged_df.merge(second_ps_df, on=groupby_list, how="left")
 
@@ -1648,7 +1647,6 @@ class ExperimentPlot:
         field_list = [
             "Median Error",
             "probability",
-            "runtime",
             "GPU Memory",
             "performance_score_1",
             "performance_score_2",
@@ -1657,7 +1655,6 @@ class ExperimentPlot:
             "probability": "probability (%)",
             "GPU Memory": "GPU Memory (GB)",
             "Median Error": "Median Error (%)",
-            "runtime": "runtime (s)",
         }
         for field in field_list:
             dnnmem_value = merged_df[merged_df["tool"] == "DNNMem"][field].values[0]
