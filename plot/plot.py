@@ -1571,6 +1571,8 @@ class ExperimentPlot:
             merged_memory["save_memory_sum"] - merged_memory["total_assign_memory"]
         ) / (merged_memory["success_count"] + merged_memory["failed_count"])
 
+        merged_memory["GPU Memory"] = merged_memory["GPU Memory"] / 1024**3
+
         # 1st validation performance CDF
         df_dict = {"tool": [], "performance_score_1": []}
         first_perf_score = (
