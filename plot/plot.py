@@ -427,6 +427,7 @@ class ExperimentPlot:
             pickles = filter_files(".pickle", data_dir, fuzz=True)
             outputs = {}
             for index, p in enumerate(pickles):
+
                 _sim = AllocatorSim(max_allocated_memory_gb=max_gpu_memory_in_gb)
                 p = Path(p)
                 model_name = p.name.split(".")[0]
