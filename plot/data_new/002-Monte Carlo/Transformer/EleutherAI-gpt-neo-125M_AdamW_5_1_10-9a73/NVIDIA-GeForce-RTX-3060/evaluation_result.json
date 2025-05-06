@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.43556085918854415,
+    "ground": 3514826752,
+    "memory": 1983905792,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 1156976862,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 0.39588305489260145,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.3451670644391408,
+    "ground": 3514826752,
+    "memory": 4728029184,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 23567176192,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.14989558472553693,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.09679295942720759,
+    "ground": 3514826752,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 39139528,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "EleutherAI-gpt-neo-125M_AdamW_5_1_10-9a73/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "EleutherAI/gpt-neo-125M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.06980906921241051,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.018496420047732696,
+    "ground": 3514826752,
+    "memory": 3579838464,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 21991179863,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "EleutherAI/gpt-neo-125M",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

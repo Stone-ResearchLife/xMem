@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.014803066349458101,
+    "ground": 7933526016,
+    "memory": 7816085504,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 4077967329,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.5223367697594502,
+    "ground": 7933526016,
+    "memory": 12077498368,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 23047014950,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.5258353158868623,
+    "ground": 7933526016,
+    "memory": 3761797857.28,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 35317477,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "EleutherAI-gpt-neo-125M_AdamW_28_0_10-6f72/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "EleutherAI/gpt-neo-125M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.051017710811525244,
+    "ground": 7933526016,
+    "memory": 8338276352,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 26712887265,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 28,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "EleutherAI/gpt-neo-125M",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

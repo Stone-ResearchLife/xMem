@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.07424071991001124,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.06411698537682789,
+    "ground": 1864368128,
+    "memory": 1983905792,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 777092356,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 1.4493813273340832,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 1.4955005624296962,
+    "ground": 1864368128,
+    "memory": 4652531712,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22763780274,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.9552587176602924,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 1.0677446569178852,
+    "ground": 1864368128,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 35677781,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-125m_SGD_5_1_8-d9e7/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-125m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.2125984251968504,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.21372328458942633,
+    "ground": 1864368128,
+    "memory": 2262827008,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 11343786881,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-125m",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

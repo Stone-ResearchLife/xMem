@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.22483328040647824,
+    "ground": 6603931648,
+    "memory": 5119148032,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 2613443450,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.7219752302318196,
+    "ground": 6603931648,
+    "memory": 1836056576,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22093395223,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.6147538901238488,
+    "ground": 6603931648,
+    "memory": 2544138977.28,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 37341482,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "distilbert-distilgpt2_SGD_30_1_10-9c7d/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "distilbert/distilgpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.09050492219752303,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.0876468720228644,
+    "ground": 6603931648,
+    "memory": 7182745600,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 6290403167,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 30,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "distilbert/distilgpt2",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

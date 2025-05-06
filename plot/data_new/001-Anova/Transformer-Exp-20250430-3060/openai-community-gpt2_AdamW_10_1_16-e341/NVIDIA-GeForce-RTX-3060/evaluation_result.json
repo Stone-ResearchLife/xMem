@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.2660377358490566,
+    "ground": 4445962240,
+    "memory": 3263168512,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 1646565259,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.5591981132075472,
+    "ground": 4445962240,
+    "memory": 1959788544,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 23144609870,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.13291273584905663,
+    "ground": 4445962240,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 39836246,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "openai-community-gpt2_AdamW_10_1_16-e341/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "openai-community/gpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.0330188679245283,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.019339622641509433,
+    "ground": 4445962240,
+    "memory": 4531945472,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 20504575973,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 10,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "openai-community/gpt2",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

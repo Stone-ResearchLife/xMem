@@ -1,0 +1,76 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.014124293785310734,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.00423728813559322,
+    "ground": 1484783616,
+    "memory": 1491075072,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 39764713567,
+    "tool": "DNNmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.6062005649717515,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.6429237288135594,
+    "ground": 1484783616,
+    "memory": 2439386234.88,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 188560219,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "CNN-Exp",
+    "run_id": "RegNetY400MF_Adagrad_200_1_cf65/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "RegNetY400MF",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.02824858757062147,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.06497175141242938,
+    "ground": 1484783616,
+    "memory": 1388314624,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 11631733668,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 200,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "RegNetY400MF",
+    "optimiser": "Adagrad",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

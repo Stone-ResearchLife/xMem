@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.028688524590163935,
+    "ground": 8187281408,
+    "memory": 8422162432,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 10843012747,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.6787909836065574,
+    "ground": 8187281408,
+    "memory": 2629828608,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 22705910701,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.5405315061475409,
+    "ground": 8187281408,
+    "memory": 3761797857.28,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 32844612,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "openai-community-gpt2_AdamW_58_0_16-e36b/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "openai-community/gpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.01485655737704918,
+    "ground": 8187281408,
+    "memory": 8308916224,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 23373222114,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 58,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "openai-community/gpt2",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

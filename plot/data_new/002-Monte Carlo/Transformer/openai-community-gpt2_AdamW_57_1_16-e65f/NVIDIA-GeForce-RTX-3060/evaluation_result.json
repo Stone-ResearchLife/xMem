@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.03904778215447851,
+    "ground": 12245270528,
+    "memory": 12723421184,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 11076837597,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.7849803048467203,
+    "ground": 12245270528,
+    "memory": 2632974336,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 22537845152,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.6851815379345778,
+    "ground": 12245270528,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 36502964,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "openai-community-gpt2_AdamW_57_1_16-e65f/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "openai-community/gpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.029114574413426957,
+    "ground": 12245270528,
+    "memory": 12601786368,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 23735336362,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 57,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "openai-community/gpt2",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

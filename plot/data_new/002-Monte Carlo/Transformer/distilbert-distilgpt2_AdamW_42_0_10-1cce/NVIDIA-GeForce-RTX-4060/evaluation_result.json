@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.13788557869760085,
+    "ground": 7954497536,
+    "memory": 6857687040,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 3629823104,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.7569206432902715,
+    "ground": 7954497536,
+    "memory": 1933574144,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 22400002315,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.7103466912733984,
+    "ground": 7954497536,
+    "memory": 2304046530.56,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 37515797,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "distilbert-distilgpt2_AdamW_42_0_10-1cce/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "distilbert/distilgpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.040337463749011336,
+    "ground": 7954497536,
+    "memory": 7633633280,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 8204631162,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 42,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "distilbert/distilgpt2",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

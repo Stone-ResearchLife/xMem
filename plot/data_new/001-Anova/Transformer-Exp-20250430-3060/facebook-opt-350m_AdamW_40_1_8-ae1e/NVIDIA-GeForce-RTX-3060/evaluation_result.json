@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.02397838568051334,
+    "ground": 12419334144,
+    "memory": 12717129728,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 16046164911,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.5610435663627154,
+    "ground": 12419334144,
+    "memory": 19387121664,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 23528850795,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.6773167848699763,
+    "ground": 12419334144,
+    "memory": 4007510671.36,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 35920175,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-350m_AdamW_40_1_8-ae1e/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-350m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.006923336710570753,
+    "ground": 12419334144,
+    "memory": 12333350912,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 46239995052,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 40,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-350m",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 1.0127931769722816,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 1.0092395167022032,
+    "ground": 5901385728,
+    "memory": 11857297408,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 4580607227,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 0.8829068941009239,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.8740227434257285,
+    "ground": 5901385728,
+    "memory": 11059331072,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 23913643544,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.3209203980099502,
+    "ground": 5901385728,
+    "memory": 4007510671.36,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 32781932,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-350m_SGD_15_1_8-e18e/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-350m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.04655294953802416,
+    "ground": 5901385728,
+    "memory": 5626658816,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 39236591230,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 15,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-350m",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.029411764705882353,
+    "ground": 8199864320,
+    "memory": 8441036800,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 8187715680,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.8219948849104859,
+    "ground": 8199864320,
+    "memory": 14940110848,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 22847827342,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.5412365728900255,
+    "ground": 8199864320,
+    "memory": 3761797857.28,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 35919024,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "EleutherAI-gpt-neo-125M_AdamW_37_0_10-3705/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "EleutherAI/gpt-neo-125M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.04245524296675192,
+    "ground": 8199864320,
+    "memory": 7851737088,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 26564683789,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 37,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "EleutherAI/gpt-neo-125M",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

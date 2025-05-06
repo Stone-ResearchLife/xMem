@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.10758570386579139,
+    "ground": 11500781568,
+    "memory": 12738101248,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 11099938968,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.9393690736688548,
+    "ground": 11500781568,
+    "memory": 22304260096,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 23003310058,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.6648021517140773,
+    "ground": 11500781568,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 33390673,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "EleutherAI-gpt-neo-125M_AdamW_60_1_10-69a0/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "EleutherAI/gpt-neo-125M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.07148067104303428,
+    "ground": 11500781568,
+    "memory": 12322865152,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 29614526836,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 60,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "EleutherAI/gpt-neo-125M",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

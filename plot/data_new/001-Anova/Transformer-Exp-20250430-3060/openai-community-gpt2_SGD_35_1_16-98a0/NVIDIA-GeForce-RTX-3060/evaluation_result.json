@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.09518120270808443,
+    "ground": 10531897344,
+    "memory": 9529458688,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 4886519664,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.7786738351254481,
+    "ground": 10531897344,
+    "memory": 2330984448,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22388025459,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.6339655515730784,
+    "ground": 10531897344,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 34812961,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "openai-community-gpt2_SGD_35_1_16-98a0/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "openai-community/gpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.027279968140183193,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.025487853444842692,
+    "ground": 10531897344,
+    "memory": 10800332800,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 19898890151,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 35,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "openai-community/gpt2",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

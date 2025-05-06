@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.20151975683890577,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.20151975683890577,
+    "ground": 6899630080,
+    "memory": 8290041856,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 3434896415,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": false,
+    "error": 0.78419452887538,
+    "ground": 6899630080,
+    "memory": 12310282240,
+    "oom": true,
+    "real_oom": false,
+    "runtime": 22950306408,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.45478267477203643,
+    "ground": 6899630080,
+    "memory": 3761797857.28,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 36006630,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-125m_AdamW_29_0_8-4089/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-125m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.05197568389057751,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.04984802431610942,
+    "ground": 6899630080,
+    "memory": 7243563008,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 13236755918,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 29,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-125m",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

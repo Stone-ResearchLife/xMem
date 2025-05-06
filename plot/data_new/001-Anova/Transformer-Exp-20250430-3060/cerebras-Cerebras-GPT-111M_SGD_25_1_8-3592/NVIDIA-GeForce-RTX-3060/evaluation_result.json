@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.040145985401459854,
+    "ground": 5746196480,
+    "memory": 5515509760,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 2433391189,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.6322992700729927,
+    "ground": 5746196480,
+    "memory": 2112880640,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22434702808,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.32911496350364966,
+    "ground": 5746196480,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 31599144,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "cerebras-Cerebras-GPT-111M_SGD_25_1_8-3592/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "cerebras/Cerebras-GPT-111M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.02664233576642336,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.02335766423357664,
+    "ground": 5746196480,
+    "memory": 5880414208,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 5771195454,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 25,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "cerebras/Cerebras-GPT-111M",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

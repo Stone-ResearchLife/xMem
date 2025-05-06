@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.40801001251564456,
+    "ground": 3351248896,
+    "memory": 1983905792,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 1060260007,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 0.42334167709637044,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.41082603254067585,
+    "ground": 3351248896,
+    "memory": 4728029184,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 23035615001,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.12842615769712135,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.15032853566958693,
+    "ground": 3351248896,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 33249667,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "EleutherAI-gpt-neo-125M_Adam_5_1_10-ee96/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "EleutherAI/gpt-neo-125M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.12640801001251564,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.14956195244055068,
+    "ground": 3351248896,
+    "memory": 3852468224,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22072090537,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "EleutherAI/gpt-neo-125M",
+    "optimiser": "Adam",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

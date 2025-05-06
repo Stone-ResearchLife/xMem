@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.183504637753823,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.183504637753823,
+    "ground": 8365539328,
+    "memory": 9900654592,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 4064827718,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": false,
+    "error": 0.7414138881925294,
+    "ground": 8365539328,
+    "memory": 14567866368,
+    "oom": true,
+    "real_oom": false,
+    "runtime": 23023569500,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.5391764853346703,
+    "ground": 8365539328,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 35380667,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-125m_AdamW_36_1_8-815f/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-125m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.05540235648032088,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.05314615191777388,
+    "ground": 8365539328,
+    "memory": 8810135552,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 13256362003,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 36,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-125m",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

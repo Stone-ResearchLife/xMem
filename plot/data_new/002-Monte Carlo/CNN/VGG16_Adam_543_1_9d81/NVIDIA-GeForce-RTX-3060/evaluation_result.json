@@ -1,0 +1,76 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.2784476262245667,
+    "ground": 11131682816,
+    "memory": 8032092160,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 30123159871,
+    "tool": "DNNmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.07220610399397144,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.040830821401657794,
+    "ground": 11131682816,
+    "memory": 10677167063.04,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 190000574,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "CNN-Exp",
+    "run_id": "VGG16_Adam_543_1_9d81/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "VGG16",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.03862094951017332,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.017897513187641295,
+    "ground": 11131682816,
+    "memory": 10932453376,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 8959018960,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 543,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "VGG16",
+    "optimiser": "Adam",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

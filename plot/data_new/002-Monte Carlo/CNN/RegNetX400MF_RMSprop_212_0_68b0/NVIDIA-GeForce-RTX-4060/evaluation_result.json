@@ -1,0 +1,76 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.010221465076660987,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.0068143100511073255,
+    "ground": 1231028224,
+    "memory": 1222639616,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 40396229896,
+    "tool": "DNNmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.7223253833049403,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.6695144804088586,
+    "ground": 1231028224,
+    "memory": 2055219445.76,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 254555594,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "CNN-Exp",
+    "run_id": "RegNetX400MF_RMSprop_212_0_68b0/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "RegNetX400MF",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.0,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.0017035775127768314,
+    "ground": 1231028224,
+    "memory": 1228931072,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 11314334187,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 212,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "RegNetX400MF",
+    "optimiser": "RMSprop",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

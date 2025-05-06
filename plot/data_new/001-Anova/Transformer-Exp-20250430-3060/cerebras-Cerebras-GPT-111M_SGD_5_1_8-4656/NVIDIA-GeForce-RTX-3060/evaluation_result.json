@@ -1,0 +1,76 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.15191256830601094,
+    "ground": 1918894080,
+    "memory": 1627389952,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 675516392,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 0.0453551912568306,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.03551912568306011,
+    "ground": 1918894080,
+    "memory": 1850736640,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22078856395,
+    "tool": "LLmem"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "cerebras-Cerebras-GPT-111M_SGD_5_1_8-4656/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "cerebras/Cerebras-GPT-111M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.21202185792349726,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.2174863387978142,
+    "ground": 1918894080,
+    "memory": 2336227328,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 5437052769,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "cerebras/Cerebras-GPT-111M",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

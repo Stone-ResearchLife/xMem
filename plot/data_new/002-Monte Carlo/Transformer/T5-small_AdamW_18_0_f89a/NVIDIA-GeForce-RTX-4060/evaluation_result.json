@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.13056092843326886,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.13056092843326886,
+    "ground": 4336910336,
+    "memory": 4903141376,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 1755970735,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": false,
+    "error": 1.000000000230579,
+    "ground": 4336910336,
+    "memory": -1,
+    "oom": true,
+    "real_oom": false,
+    "runtime": -1,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.4687354932301741,
+    "ground": 4336910336,
+    "memory": 2304046530.56,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 36897554,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "T5-small_AdamW_18_0_f89a/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "T5-small",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.004835589941972921,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.008220502901353965,
+    "ground": 4336910336,
+    "memory": 4301258752,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 37224780529,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 18,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "T5-small",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

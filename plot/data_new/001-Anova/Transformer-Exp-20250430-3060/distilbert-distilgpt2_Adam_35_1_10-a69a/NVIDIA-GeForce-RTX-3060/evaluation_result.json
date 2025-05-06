@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.30952380952380953,
+    "ground": 8543797248,
+    "memory": 5899288576,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 3084913495,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.7792096219931272,
+    "ground": 8543797248,
+    "memory": 1886388224,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22404441309,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.7022238586156111,
+    "ground": 8543797248,
+    "memory": 2544138977.28,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 35291655,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "distilbert-distilgpt2_Adam_35_1_10-a69a/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "distilbert/distilgpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.07952871870397643,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.07731958762886598,
+    "ground": 8543797248,
+    "memory": 9204400128,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 7075024205,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 35,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "distilbert/distilgpt2",
+    "optimiser": "Adam",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

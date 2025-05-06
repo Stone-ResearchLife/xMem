@@ -1,0 +1,76 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.27417779225008143,
+    "ground": 6440353792,
+    "memory": 4674551808,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 25282616443,
+    "tool": "DNNmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.08977694562031908,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.1607635949202214,
+    "ground": 6440353792,
+    "memory": 7475728220.16,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 190386055,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "CNN-Exp",
+    "run_id": "VGG16_AdamW_275_0_4ca8/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "VGG16",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.04005210029306415,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.11331813741452296,
+    "ground": 6440353792,
+    "memory": 7170162688,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 4591973790,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 275,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "VGG16",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

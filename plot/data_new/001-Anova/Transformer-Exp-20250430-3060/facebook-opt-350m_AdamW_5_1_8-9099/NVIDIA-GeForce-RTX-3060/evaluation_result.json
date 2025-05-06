@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.4030428769017981,
+    "ground": 7581204480,
+    "memory": 4525654016,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 2601568875,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 0.052420470262793915,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.01839557399723375,
+    "ground": 7581204480,
+    "memory": 7720665088,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 23522938392,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.47138865836791144,
+    "ground": 7581204480,
+    "memory": 4007510671.36,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 31269067,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-350m_AdamW_5_1_8-9099/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-350m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.013001383125864454,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.021576763485477178,
+    "ground": 7581204480,
+    "memory": 7417626624,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 44189710074,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-350m",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

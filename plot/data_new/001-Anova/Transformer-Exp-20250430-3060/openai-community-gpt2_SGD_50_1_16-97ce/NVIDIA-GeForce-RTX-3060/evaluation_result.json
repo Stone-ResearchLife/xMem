@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.04807858004480441,
+    "ground": 12169773056,
+    "memory": 12754878464,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 10384716023,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.7924349474409788,
+    "ground": 12169773056,
+    "memory": 2526019584,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 22604837551,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": false,
+    "error": 0.6832285024987076,
+    "ground": 12169773056,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": true,
+    "runtime": 32221982,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "openai-community-gpt2_SGD_50_1_16-97ce/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "openai-community/gpt2",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": true,
+    "error": 0.02757194554540755,
+    "ground": 12169773056,
+    "memory": 12505317376,
+    "oom": true,
+    "real_oom": true,
+    "runtime": 21936305993,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 50,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "openai-community/gpt2",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.20939597315436242,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.20939597315436242,
+    "ground": 7811891200,
+    "memory": 9447669760,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 3808849587,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": false,
+    "error": 0.7426845637583893,
+    "ground": 7811891200,
+    "memory": 13613662208,
+    "oom": true,
+    "real_oom": false,
+    "runtime": 23150043702,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.50651677852349,
+    "ground": 7811891200,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 35392861,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-125m_AdamW_33_1_8-7926/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-125m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.049664429530201344,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.047248322147651005,
+    "ground": 7811891200,
+    "memory": 8180989952,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 13617908538,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 33,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-125m",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

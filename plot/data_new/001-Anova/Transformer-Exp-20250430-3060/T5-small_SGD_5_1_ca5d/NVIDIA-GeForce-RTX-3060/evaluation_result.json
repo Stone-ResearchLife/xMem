@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.23824959481361427,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.22042139384116693,
+    "ground": 1293942784,
+    "memory": 1579155456,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 538884800,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": null
+    },
+    "correct_estimation": false,
+    "error": 1.0000000007728318,
+    "ground": 1293942784,
+    "memory": -1,
+    "oom": true,
+    "real_oom": false,
+    "runtime": -1,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.9791572123176663,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.9661912479740682,
+    "ground": 1293942784,
+    "memory": 2544138977.28,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 36883254,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "T5-small_SGD_5_1_ca5d/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "T5-small",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.050243111831442464,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.22366288492706646,
+    "ground": 1293942784,
+    "memory": 1583349760,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 35677975677,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "T5-small",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.4447653429602888,
+    "ground": 2904555520,
+    "memory": 1612709888,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 904311882,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.36606498194945847,
+    "ground": 2904555520,
+    "memory": 1841299456,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22445645444,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.25181588447653436,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.29513718411552353,
+    "ground": 2904555520,
+    "memory": 3761797857.28,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 31013427,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "cerebras-Cerebras-GPT-111M_AdamW_5_0_8-85ed/NVIDIA-GeForce-RTX-4060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "cerebras/Cerebras-GPT-111M",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.0036101083032490976,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.0332129963898917,
+    "ground": 2904555520,
+    "memory": 3001024512,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 6804741287,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 0,
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "cerebras/Cerebras-GPT-111M",
+    "optimiser": "AdamW",
+    "target_iteration": 3,
+    "total_gpu_memory": 8318222336,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

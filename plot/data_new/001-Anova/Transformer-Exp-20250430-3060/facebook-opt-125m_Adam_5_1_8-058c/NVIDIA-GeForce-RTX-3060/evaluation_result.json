@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": null,
+      "oom": true
+    },
+    "correct_estimation": true,
+    "error": 0.3533834586466165,
+    "ground": 3068133376,
+    "memory": 1983905792,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 967210755,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 0.40498974709501023,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.5164046479835953,
+    "ground": 3068133376,
+    "memory": 4652531712,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 22735416470,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 0.1812884483937115,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.2564764183185235,
+    "ground": 3068133376,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 31489080,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-125m_Adam_5_1_8-058c/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-125m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.12576896787423103,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.11073137388926863,
+    "ground": 3068133376,
+    "memory": 3407872000,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 12722320531,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-125m",
+    "optimiser": "Adam",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}

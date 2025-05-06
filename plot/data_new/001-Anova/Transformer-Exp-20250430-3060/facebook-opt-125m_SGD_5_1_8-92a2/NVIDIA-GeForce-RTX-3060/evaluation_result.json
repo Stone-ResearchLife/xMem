@@ -1,0 +1,90 @@
+{
+  "DNNmem": {
+    "2nd verification": {
+      "error": 0.075,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.075,
+    "ground": 1845493760,
+    "memory": 1983905792,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 748014903,
+    "tool": "DNNmem"
+  },
+  "LLmem": {
+    "2nd verification": {
+      "error": 1.43125,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 1.5210227272727272,
+    "ground": 1845493760,
+    "memory": 4652531712,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 23008966677,
+    "tool": "LLmem"
+  },
+  "SchedTune": {
+    "2nd verification": {
+      "error": 1.0945738636363636,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 1.0888920454545454,
+    "ground": 1845493760,
+    "memory": 3855037235.2,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 34426636,
+    "tool": "SchedTune"
+  },
+  "config": {
+    "dataset": {
+      "shuffle": true
+    },
+    "debug": 0.0,
+    "name": "Transformer-Exp",
+    "run_id": "facebook-opt-125m_SGD_5_1_8-92a2/NVIDIA-GeForce-RTX-3060",
+    "save2tmp": false,
+    "task_id": null,
+    "trainer": {
+      "epochs": 1,
+      "huggingface_enable": true,
+      "huggingface_model_name": "facebook/opt-125m",
+      "lr": 0.001
+    }
+  },
+  "solution": {
+    "2nd verification": {
+      "error": 0.02159090909090909,
+      "oom": false
+    },
+    "correct_estimation": true,
+    "error": 0.011363636363636364,
+    "ground": 1845493760,
+    "memory": 1866465280,
+    "oom": false,
+    "real_oom": false,
+    "runtime": 11375389459,
+    "tool": "solution"
+  },
+  "train info": {
+    "batch_size": 5,
+    "device": 1,
+    "gpu_name": "NVIDIA GeForce RTX 3060",
+    "input_size": [
+      86,
+      86,
+      3
+    ],
+    "model": "facebook/opt-125m",
+    "optimiser": "SGD",
+    "target_iteration": 3,
+    "total_gpu_memory": 12622168064,
+    "used_gpu_memory": null,
+    "zero_grad_mode": null
+  }
+}
