@@ -560,6 +560,9 @@ class ExperimentPlot:
         model_order = sorted(df["model"].unique())
         df["error"] = df["error"] * 100
 
+        # Filter out rows where is runtime = -1 and memory = -1, meaning that that estimator does not support this model
+        df = df[~((df["runtime"] == -1) & (df["memory"] == -1))].copy()
+
         # Create a box plot grouped by 'Category'
         fig = px.box(
             df,
@@ -978,6 +981,9 @@ class ExperimentPlot:
         self.legend_font.update(dict(size=legend_font_size))
         df = self.data_processing(data_dir)
         df["error"] = df["error"] * 100
+        # Filter out rows where is runtime = -1 and memory = -1, meaning that that estimator does not support this model
+        df = df[~((df["runtime"] == -1) & (df["memory"] == -1))].copy()
+
         group_by_list = list(group_by_list)
         if optimiser is not None:
             df = df[df["optimiser"] == optimiser]
@@ -1240,6 +1246,8 @@ class ExperimentPlot:
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))
         df = self.data_processing(data_dir)
+        # Filter out rows where is runtime = -1 and memory = -1, meaning that that estimator does not support this model
+        df = df[~((df["runtime"] == -1) & (df["memory"] == -1))].copy()
 
         # for 1st round of verification
         grouped = (
@@ -1386,9 +1394,11 @@ class ExperimentPlot:
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))
         df = self.data_processing(data_dir)
+        df = df[(df["runtime"] != -1) & (df["memory"] != -1)].copy()
+
         group_by = list(group_by)
         memory_save = (
-            df[(df["correct_estimation"] == True)]
+            df[(df["accurate_estimation"] == True)]
             .groupby(group_by)
             .agg(
                 save_memory_sum=("save_memory", "sum"),
@@ -1399,11 +1409,11 @@ class ExperimentPlot:
 
         # Calculate memory_waste
         memory_waste = (
-            df[(df["correct_estimation"] == False)]
+            df[(df["accurate_estimation"] == False)]
             .groupby(group_by)
             .agg(
-                total_assign_memory=("total_gpu_memory", "sum"),
-                failed_count=("total_gpu_memory", "count"),
+                total_assign_memory=("memory", "sum"),
+                failed_count=("memory", "count"),
             )
             .reset_index()
         )
@@ -1538,10 +1548,11 @@ class ExperimentPlot:
 
         # Runtime
         runtime = df.groupby(groupby_list)["runtime"].mean().reset_index()
+        runtime["runtime"] = runtime["runtime"] / 1000**3
 
         # GPU Memory conservation
         memory_save = (
-            df[(df["correct_estimation"] == True)]
+            df[(df["accurate_estimation"] == True)]
             .groupby(groupby_list)
             .agg(
                 save_memory_sum=("save_memory", "sum"),
@@ -1552,11 +1563,11 @@ class ExperimentPlot:
 
         # Calculate memory_waste
         memory_waste = (
-            df[(df["correct_estimation"] == False)]
+            df[(df["accurate_estimation"] == False)]
             .groupby(groupby_list)
             .agg(
-                total_assign_memory=("total_gpu_memory", "sum"),
-                failed_count=("total_gpu_memory", "count"),
+                total_assign_memory=("memory", "sum"),
+                failed_count=("memory", "count"),
             )
             .reset_index()
         )
@@ -1639,7 +1650,7 @@ class ExperimentPlot:
         # Displaying the result
         merged_df = correctness_counts.merge(median_error, on=groupby_list, how="left")
         merged_df = merged_df.merge(merged_memory, on=groupby_list, how="left")
-        # merged_df = merged_df.merge(runtime, on=groupby_list, how="left")
+        merged_df = merged_df.merge(runtime, on=groupby_list, how="left")
         merged_df = merged_df.merge(first_ps_df, on=groupby_list, how="left")
         merged_df = merged_df.merge(second_ps_df, on=groupby_list, how="left")
 
@@ -1653,11 +1664,13 @@ class ExperimentPlot:
             "GPU Memory",
             "performance_score_1",
             "performance_score_2",
+            "runtime",
         ]
         field_map = {
             "probability": "probability (%)",
             "GPU Memory": "GPU Memory (GB)",
             "Median Error": "Median Error (%)",
+            "runtime": "Average Runtime (s)",
         }
         for field in field_list:
             dnnmem_value = merged_df[merged_df["tool"] == "DNNMem"][field].values[0]
