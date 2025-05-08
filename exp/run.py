@@ -428,7 +428,7 @@ class ExperimentRun:
                             gpu_id=gpu_id,
                         )
 
-    def prepare_monte_carlo_experiments_data(self, number: int):
+    def prepare_monte_carlo_experiments_data(self, number: int, gpus:Optional[list[int]] = None):
         assert isinstance(number, int)
         import random
         conf = self._config
@@ -436,7 +436,7 @@ class ExperimentRun:
             model_name = random.choice(conf.models)
             batch_size = random.randint(conf.batch_range[0], conf.batch_range[1])
             optimizer = random.choice(conf.optimisers)
-            gpu_id = random.choice([0, 1])
+            gpu_id = random.choice(gpus or [0, 1])
             self.add_task(
                 model_name=model_name,
                 batch_size=batch_size,

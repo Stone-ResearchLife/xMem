@@ -84,11 +84,11 @@ class ScheduleTune(EstimatorInterface):
             option="1",
             activations=result.total_output_bytes / 1024**2,
             parameters=result.total_params / 1024**2,
-            inputsize=result.input_size / 1024**2,
+            inputsize=result.total_input / 1024**2,
             gpu=self.gpu_name,
             conf_dir=self.conf_dir,
         )
         schedtune_output = schedtune.estimate()
         e_time = time.time_ns()
-        self._execute_time += e_time - s_time
+        self._execute_time = e_time - s_time
         self._memory = schedtune_output["mem"] * 1024**2
