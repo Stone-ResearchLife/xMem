@@ -13,8 +13,6 @@ from pathlib import Path
 from typing import Optional
 from ures.string import format_memory
 from ures.files import filter_files
-
-from exp.experiment_note import gpu_id
 from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file
 from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments
