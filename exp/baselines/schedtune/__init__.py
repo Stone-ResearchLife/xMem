@@ -18,6 +18,8 @@ class ScheduleTune(EstimatorInterface):
             is_transformer: bool = False,
             device_id: int = 0,
     ):
+
+        s_time = time.time_ns()
         activation_size = 0
         parameter_size = 0
         for param in model.parameters():
@@ -44,6 +46,7 @@ class ScheduleTune(EstimatorInterface):
                 if layer.op_type == "call_module":
                     if isinstance(layer.output, torch.Tensor):
                         activation_size += layer.output.nbytes
+        e_time = time.time_ns()
 
         self.parameter_size = parameter_size
         self.activation_size = activation_size
@@ -51,7 +54,7 @@ class ScheduleTune(EstimatorInterface):
         self.gpu_name = "4060" if device_id == 0 else "3060"
         self.conf_dir = Path(__file__).parent.joinpath("src")
         self._memory = None
-        self._execute_time = None
+        self._execute_time = e_time - s_time
 
     @property
     def execute_time(self):
@@ -74,6 +77,6 @@ class ScheduleTune(EstimatorInterface):
         )
         schedtune_output = schedtune.estimate()
         e_time = time.time_ns()
-        self._execute_time = e_time - s_time
+        self._execute_time += (e_time - s_time)
         self._memory =  schedtune_output["mem"] * 1024 ** 2
 
