@@ -25,6 +25,7 @@ def conv_train_loop(
 
     """
     zero_grad_mode = zero_grad_mode or 0
+    zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
     [_plugin.start() for _plugin in plugins]
     model.to(device)
     model.train()
@@ -49,6 +50,8 @@ def conv_train_loop(
                     loss_value.backward()
                     optimizer.step()
                 _, preds = torch.max(outputs, 1)
+                if zero_grad_mode == 2:
+                    optimizer.zero_grad()
                 scheduler.step()
                 print(
                     f"Epoch: {epoch}/{index}, learning rate: {scheduler.get_last_lr()}"

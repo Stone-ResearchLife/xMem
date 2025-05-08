@@ -14,7 +14,7 @@ from typing import Optional
 from ures.string import format_memory
 from ures.files import filter_files
 from perf_estimator.config import Config
-from utils import search_nvml_file, search_profiler_file
+from utils import search_nvml_file, search_profiler_file, search_snapshot_file
 from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments
 from exp.trainer.trainer import ModelPreparer
 from paper_container.evaluations import Experiments
@@ -223,6 +223,7 @@ class _ExperimentExecutor:
         time.sleep(2)
         frame_mem = GPUtil.getGPUs()[self.gpu_id].memoryUsed * 1024**2
         ground_truth = self._get_ground_truth(g_config)
+        snap_truth = self._get_snap_ground_truth(g_config)
         result = self._unified_format(
             name=SummarySectionName.groundtruth,
             memory=ground_truth,
@@ -230,6 +231,7 @@ class _ExperimentExecutor:
             runtime=e_time - s_time,
             verify=False,
             framework_mem=frame_mem,
+            snap_truth=snap_truth,
         )
         return result
 
@@ -314,6 +316,14 @@ class _ExperimentExecutor:
                     data["memory"]["used"] - start_memory[device_id]
                 )
         return max(_gpu_memory_usage[str(self.gpu_id)])
+
+    def _get_snap_ground_truth(self, config: Config):
+        from exp.snapshot import SnapshotAnalyser
+        result_dir = config.result_dir
+        s_files = search_snapshot_file(result_dir)
+        snap = SnapshotAnalyser(str(s_files[-1]))
+        seg, _ = snap.gpu_and_segment_max_memory_changes_data()
+        return max(seg)
 
     def _get_solution_est(self, config: Config) -> dict:
         from exp.baselines.solution import MySolution
@@ -453,11 +463,13 @@ class ExperimentRun:
             batch_size = random.randint(conf.batch_range[0], conf.batch_range[1])
             optimizer = random.choice(conf.optimisers)
             gpu_id = random.choice(gpus or [0, 1])
+            zero_out = random.choice([0, 1, 2])
             self.add_task(
                 model_name=model_name,
                 batch_size=batch_size,
                 optimizer=optimizer,
                 gpu_id=gpu_id,
+                zero_out=zero_out,
             )
 
     def load_from_exist_data(self):

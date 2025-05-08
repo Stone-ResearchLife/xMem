@@ -136,9 +136,9 @@ class FastRunner:
                 cpu_enable=False,
                 network_enable=False,
             ),
+            SnapshotPlugin(config=gpu_config)
         ]
         if self.config.debug:
-            profilers.append(SnapshotPlugin(config=gpu_config))
             profilers.append(ProfilerPlugin(config=gpu_config))
         trainer = ModelTrainer(
             model=copy.deepcopy(self.model_preparer.model),
