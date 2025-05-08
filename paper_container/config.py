@@ -118,13 +118,14 @@ class Configs:
             context_dir=Path(__file__).parent.parent,
         )
         return _config
-    
+
     def schedtune_config(self) -> BuildConfig:
         _config = BuildConfig(
             python_dependencies=[
                 "ures==1.9.0",
                 "pandas==2.2.3",
                 "datasets==3.5.0",
+                "torchinfo==1.8.0",
             ],
             labels=[
                 ("Platform", "PyTorch"),
