@@ -43,3 +43,7 @@ class TransformerExperiments(ExperimentConfig):
         ],
         description="List of transformer models.",
     )
+    optimisers: list[str] = Field(
+        default=["SGD", "Adam", "AdamW"],
+        description="Optimiser to use for the experiment."
+    )

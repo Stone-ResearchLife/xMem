@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Optional
 from ures.string import format_memory
 from ures.files import filter_files
+
+from exp.experiment_note import gpu_id
 from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file
 from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments
@@ -427,6 +429,22 @@ class ExperimentRun:
                             optimizer=opt,
                             gpu_id=gpu_id,
                         )
+
+    def prepare_monte_carlo_experiments_data(self, number: int):
+        assert isinstance(number, int)
+        import random
+        conf = self._config
+        for index in range(number):
+            model_name = random.choice(conf.models)
+            batch_size = random.randint(conf.batch_range[0], conf.batch_range[1])
+            optimizer = random.choice(conf.optimisers)
+            gpu_id = random.choice([0, 1])
+            self.add_task(
+                model_name=model_name,
+                batch_size=batch_size,
+                optimizer=optimizer,
+                gpu_id=gpu_id,
+            )
 
     def load_from_exist_data(self):
         all_summary_files = filter_files('summary.json', directory=str(self.base_dir), fuzz=False)
