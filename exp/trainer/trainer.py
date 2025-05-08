@@ -9,10 +9,10 @@ from .train_loop import conv_train_loop, transformer_train_loop
 
 class ModelPreparer:
     def __init__(
-            self,
-            model_name: str,
-            batch_size: int = 32,
-            optimiser: str = None,
+        self,
+        model_name: str,
+        batch_size: int = 32,
+        optimiser: str = None,
     ):
         self._mlm = False
         self.is_transformer = False
@@ -24,6 +24,7 @@ class ModelPreparer:
         if getattr(AllModels, model_name, None) is None:
             from transformers import AutoConfig, AutoModelForMaskedLM
             from utils.huggingface import suggest_automodel_class
+
             model_class = suggest_automodel_class(model_name)
             if isinstance(model_class, AutoModelForMaskedLM):
                 self._mlm = True
@@ -44,6 +45,7 @@ class ModelPreparer:
         if self.is_transformer:
             from transformers import AutoTokenizer, DataCollatorForLanguageModeling
             from datasets import load_dataset
+
             model_name = self.model.name_or_path
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             tokenizer.pad_token = tokenizer.eos_token
@@ -53,10 +55,14 @@ class ModelPreparer:
             def tokenize_function(examples):
                 return tokenizer(examples["text"], truncation=True, max_length=128)
 
-            tokenized_datasets = dataset.map(tokenize_function, batched=True, remove_columns=["text"])
+            tokenized_datasets = dataset.map(
+                tokenize_function, batched=True, remove_columns=["text"]
+            )
 
             # 4. create DataCollatorForLanguageModeling
-            data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=self._mlm)
+            data_collator = DataCollatorForLanguageModeling(
+                tokenizer=tokenizer, mlm=self._mlm
+            )
 
             # 5. create DataLoader
             tokenized_datasets.set_format("torch")
@@ -64,10 +70,11 @@ class ModelPreparer:
                 tokenized_datasets,
                 batch_size=batch_size,
                 shuffle=True,
-                collate_fn=data_collator
+                collate_fn=data_collator,
             )
         else:
             from perf_estimator.dataset import image_dataset
+
             dataloader = image_dataset(batch=batch_size)
         return dataloader
 
@@ -80,7 +87,7 @@ class ModelTrainer:
         on_cpu: bool = False,
         gpu_id: int = 0,
         iterations: Optional[int] = 1,
-        zero_grad_mode: int = 1,
+        zero_grad_mode: int = 0,
         plugins: List["AbcPlugin"] = None,
         optimiser: Optional[torch.optim.Optimizer] = None,
         config: Config = default_setting,
@@ -117,7 +124,9 @@ class ModelTrainer:
         print(f"Directory: {self._config.base_dir}")
         print("================================================")
 
-    def train(self, is_transformer: bool = False, display_info: bool = False) -> tuple[Config, bool]:
+    def train(
+        self, is_transformer: bool = False, display_info: bool = False
+    ) -> tuple[Config, bool]:
         """
         Train the model on CPU and return the configuration.
 
@@ -157,4 +166,3 @@ class ModelTrainer:
         else:
             logger.info("Training completed successfully.")
             return _conf, False
-

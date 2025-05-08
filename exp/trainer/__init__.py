@@ -8,18 +8,17 @@ from .plugins import SnapshotPlugin, ProfilerPlugin, HostMonitorPlugin
 from .trainer import ModelTrainer, ModelPreparer
 
 
-
 logger = logging.getLogger(__name__)
 
 
 class FastRunner:
     def __init__(
-            self,
-            model_name: str,
-            batch_size: int = 32,
-            gpu_id: int = 0,
-            optimiser: str = None,
-            config: Config = default_setting,
+        self,
+        model_name: str,
+        batch_size: int = 32,
+        gpu_id: int = 0,
+        optimiser: str = None,
+        config: Config = default_setting,
     ):
         self.model_preparer = ModelPreparer(
             model_name=model_name,
@@ -31,11 +30,11 @@ class FastRunner:
             "batch_size": batch_size,
             "gpu_id": gpu_id,
             "optimiser": optimiser,
+            "zero_out_pos": config.trainer.zero_out,
             "gpu_total_memory": None,
             "gpu_name": None,
         }
         self.config = config
-
 
     @property
     def gpu_id(self) -> int:
@@ -44,30 +43,34 @@ class FastRunner:
     @property
     def gpu_name(self):
         if not torch.cuda.is_available():
-            logger.warning("CUDA is not available. Therefore, GPU name cannot be retrieved.")
+            logger.warning(
+                "CUDA is not available. Therefore, GPU name cannot be retrieved."
+            )
             return None
         else:
             gpu_id = self.gpu_id
             _name = str(torch.cuda.get_device_properties(gpu_id).name).replace(" ", "-")
-            self._info['gpu_name'] = _name
+            self._info["gpu_name"] = _name
             return _name
 
     def get_total_gpu_memory(self) -> Optional[int]:
         if not torch.cuda.is_available():
-            logger.warning("CUDA is not available. Therefore, GPU memory cannot be retrieved.")
+            logger.warning(
+                "CUDA is not available. Therefore, GPU memory cannot be retrieved."
+            )
             return None
         else:
             gpu_id = self.gpu_id
-            total_memory_in_bytes =torch.cuda.get_device_properties(gpu_id).total_memory
-            self._info['gpu_total_memory'] = total_memory_in_bytes
+            total_memory_in_bytes = torch.cuda.get_device_properties(
+                gpu_id
+            ).total_memory
+            self._info["gpu_total_memory"] = total_memory_in_bytes
             return total_memory_in_bytes
 
     def set_fraction_gpu_memory(self, fraction_gpu: Optional[float] = 1):
         fraction = float(fraction_gpu or 1)
         if fraction > 1:
-            logger.warning(
-                f"The limit is over the total GPU memory, set to 1.0"
-            )
+            logger.warning(f"The limit is over the total GPU memory, set to 1.0")
             fraction = 1.0
 
         logger.info(
@@ -93,11 +96,11 @@ class FastRunner:
         if self.config.debug:
             profilers.append(
                 HostMonitorPlugin(
-                    interval_ms = 1,
+                    interval_ms=1,
                     config=cpu_config,
                     gpu_enable=True,
                     cpu_enable=False,
-                    network_enable=False
+                    network_enable=False,
                 )
             )
             profilers.append(SnapshotPlugin(config=cpu_config))
@@ -110,9 +113,9 @@ class FastRunner:
             optimiser=self.model_preparer.optimiser,
             config=cpu_config,
             plugins=profilers,
+            zero_grad_mode=self.config.trainer.zero_out,
         )
         return trainer.train(is_transformer=self.model_preparer.is_transformer)
-
 
     def train_on_gpu(self, fraction_gpu: Optional[float] = None):
         """
@@ -127,11 +130,11 @@ class FastRunner:
         gpu_config.task_id = f"GPU_{uuid.uuid4().hex[:3]}"
         profilers = [
             HostMonitorPlugin(
-                interval_ms = 1,
+                interval_ms=1,
                 config=gpu_config,
                 gpu_enable=True,
                 cpu_enable=False,
-                network_enable=False
+                network_enable=False,
             ),
         ]
         if self.config.debug:
@@ -146,6 +149,7 @@ class FastRunner:
             optimiser=self.model_preparer.optimiser,
             config=gpu_config,
             plugins=profilers,
+            zero_grad_mode=self.config.trainer.zero_out,
         )
         return trainer.train(is_transformer=self.model_preparer.is_transformer)
 

@@ -14,6 +14,7 @@ class TrainerConfig(BaseModel):
     epochs: int = Field(default=1, description="Number of Epochs")
     huggingface_enable: bool = Field(default=True, description="HuggingFace Enable")
     huggingface_model_name: str = Field(default=None, description="HuggingFace Model")
+    zero_out: int = Field(default=0, description="Position of the zero out")
 
 
 class Config(BaseModel):
@@ -25,7 +26,10 @@ class Config(BaseModel):
         default=f"{time_now(iso8601=False)}-{str(uuid.uuid4().hex)[:4]}",
         description="Run ID",
     )
-    task_id: Optional[str] = Field(default=None, description="This is a subtask id, that is used to identify the task in the same run_id")
+    task_id: Optional[str] = Field(
+        default=None,
+        description="This is a subtask id, that is used to identify the task in the same run_id",
+    )
     dataset: DatasetConfig = DatasetConfig()
     trainer: TrainerConfig = TrainerConfig()
 

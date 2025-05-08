@@ -65,23 +65,22 @@ def conv_train_loop(
             _plugin.stop()
 
 
-
 def transformer_train_loop(
-        model: torch.nn.Module,
-        data_loader: torch.utils.data.DataLoader,
-        epochs: int,
-        device: torch.device,
-        optimizer: type(torch.optim.Optimizer),
-        iterations: Optional[int] = 2,
-        lr: float = 0.001,
-        plugins: List[InterfacePlugin] = [],
-        zero_grad_mode: Optional[int] = None,
+    model: torch.nn.Module,
+    data_loader: torch.utils.data.DataLoader,
+    epochs: int,
+    device: torch.device,
+    optimizer: type(torch.optim.Optimizer),
+    iterations: Optional[int] = 2,
+    lr: float = 0.001,
+    plugins: List[InterfacePlugin] = [],
+    zero_grad_mode: Optional[int] = None,
 ):
-
 
     [_plugin.start() for _plugin in plugins]
     time.sleep(2)
-
+    zero_grad_mode = zero_grad_mode or 0
+    zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
     optimizer = optimizer(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
@@ -90,12 +89,17 @@ def transformer_train_loop(
         for epoch in range(epochs):
             for index, batch in enumerate(data_loader):
                 [_plugin.step() for _plugin in plugins]
+                if zero_grad_mode == 0:
+                    optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     batch = {k: v.to(device) for k, v in batch.items()}
                     outputs = model(**batch)
+                    if zero_grad_mode == 1:
+                        optimizer.zero_grad()
                     loss = outputs.loss
                     loss.backward()
                     optimizer.step()
+                if zero_grad_mode == 2:
                     optimizer.zero_grad()
                 if index == iterations:
                     break
@@ -104,4 +108,3 @@ def transformer_train_loop(
         raise RuntimeError(f"Training failed: {e}") from e
     finally:
         [_plugin.stop() for _plugin in plugins]
-
