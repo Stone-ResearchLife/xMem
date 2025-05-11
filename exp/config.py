@@ -25,7 +25,7 @@ class CNNExperiments(ExperimentConfig):
     """Configuration for CNN experiments."""
 
     batch_range: tuple[int] = Field(
-        default=(200, 1000, 100), description="Batch size for the experiment."
+        default=(200, 800, 100), description="Batch size for the experiment."
     )
     run_id: str = Field(default="CNN-Exp", description="Run ID for the experiment.")
     optimisers: list[str] = Field(
@@ -42,7 +42,7 @@ class TransformerExperiments(ExperimentConfig):
     """Configuration for transformer experiments."""
 
     batch_range: tuple[int] = Field(
-        default=(5, 70, 5), description="Batch size for the experiment."
+        default=(5, 60, 5), description="Batch size for the experiment."
     )
     run_id: str = Field(
         default="Transformer-Exp", description="Run ID for the experiment."
