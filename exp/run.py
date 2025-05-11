@@ -400,10 +400,11 @@ class ExperimentRun:
         project_name = self.base_dir.name
         if task_id is None:
             formatted_model_name, indices = self._model_name_split(model_name)
+            task_uuid = str(uuid.uuid4().hex[:4])
             if len(indices) == 0:
-                task_id = uuid.uuid4().hex[:4]
+                task_id = task_uuid
             else:
-                task_id = f"{'-'.join(indices)}-{uuid.uuid4().hex[:4]}"
+                task_id = f"{'-'.join(indices)}-{task_uuid}"
         else:
             # Ensure task_id is a string
             # task_is is treated as an int when task_id consists of digits
