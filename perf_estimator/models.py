@@ -298,10 +298,8 @@ inverted_residual_setting_small = [
 
 # Totally has 16 models
 class AllModels(Enum):
-    VGG11 = torchvision.models.vgg11(weights=None)
     VGG16 = torchvision.models.vgg16(weights=None)
     VGG19 = torchvision.models.vgg19(weights=None)
-    ResNet50 = torchvision.models.resnet50(weights=None)
     ResNet101 = torchvision.models.resnet101(weights=None)
     ResNet152 = torchvision.models.resnet152(weights=None)
     MobileNetV2 = torchvision.models.mobilenet_v2(weights=None)
