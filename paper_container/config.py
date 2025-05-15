@@ -25,7 +25,6 @@ class Configs:
         mandatory_requirements = root_path.joinpath("requirement.txt")
         _config = BuildConfig(
             base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
-            # base_image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
             python_deps_manager="pip",
             sys_dependencies=["vim"],
             sys_deps_manager="apt",
@@ -60,14 +59,13 @@ class Configs:
     # for experiments of recent version
     def exp_base_config(self) -> BuildConfig:
         _config = BuildConfig(
-            # base_image="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel",
             base_image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
             python_dependencies=[
                 "transformers==4.51.3",
                 "pynvml==12.0.0",
                 "sortedcontainers==2.4.0",
                 "matplotlib~=3.10.1",
-                "plotly==5.24.0",
+                "plotly==6.0.0",
                 "pydantic==2.9.2",
                 "tqdm==4.67.1",
                 "docker==7.1.0",
