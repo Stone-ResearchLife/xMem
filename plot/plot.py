@@ -540,11 +540,13 @@ class ExperimentPlot:
         optimiser: Optional[str] = None,
         yrange=(0, 250),
         image_size=(2000, 450),
-        overall_median: bool = False,
         font_size=20,
         legend_font_size=18,
+        legend_position=(0.95, 0.58),
         tickfont_size: int = 22,
         view_mode: bool = False,
+        overall_median: bool = False,
+        median_box_offset=(0.8, 0.92, 0.08),
     ):
         if view_mode:
             image_size = (1200, 350)
@@ -602,7 +604,6 @@ class ExperimentPlot:
                 xshift=x_offset_mapping.get(name, 0),
             )
         if overall_median:
-            y_offset = 0.92
             for i, name in enumerate(df["tool"].unique()):
                 # Filter data for each 'name'
                 name_filtered_df = df[df["tool"] == name]
@@ -614,12 +615,14 @@ class ExperimentPlot:
 
                     # Add annotation at the top-left of the plot, vertically stacked
                     fig.add_annotation(
-                        x=0.82,  # Place near the left of the plot (use paper coordinates)
-                        y=y_offset
+                        x=median_box_offset[
+                            0
+                        ],  # Place near the left of the plot (use paper coordinates)
+                        y=median_box_offset[1]
                         - (
-                            i * 0.08
+                            i * median_box_offset[2]
                         ),  # Decrease y position for each annotation to vertically stack
-                        text=f"{round(overall_median, 2)}%",
+                        text=f"{int(round(overall_median, 0))}%",
                         showarrow=False,
                         xref="paper",  # Use 'paper' coordinates for relative positioning
                         yref="paper",
@@ -641,9 +644,9 @@ class ExperimentPlot:
                 title=None,
                 orientation="v",
                 yanchor="bottom",
-                y=0.58,
+                y=legend_position[1],
                 xanchor="center",
-                x=0.95,
+                x=legend_position[0],
                 bgcolor="rgba(255,255,255,0.8)",  # Semi-transparent background
                 bordercolor="Black",
                 borderwidth=2,
@@ -1015,7 +1018,12 @@ class ExperimentPlot:
         ) * 100
 
         # Step 2: Aggregate 'error' by mean
-        error_agg = df.groupby(group_by_list)["error"].median().reset_index()
+        error_agg = (
+            df[df["real_oom"] == False]
+            .groupby(group_by_list)["error"]
+            .median()
+            .reset_index()
+        )
         error_agg.rename(columns={"error": "Mean_Error"}, inplace=True)
         error_agg["Mean_Error"] = round(error_agg["Mean_Error"], 2)
 
@@ -1377,6 +1385,7 @@ class ExperimentPlot:
         image_size=(800, 600),
         font_size=20,
         legend_font_size=18,
+        legend_position=(0.95, 0.58),
         tickfont_size=25,
         overall: bool = False,
         view_mode: bool = False,
@@ -1394,9 +1403,17 @@ class ExperimentPlot:
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))
         df = self.data_processing(data_dir)
-        df = df[(df["runtime"] != -1) & (df["memory"] != -1)].copy()
+        df = df[(df["runtime"] != -1) & (df["memory"] != -1)]
 
         group_by = list(group_by)
+        total_df = (
+            df.groupby(group_by)
+            .agg(
+                total_runs=("memory", "sum"),
+            )
+            .reset_index()
+        )
+
         memory_save = (
             df[(df["accurate_estimation"] == True)]
             .groupby(group_by)
@@ -1419,7 +1436,8 @@ class ExperimentPlot:
         )
 
         # Merge memory_save and memory_waste
-        merged_memory = memory_save.merge(memory_waste, on=group_by, how="left")
+        merged_memory = total_df.merge(memory_save, on=group_by, how="left")
+        merged_memory = merged_memory.merge(memory_waste, on=group_by, how="left")
 
         # Fill NaN values with 0
         merged_memory = merged_memory.fillna(0)
@@ -1428,6 +1446,8 @@ class ExperimentPlot:
         merged_memory["average"] = (
             merged_memory["save_memory_sum"] - merged_memory["total_assign_memory"]
         ) / (merged_memory["success_count"] + merged_memory["failed_count"])
+
+        merged_memory["average"] = merged_memory["average"] / 1024**3
 
         # Sort values
         merged_memory = merged_memory.sort_values(by="save_memory_sum", ascending=False)
@@ -1461,7 +1481,7 @@ class ExperimentPlot:
         fig.update_xaxes(tickangle=30)
         fig.update_layout(
             xaxis_title=None,
-            yaxis_title="Memory conserved/Run (GB)",
+            yaxis_title="Avg. Saved Memory (GB)",
             yaxis=dict(
                 showgrid=True,
                 gridcolor="LightGray",
@@ -1479,9 +1499,9 @@ class ExperimentPlot:
                 title=None,
                 orientation="v",
                 yanchor="bottom",
-                y=0.05,
+                y=legend_position[1],
                 xanchor="center",
-                x=0.27,
+                x=legend_position[0],
                 bgcolor="rgba(255,255,255,0.7)",  # Semi-transparent background
                 bordercolor="Black",
                 borderwidth=2,
@@ -1503,7 +1523,7 @@ class ExperimentPlot:
                 width=default_width,
                 height=default_height,
             )
-        return fig
+        return fig, merged_memory
 
     def display_summary(self, data_dir: Union[str, Path], with_llmem: bool = False):
         df = self.summarize_data(data_dir, with_llmem)
@@ -1518,7 +1538,12 @@ class ExperimentPlot:
         groupby_list = ["tool"]
 
         # Relative Error
-        median_error = df.groupby(groupby_list)["error"].median().reset_index()
+        median_error = (
+            df[df["real_oom"] == False]
+            .groupby(groupby_list)["error"]
+            .median()
+            .reset_index()
+        )
         median_error.columns = groupby_list + ["Median Error"]
         median_error["Median Error"] = median_error["Median Error"] * 100
 
@@ -1551,6 +1576,13 @@ class ExperimentPlot:
         runtime["runtime"] = runtime["runtime"] / 1000**3
 
         # GPU Memory conservation
+        total_df = (
+            df.groupby(groupby_list)
+            .agg(
+                total_runs=("memory", "sum"),
+            )
+            .reset_index()
+        )
         memory_save = (
             df[(df["accurate_estimation"] == True)]
             .groupby(groupby_list)
@@ -1573,7 +1605,8 @@ class ExperimentPlot:
         )
 
         # Merge memory_save and memory_waste
-        merged_memory = memory_save.merge(memory_waste, on=groupby_list, how="left")
+        merged_memory = total_df.merge(memory_waste, on=groupby_list, how="left")
+        merged_memory = merged_memory.merge(memory_save, on=groupby_list, how="left")
 
         # Fill NaN values with 0
         merged_memory = merged_memory.fillna(0)
