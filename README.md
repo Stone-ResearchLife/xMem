@@ -60,7 +60,9 @@ pip install -r requirement.txt
 
 ## ⚙️ CMD Usage
 
-Ensure that you alreayd export the right PYTHONPATH. If not, run below command
+Ensure that you alreayd export the right PYTHONPATH. If not, run commands below.
+
+After run, a webpage will also be opened in your browser, showing the memory usage curve of the model by plotly.
 
 ```shell
 export PYTHONPATH="$(pwd)"
@@ -80,17 +82,18 @@ POSITIONAL ARGUMENTS
         Type: str
 
 FLAGS
-    -b, --batch_size=
+    -i, --is_transformer=IS_TRANSFORMER
+        Type: bool
+        Default: False
+    -m, --model_name=MODEL_NAME
+        Type: Optional[Optional]
+        Default: None
+    -b, --batch_size=BATCH_SIZE
         Type: int
         Default: 200
-    -i, --input_size=INPUT_SIZE
-        Type: int
-        Default: 86
-    -g, --gpu_memory_in_gb=MAX_GPU_MEMORY_IN_GB
+    -g, --gpu_memory_in_gb=GPU_MEMORY_IN_GB
         Type: Union
-        Default: 4
-
-
+        Default: 8
 ```
 
 ### 🚀Quick Example - OOM Example
@@ -142,6 +145,13 @@ Estimated Peak GPU Memory: 5.26GB    <---- This is the peak memory that the mode
 Estimated Peak Tensor Memory: 4.99GB
 ```
 
+### 🚀Quick Example for Transformer Model
+
+```shell
+python main.py ./examples/facebook-opt-125m-batch34.json -b 34 -g 12 -m 'facebook/opt-125m' -i
+```
+
+
 ## 📏 CPU-Based Profiler
 
 Please use 'xmem_profile.py' to generate the profiler file.
@@ -159,10 +169,8 @@ There are only the below models supported for profiling
 
 ```text
 MODELS SUPPORTED:
-        VGG11
         VGG16
         VGG19
-        ResNet50
         ResNet101
         esNet152
         MobileNetV2
@@ -172,9 +180,7 @@ MODELS SUPPORTED:
         ConvNeXtTiny
         ConvNeXtBase
         RegNetX400MF
-        RegNetX32GF
         RegNetY400MF
-        RegNetY32GF
 
 Optimizer Supported:
         SGD
