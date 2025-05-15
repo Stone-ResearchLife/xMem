@@ -25,6 +25,12 @@ class FastRunner:
             batch_size=batch_size,
             optimiser=optimiser,
         )
+        assert self.model_preparer.is_transformer and optimiser in [
+            "AdamW",
+            "SGD",
+            "Adam",
+        ], f""
+
         self._info = {
             "model_name": model_name,
             "batch_size": batch_size,
@@ -136,7 +142,7 @@ class FastRunner:
                 cpu_enable=False,
                 network_enable=False,
             ),
-            SnapshotPlugin(config=gpu_config)
+            SnapshotPlugin(config=gpu_config),
         ]
         if self.config.debug:
             profilers.append(ProfilerPlugin(config=gpu_config))

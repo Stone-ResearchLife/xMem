@@ -1,5 +1,4 @@
 import fire
-from paper_container.apps import XMem, XProfiler, LLmem
 from paper_container.evaluations import Experiments
 from paper_container.docker_cleanup import DockerCleanup
 
@@ -16,11 +15,7 @@ class APPs:
     """
 
     def __init__(self):
-        self.xmem = XMem()
-        self.xprofiler = XProfiler()
-        self.llmem = LLmem()
         self.experiments = Experiments()
-
 
     def cleanup(self):
         _cleanup = DockerCleanup()
