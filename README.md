@@ -40,14 +40,14 @@ conda activate xmem
 Please use the following command to install CPU-Only PyTorch
 
 ```shell
-pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 ```
 
 Or You cloud use the below command to install the GPU version based on your CUDA version.
-The below command is for CUDA 12.1
+The below command is for CUDA 12.4
 
 ```shell
-pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 ```
 
 You can also see official document of PyTorch 2.3.0 installation [here](https://pytorch.org/get-started/previous-versions/#v230)

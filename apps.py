@@ -1,6 +1,7 @@
 import fire
 from paper_container.apps import XMem, XProfiler, LLmem
 from paper_container.evaluations import Experiments
+from paper_container.docker_cleanup import DockerCleanup
 
 
 class APPs:
@@ -19,6 +20,12 @@ class APPs:
         self.xprofiler = XProfiler()
         self.llmem = LLmem()
         self.experiments = Experiments()
+
+
+    def cleanup(self):
+        _cleanup = DockerCleanup()
+        _cleanup.stopped_containers()
+        _cleanup.dangling_images()
 
 
 if __name__ == "__main__":
