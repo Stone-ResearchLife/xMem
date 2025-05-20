@@ -29,7 +29,8 @@ class FastRunner:
             "AdamW",
             "SGD",
             "Adam",
-        ], f""
+            "Adafactor"
+        ], f"Unsupported optimiser: {optimiser}. Supported optimisers are AdamW, SGD, Adam, Adafactor"
 
         self._info = {
             "model_name": model_name,

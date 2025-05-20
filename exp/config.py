@@ -65,7 +65,7 @@ class TransformerExperiments(ExperimentConfig):
         description="Optimiser to use for the experiment.",
     )
 
-class ModarateSizeTransformerExperiments(ExperimentConfig):
+class ModarateSizeTransformerExperiments(TransformerExperiments):
     """Configuration for transformer experiments."""
 
     batch_range: tuple[int] = Field(
