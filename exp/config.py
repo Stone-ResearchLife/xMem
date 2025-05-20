@@ -81,6 +81,6 @@ class ModarateSizeTransformerExperiments(TransformerExperiments):
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=["Adafactor"],
+        default=["AdamW"],
         description="Optimiser to use for the experiment.",
     )
