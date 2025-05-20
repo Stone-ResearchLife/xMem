@@ -85,6 +85,7 @@ class Experiments(AbcExecutor):
             paper: bool = False,
             ground: bool = False,
             debug: bool = False,
+            **kwargs
     ):
         command = [
             "--model", model.replace("/", "-"),
@@ -100,7 +101,8 @@ class Experiments(AbcExecutor):
             "--paper", paper,
             "--ground", ground,
             "--debug", debug,
-
+            "--fp16", kwargs.get("fp16", False),
+            "--enable_large_model", kwargs.get("enable_large_model", False),
         ]
         if task_id is not None:
             command += ["--task_id", task_id]
@@ -121,6 +123,8 @@ class Experiments(AbcExecutor):
             dir_name = "Transformer-Exp"
         else:
             dir_name = "CNN-Exp"
+        if kwargs.get('enable_large_model', False):
+            dir_name = "Modarate-Transformer-Exp"
         src = Path().home().joinpath(dir_name)
         dest_container = self._home_in_container().joinpath(dir_name)
         runtime_conf.add_volume(

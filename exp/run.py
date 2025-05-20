@@ -15,7 +15,7 @@ from ures.string import format_memory
 from ures.files import filter_files
 from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file, search_snapshot_file
-from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments
+from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments, ModarateSizeTransformerExperiments
 from exp.trainer.trainer import ModelPreparer
 from paper_container.evaluations import Experiments
 from ures.docker.container import Container
@@ -511,7 +511,12 @@ class ExperimentRun:
             exp = Experiments()
             for index, task in enumerate(tqdm.tqdm(self._job_list)):
                 self._build_container(
-                    container_manager=exp, task=task, ground=True, paper=True
+                    container_manager=exp,
+                    task=task,
+                    ground=True,
+                    paper=True,
+                    fp16=self._config.fp16,
+                    enable_large_model=isinstance(self._config, ModarateSizeTransformerExperiments)
                 )
             exp.execute(manual_container=True)
         else:
@@ -529,6 +534,7 @@ class ExperimentRun:
         llmem: bool = False,
         paper: bool = False,
         ground: bool = False,
+        **kwargs,
     ) -> Optional[Container]:
         run_id = str(task.config.run_id).split("/")[0]
         task_id = str(str(run_id).split("_")[-1])
@@ -549,6 +555,8 @@ class ExperimentRun:
             "llmem": llmem,
             "ground": ground,
             "debug": self._config.debug,
+            "fp16": kwargs.get("fp16", False),
+            "enable_large_model": kwargs.get("enable_large_model", False),
         }
 
         # Only add the container if at least one estimator is selected
@@ -622,6 +630,8 @@ class ExperimentRun:
                     "schedtune": False,
                     "llmem": False,
                     "ground": False,
+                    "fp16": self._config.fp16,
+                    "enable_large_model": isinstance(self._config, ModarateSizeTransformerExperiments)
                 }
                 for est in estimators:
                     if est.value in summary_data.keys() and force is False:
@@ -830,6 +840,7 @@ def estimate(
     ground: bool = False,
     debug: bool = False,
     fp16: bool = False,
+    enable_large_model: bool = False,
 ):
     if not any([llmem, schedtune, paper, dnnmem, ground]):
         raise ValueError(
@@ -847,6 +858,8 @@ def estimate(
             estimate_list.append(SummarySectionName.solution)
 
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
+    if enable_large_model:
+        conf = ModarateSizeTransformerExperiments()
     conf.fp16 = fp16
     conf.debug = debug
     exp = ExperimentRun(config=conf)

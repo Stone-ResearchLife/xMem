@@ -199,18 +199,18 @@ class Configs:
             sys_dependencies=["vim"],
             labels=[],
             copies=[
-                {
-                    "src": "experiments",
-                    "dest": "experiments",
-                },
+                # {
+                #     "src": "experiments",
+                #     "dest": "experiments",
+                # },
                 {
                     "src": "perf_estimator",
                     "dest": "perf_estimator",
                 },
-                {
-                    "src": "experiments/evaluation.py",
-                    "dest": "evaluation.py",
-                },
+                # {
+                    # "src": "experiments/evaluation.py",
+                    # "dest": "evaluation.py",
+                # },
             ],
             entrypoint=["python", "evaluation.py"],
             context_dir=Path(__file__).parent.parent,
