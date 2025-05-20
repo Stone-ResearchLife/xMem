@@ -24,6 +24,7 @@ class FastRunner:
             model_name=model_name,
             batch_size=batch_size,
             optimiser=optimiser,
+            fp16=config.trainer.fp16
         )
         assert self.model_preparer.is_transformer and optimiser in [
             "AdamW",
@@ -40,6 +41,7 @@ class FastRunner:
             "zero_out_pos": config.trainer.zero_out,
             "gpu_total_memory": None,
             "gpu_name": None,
+            "fp16": config.trainer.fp16,
         }
         self.config = config
 

@@ -19,6 +19,7 @@ class ExperimentConfig(BaseModel):
     )
     gpu_id: int = Field(default=0, description="GPU ID to use.")
     debug: bool = Field(default=False, description="Enable debug mode.")
+    fp16: bool = Field(default=False, description="Enable FP16 mode.")
 
 
 class CNNExperiments(ExperimentConfig):
@@ -76,11 +77,18 @@ class ModarateSizeTransformerExperiments(TransformerExperiments):
     )
     models: list[str] = Field(
         default=[
-            "EleutherAI/pythia-1b"
+            # "EleutherAI/pythia-1b"
+            # "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+            "facebook/opt-350m",
         ],
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=["AdamW"],
+        default=[
+            "Adafactor",
+            # "AdamW",
+            # "Adam",
+            # "SGD"
+        ],
         description="Optimiser to use for the experiment.",
     )

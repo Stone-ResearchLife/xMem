@@ -75,7 +75,11 @@ class _ExperimentExecutor:
         # supplement run_id with gpu name
         config.run_id = f"{config.run_id}/{str(gpu_info.name).replace(' ', '-')}"
         config.trainer.huggingface_model_name = model_name
-        self.config = config
+        self._config = config
+
+    @property
+    def config(self) -> Config:
+        return copy.deepcopy(self._config)
 
     @property
     def model_name(self):
@@ -183,7 +187,7 @@ class _ExperimentExecutor:
 
     def run_solution(self):
         from exp.trainer import FastRunner
-
+        print(f"Solution: CPU-based Running...")
         runner = FastRunner(
             model_name=self.model_name,
             batch_size=self.batch_size,
@@ -286,6 +290,7 @@ class _ExperimentExecutor:
         }
         _formatted_data.update(kwargs)
         if verify and not oom:
+            print(f"{name}: Verification of Estimated Memory {format_memory(memory)}...")
             mem_fraction = self._get_mem_fraction(memory)
             ground, oom = self._verify_est_mem(mem_fraction=mem_fraction)
             _formatted_data["verification"] = {
@@ -327,6 +332,7 @@ class _ExperimentExecutor:
     def _get_solution_est(self, config: Config) -> dict:
         from exp.baselines.solution import MySolution
 
+        print(f"Solution: Estimating memory usage...")
         model_p = self._get_model_p_instance()
 
         config.trainer.huggingface_enable = model_p.is_transformer
@@ -349,6 +355,7 @@ class _ExperimentExecutor:
             memory=solution.estimate_memory + self._get_framework_mem,
             oom=solution.oom,
             runtime=solution.execute_time,
+            fp16=config.trainer.fp16
         )
 
         return est_date
@@ -358,6 +365,7 @@ class _ExperimentExecutor:
             model_name=self.model_name,
             batch_size=self.batch_size,
             optimiser=self.optimiser,
+            fp16=self.config.trainer.fp16,
         )
 
 
@@ -365,6 +373,7 @@ class ExperimentRun:
     def __init__(self, config: ExperimentConfig):
         self._job_list: list[_ExperimentExecutor] = []
         self._config = config
+
 
     @property
     def base_dir(self) -> Path:
@@ -421,6 +430,7 @@ class ExperimentRun:
         run_id = f"{formatted_model_name}_{optimizer}_{batch_size}_{gpu_id}_{task_id}"
         _exe_config = Config(name=project_name, run_id=run_id, save2tmp=False)
         _exe_config.trainer.zero_out = zero_out
+        _exe_config.trainer.fp16 = self._config.fp16
         _exe_config.debug = self._config.debug
 
         _exe_instance = _ExperimentExecutor(
@@ -819,6 +829,7 @@ def estimate(
     paper: bool = False,
     ground: bool = False,
     debug: bool = False,
+    fp16: bool = False,
 ):
     if not any([llmem, schedtune, paper, dnnmem, ground]):
         raise ValueError(
@@ -836,6 +847,7 @@ def estimate(
             estimate_list.append(SummarySectionName.solution)
 
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
+    conf.fp16 = fp16
     conf.debug = debug
     exp = ExperimentRun(config=conf)
     exp.add_task(

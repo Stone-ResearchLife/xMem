@@ -15,6 +15,7 @@ class TrainerConfig(BaseModel):
     huggingface_enable: bool = Field(default=True, description="HuggingFace Enable")
     huggingface_model_name: str = Field(default=None, description="HuggingFace Model")
     zero_out: int = Field(default=0, description="Position of the zero out")
+    fp16: bool = Field(default=False, description="FP16 Enable")
 
 
 class Config(BaseModel):

@@ -161,7 +161,7 @@ class _Estimator(ABC):
                 # set end time to None as it is a persistent memory
                 mem._end = None
 
-        if len(filter_ops_memory) > 0:
+        if len(filter_ops_memory) > 0 and kwargs.get("stateful_persist", False):
             if iteration_index == 1:
                 if len(filter_ops_memory) == 0:
                     last_start_timepoint = iteration_data.optimiser_step[0]
@@ -205,9 +205,13 @@ class _Estimator(ABC):
                 zero_grad = True
 
             if iteration == 1:
-                optimiser_required = True
+                iteration_data = self.profiler.get_iteration(iteration)
+                ops_name = iteration_data.optimiser_name
+                optimiser_required = True if ops_name in ["Adam", "AdamW", "RMSprop", "Adagrad"] else False
+                stateful_persist = True if ops_name in ["Adam", "AdamW", "RMSprop", "Adagrad"] else False
             else:
                 optimiser_required = False
+                stateful_persist = False
 
             memory_activity += self.data_memory(
                 iteration_index=iteration, need_released=dataset_need_released
@@ -216,7 +220,9 @@ class _Estimator(ABC):
                 iteration_index=iteration, zero_grad=zero_grad
             )
             memory_activity += self.optimiser_memory(
-                iteration_index=iteration, persist_required=optimiser_required
+                iteration_index=iteration,
+                persist_required=optimiser_required,
+                stateful_persist=stateful_persist,
             )
 
         sorted_memory = sorted(memory_activity, key=lambda x: x.alloc_time)
@@ -310,9 +316,14 @@ class TrainerEstimator(_Estimator):
                 config = AutoConfig.from_pretrained(
                     model_name
                 )  # load config; do NOT load pretrained weights
-                config.torch_dtype = torch.float32
+                if self.config.trainer.fp16:
+                    config.torch_dtype = torch.float16
+                else:
+                    config.torch_dtype = torch.float32
                 model_class = suggest_automodel_class(model_name)
                 model = model_class.from_config(config)
+                if self.config.trainer.fp16:
+                    model = model.half()
 
                 parameters_list = list(model.parameters())
                 parameters_list.reverse()

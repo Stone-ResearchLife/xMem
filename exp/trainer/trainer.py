@@ -13,8 +13,11 @@ class ModelPreparer:
         model_name: str,
         batch_size: int = 32,
         optimiser: str = None,
+        fp16: bool = False,
     ):
+        print(f"Preparing {model_name} with fp16: {fp16} and optimiser: {optimiser}")
         self._mlm = False
+        self._fp16 = fp16
         self.is_transformer = False
         self.model = self.get_model(model_name)
         self.dl = self.get_dataloader(batch_size)
@@ -24,6 +27,8 @@ class ModelPreparer:
             self.optimiser = getattr(transformers, optimiser, None)
             if self.optimiser is None:
                 raise ValueError(f"Invalid optimiser: {optimiser}. The optimiser must be available in torch.optim or transformers.")
+
+        print(f"Loaded {model_name} in data type: {next(self.model.parameters()).dtype}")
 
     def get_model(self, model_name: str) -> torch.nn.Module:
         if getattr(AllModels, model_name, None) is None:
@@ -37,8 +42,13 @@ class ModelPreparer:
             config = AutoConfig.from_pretrained(
                 model_name
             )  # load config; do NOT load pretrained weights
-            config.torch_dtype = torch.float32
+            if self._fp16:
+                config.torch_dtype = torch.float16
+            else:
+                config.torch_dtype = torch.float32
             model = model_class.from_config(config)
+            if self._fp16:
+                model.half()
             self.is_transformer = True
             model.train()
         else:
@@ -46,19 +56,25 @@ class ModelPreparer:
 
         return model
 
-    def get_dataloader(self, batch_size: int) -> torch.utils.data.DataLoader:
+    def get_dataloader(self, batch_size: int, token_padding: bool = False) -> torch.utils.data.DataLoader:
         if self.is_transformer:
             from transformers import AutoTokenizer, DataCollatorForLanguageModeling
             from datasets import load_dataset
-
             model_name = self.model.name_or_path
+            if model_name in ["EleutherAI/pythia-1b", "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"]:
+                token_padding = True
+            
             tokenizer = AutoTokenizer.from_pretrained(model_name)
-            tokenizer.pad_token = tokenizer.eos_token
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
             dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
 
             # 3. participle
             def tokenize_function(examples):
-                return tokenizer(examples["text"], truncation=True, max_length=128)
+                if token_padding:
+                    return tokenizer(examples["text"], truncation=True, max_length=128, return_tensors="pt", padding=True)
+                else:
+                    return tokenizer(examples["text"], truncation=True, max_length=128)
 
             tokenized_datasets = dataset.map(
                 tokenize_function, batched=True, remove_columns=["text"]
