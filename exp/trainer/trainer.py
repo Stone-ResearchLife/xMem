@@ -19,6 +19,11 @@ class ModelPreparer:
         self.model = self.get_model(model_name)
         self.dl = self.get_dataloader(batch_size)
         self.optimiser = getattr(torch.optim, optimiser or "AdamW", None)
+        if self.optimiser is None:
+            import transformers
+            self.optimiser = getattr(transformers, optimiser, None)
+            if self.optimiser is None:
+                raise ValueError(f"Invalid optimiser: {optimiser}. The optimiser must be available in torch.optim or transformers.")
 
     def get_model(self, model_name: str) -> torch.nn.Module:
         if getattr(AllModels, model_name, None) is None:

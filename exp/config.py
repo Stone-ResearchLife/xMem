@@ -64,3 +64,23 @@ class TransformerExperiments(ExperimentConfig):
         default=["SGD", "Adam", "AdamW"],
         description="Optimiser to use for the experiment.",
     )
+
+class ModarateSizeTransformerExperiments(ExperimentConfig):
+    """Configuration for transformer experiments."""
+
+    batch_range: tuple[int] = Field(
+        default=(1, 2, 2), description="Batch size for the experiment."
+    )
+    run_id: str = Field(
+        default="Modarate-Transformer-Exp", description="Run ID for the experiment."
+    )
+    models: list[str] = Field(
+        default=[
+            "EleutherAI/pythia-1b"
+        ],
+        description="List of transformer models.",
+    )
+    optimisers: list[str] = Field(
+        default=["Adafactor"],
+        description="Optimiser to use for the experiment.",
+    )
