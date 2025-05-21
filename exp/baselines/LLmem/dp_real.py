@@ -408,6 +408,7 @@ def train():
 
     model_name = os.environ.get("MODELNAME", model_args.model_name_or_path)
     batch_size = int(os.environ.get("BATCH", training_args.per_device_train_batch_size))
+    fp16 = bool(os.environ.get("FP16", False))
     model_class = suggest_automodel_class(model_name)
 
     if model_class is transformers.AutoModelForCausalLM:
@@ -442,7 +443,7 @@ def train():
         plugin = GeminiPlugin(
             device=get_current_device(),
             placement_policy="cuda",
-            precision="fp16",
+            precision="fp16" if fp16 else "fp32",
             pin_memory=False,
             strict_ddp_mode=False,
             initial_scale=2**5,
@@ -484,7 +485,7 @@ def train():
         )
 
         ############################## 1 ##############################
-        lm_fp32 = True
+        lm_fp32 = False if fp16 else True
         # if ('codegen' in model_args.model_name_or_path) or ('neo' in model_args.model_name_or_path):
         #     lm_fp32 = True
         # real_bs = 0 # For batch size search mode
