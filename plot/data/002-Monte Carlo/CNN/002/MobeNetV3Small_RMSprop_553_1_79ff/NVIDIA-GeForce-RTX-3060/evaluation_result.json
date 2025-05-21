@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 553,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060",
+        "fp16": false
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_RMSprop_553_1_79ff/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 2,
+            "fp16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2796950650.88,
+        "oom": false,
+        "runtime": 427520494,
+        "ground": 1910505472,
+        "error": 0.46398463227222836,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.36738748627881457
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1906311168,
+        "oom": false,
+        "runtime": 12111117381,
+        "ground": 1910505472,
+        "error": 0.0021953896816684962,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03293084522502744
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 1646264320,
+        "oom": false,
+        "runtime": 11233561443,
+        "ground": 1910505472,
+        "error": 0.13830954994511527,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

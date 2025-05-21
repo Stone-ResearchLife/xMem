@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 600,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_Adagrad_600_1_09c9/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5519588720.64,
+        "oom": false,
+        "runtime": 802041468,
+        "ground": 4160749568,
+        "error": 0.32658518145161297,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.3240650201612904
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3925868544,
+        "oom": false,
+        "runtime": 19124169442,
+        "ground": 4160749568,
+        "error": 0.056451612903225805,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.031754032258064516
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 4120903680,
+        "oom": false,
+        "runtime": 42641965442,
+        "ground": 4160749568,
+        "error": 0.009576612903225807,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.003528225806451613
+        }
+    }
+}

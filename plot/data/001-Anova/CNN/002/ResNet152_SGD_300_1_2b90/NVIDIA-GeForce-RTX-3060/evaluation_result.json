@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet152",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet152_SGD_300_1_2b90/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet152",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 10193448468.48,
+        "oom": false,
+        "runtime": 2425308434,
+        "ground": 10242490368,
+        "error": 0.004788083538083583,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.01261568386568382
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10630463488,
+        "oom": false,
+        "runtime": 25604344642,
+        "ground": 10242490368,
+        "error": 0.03787878787878788,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.05098280098280098
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 10284433408,
+        "oom": false,
+        "runtime": 231342430024,
+        "ground": 10242490368,
+        "error": 0.004095004095004095,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.013718263718263719
+        }
+    }
+}

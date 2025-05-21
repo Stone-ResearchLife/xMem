@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "MnasNet",
+        "batch_size": 591,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060",
+        "fp16": false
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MnasNet_AdamW_591_1_4c7e/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MnasNet",
+            "zero_out": 0,
+            "fp16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 9118270095.36,
+        "oom": false,
+        "runtime": 958771166,
+        "ground": 5358223360,
+        "error": 0.7017338551859101,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.7612250489236791
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 5383389184,
+        "oom": false,
+        "runtime": 13992075160,
+        "ground": 5358223360,
+        "error": 0.004696673189823875,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.075146771037182
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 5016387584,
+        "oom": false,
+        "runtime": 17690146445,
+        "ground": 5358223360,
+        "error": 0.06379647749510763,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.020352250489236792
+        }
+    }
+}

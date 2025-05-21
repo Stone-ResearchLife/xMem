@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 209,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_AdamW_209_0_3db9/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 1646820065.28,
+        "oom": false,
+        "runtime": 326135981,
+        "ground": 740294656,
+        "error": 1.2245467422096317,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.8166147308781869
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 855638016,
+        "oom": false,
+        "runtime": 7065387340,
+        "ground": 740294656,
+        "error": 0.1558073654390935,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.24079320113314448
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 725614592,
+        "oom": false,
+        "runtime": 9905042897,
+        "ground": 740294656,
+        "error": 0.019830028328611898,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.019830028328611898
+        }
+    }
+}

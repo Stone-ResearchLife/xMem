@@ -1,0 +1,91 @@
+{
+    "train info": {
+        "model": "T5-small",
+        "batch_size": 7,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "Transformer-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "T5-small_SGD_7_0_faf0/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "T5-small",
+            "zero_out": 1
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 1647019294.72,
+        "oom": false,
+        "runtime": 291773489,
+        "ground": 1933574144,
+        "error": 0.1481995661605206,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1904214016,
+        "oom": false,
+        "runtime": 36696176873,
+        "ground": 1933574144,
+        "error": 0.015184381778741865,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.019522776572668113
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 2176843776,
+        "oom": false,
+        "runtime": 751342744,
+        "ground": 1933574144,
+        "error": 0.12581344902386118,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.175704989154013
+        }
+    },
+    "LLmem": {
+        "tool": "LLmem",
+        "memory": -1,
+        "oom": true,
+        "runtime": -1,
+        "ground": 1933574144,
+        "error": 1.000000000517177,
+        "real_oom": false,
+        "correct_estimation": false,
+        "2nd verification": {
+            "oom": null,
+            "error": null
+        }
+    }
+}

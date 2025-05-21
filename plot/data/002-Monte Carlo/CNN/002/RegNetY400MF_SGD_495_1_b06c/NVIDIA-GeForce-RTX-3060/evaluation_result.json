@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 495,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_SGD_495_1_b06c/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 2
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4677351505.92,
+        "oom": false,
+        "runtime": 672664854,
+        "ground": 3537895424,
+        "error": 0.3220717249555424,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.36415826911677535
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3296722944,
+        "oom": false,
+        "runtime": 16073773525,
+        "ground": 3537895424,
+        "error": 0.06816834617664493,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03438055720213397
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3523215360,
+        "oom": false,
+        "runtime": 42041508027,
+        "ground": 3537895424,
+        "error": 0.004149377593360996,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.004149377593360996
+        }
+    }
+}

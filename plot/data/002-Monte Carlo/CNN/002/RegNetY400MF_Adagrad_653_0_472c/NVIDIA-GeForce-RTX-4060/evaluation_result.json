@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 653,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_Adagrad_653_0_472c/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 1
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 8194264924.16,
+        "oom": false,
+        "runtime": 853434798,
+        "ground": 4880072704,
+        "error": 0.6791276321443919,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.7663644177051998
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 4200595456,
+        "oom": false,
+        "runtime": 20536529437,
+        "ground": 4880072704,
+        "error": 0.1392350666093683,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.024065320154705628
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 4383047680,
+        "oom": false,
+        "runtime": 42520944705,
+        "ground": 4880072704,
+        "error": 0.10184787279759347,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.009024495058014611
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Large",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Large_Adagrad_400_1_8314/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Large",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4531316326.4,
+        "oom": false,
+        "runtime": 619304682,
+        "ground": 3718250496,
+        "error": 0.21866892272983635,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.11883812746756899
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3705667584,
+        "oom": false,
+        "runtime": 11285807150,
+        "ground": 3718250496,
+        "error": 0.00338409475465313,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06711787930062042
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3168796672,
+        "oom": false,
+        "runtime": 18506258323,
+        "ground": 3718250496,
+        "error": 0.14777213761985336,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.01071630005640158
+        }
+    }
+}

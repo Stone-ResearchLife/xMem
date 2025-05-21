@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 200,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_Adam_200_1_766a/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2406419005.44,
+        "oom": false,
+        "runtime": 404356395,
+        "ground": 1266679808,
+        "error": 0.8997847682119205,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.9577317880794702
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1249902592,
+        "oom": false,
+        "runtime": 11349120537,
+        "ground": 1266679808,
+        "error": 0.013245033112582781,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.019867549668874173
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 1214251008,
+        "oom": false,
+        "runtime": 39933763859,
+        "ground": 1266679808,
+        "error": 0.041390728476821195,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.024834437086092714
+        }
+    }
+}

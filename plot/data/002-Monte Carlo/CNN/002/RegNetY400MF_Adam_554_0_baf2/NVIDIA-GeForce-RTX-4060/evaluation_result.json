@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 554,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_Adam_554_0_baf2/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4448719994.88,
+        "oom": false,
+        "runtime": 728630414,
+        "ground": 4232052736,
+        "error": 0.05119672943508427,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.1547646184340932
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3665821696,
+        "oom": false,
+        "runtime": 19627308728,
+        "ground": 4232052736,
+        "error": 0.1337958374628345,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.020317145688800792
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3827302400,
+        "oom": false,
+        "runtime": 42231529771,
+        "ground": 4232052736,
+        "error": 0.09563924677898909,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.006442021803766105
+        }
+    }
+}

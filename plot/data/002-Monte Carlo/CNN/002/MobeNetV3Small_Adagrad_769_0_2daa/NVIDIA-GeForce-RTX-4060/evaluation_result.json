@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 769,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_Adagrad_769_0_2daa/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 3344055664.64,
+        "oom": false,
+        "runtime": 516186109,
+        "ground": 2613051392,
+        "error": 0.2797512038523274,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.3070385232744783
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 2543845376,
+        "oom": false,
+        "runtime": 16973746101,
+        "ground": 2613051392,
+        "error": 0.026484751203852328,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.028892455858747994
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 2145386496,
+        "oom": false,
+        "runtime": 11604708211,
+        "ground": 2613051392,
+        "error": 0.17897271268057785,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

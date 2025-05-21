@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet152",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet152_Adam_300_1_9423/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet152",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 10193448468.48,
+        "oom": false,
+        "runtime": 2395919577,
+        "ground": 10502537216,
+        "error": 0.029429912140575124,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.00087559904153359
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 11037310976,
+        "oom": false,
+        "runtime": 30084813184,
+        "ground": 10502537216,
+        "error": 0.0509185303514377,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06429712460063898
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 10284433408,
+        "oom": false,
+        "runtime": 229125248521,
+        "ground": 10502537216,
+        "error": 0.020766773162939296,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.009185303514376996
+        }
+    }
+}

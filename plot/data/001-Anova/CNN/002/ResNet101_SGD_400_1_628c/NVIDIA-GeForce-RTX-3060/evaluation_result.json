@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_SGD_400_1_628c/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 12081577328.64,
+        "oom": false,
+        "runtime": 2467333814,
+        "ground": 10011803648,
+        "error": 0.20673334729786336,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.17175219941348968
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10198450176,
+        "oom": false,
+        "runtime": 15967615169,
+        "ground": 10011803648,
+        "error": 0.01864264767490574,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.030372852953498116
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 9850322944,
+        "oom": false,
+        "runtime": 134479168232,
+        "ground": 10011803648,
+        "error": 0.016129032258064516,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.007959782153330541
+        }
+    }
+}

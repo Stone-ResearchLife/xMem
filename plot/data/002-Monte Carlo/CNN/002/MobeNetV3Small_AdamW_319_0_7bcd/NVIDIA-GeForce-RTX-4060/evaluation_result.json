@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 319,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_AdamW_319_0_7bcd/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 1775281111.04,
+        "oom": false,
+        "runtime": 341924506,
+        "ground": 1145044992,
+        "error": 0.5504029304029304,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.25003663003663
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1176502272,
+        "oom": false,
+        "runtime": 9071510793,
+        "ground": 1145044992,
+        "error": 0.027472527472527472,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.07509157509157509
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 994050048,
+        "oom": false,
+        "runtime": 10511635338,
+        "ground": 1145044992,
+        "error": 0.13186813186813187,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0018315018315018315
+        }
+    }
+}

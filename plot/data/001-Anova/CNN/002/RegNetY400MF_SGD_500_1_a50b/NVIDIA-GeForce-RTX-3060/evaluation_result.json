@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 500,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_SGD_500_1_a50b/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4677351505.92,
+        "oom": false,
+        "runtime": 714329152,
+        "ground": 3602907136,
+        "error": 0.29821594877764845,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.3011263096623982
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3374317568,
+        "oom": false,
+        "runtime": 15996000996,
+        "ground": 3602907136,
+        "error": 0.06344586728754366,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.010477299185098952
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3588227072,
+        "oom": false,
+        "runtime": 41900029319,
+        "ground": 3602907136,
+        "error": 0.004074505238649592,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.04540162980209546
+        }
+    }
+}

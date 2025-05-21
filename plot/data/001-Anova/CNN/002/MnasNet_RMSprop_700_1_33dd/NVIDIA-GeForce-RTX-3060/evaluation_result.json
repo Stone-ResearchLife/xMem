@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MnasNet",
+        "batch_size": 700,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MnasNet_RMSprop_700_1_33dd/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MnasNet",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 9306531430.4,
+        "oom": false,
+        "runtime": 1084152240,
+        "ground": 6293553152,
+        "error": 0.4787404198600466,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.48240586471176267
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 6283067392,
+        "oom": false,
+        "runtime": 15240930261,
+        "ground": 6293553152,
+        "error": 0.0016661112962345886,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06931022992335888
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 5878317056,
+        "oom": false,
+        "runtime": 18619979048,
+        "ground": 6293553152,
+        "error": 0.06597800733088971,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.016327890703098966
+        }
+    }
+}

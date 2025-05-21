@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 676,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_SGD_676_0_e696/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 2
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5296294461.44,
+        "oom": false,
+        "runtime": 729215742,
+        "ground": 3772776448,
+        "error": 0.40381878821567524,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.36435241801000545
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3525312512,
+        "oom": false,
+        "runtime": 18759390718,
+        "ground": 3772776448,
+        "error": 0.06559199555308505,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.042801556420233464
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3535798272,
+        "oom": false,
+        "runtime": 42064479027,
+        "ground": 3772776448,
+        "error": 0.06281267370761534,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.022790439132851583
+        }
+    }
+}

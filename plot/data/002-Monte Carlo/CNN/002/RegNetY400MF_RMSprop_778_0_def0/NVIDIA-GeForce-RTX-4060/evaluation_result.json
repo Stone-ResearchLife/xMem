@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 778,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_RMSprop_778_0_def0/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 2
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 8183233904.64,
+        "oom": false,
+        "runtime": 1036345646,
+        "ground": 5798625280,
+        "error": 0.4112368896925859,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.4430632911392406
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 4949278720,
+        "oom": false,
+        "runtime": 22752360737,
+        "ground": 5798625280,
+        "error": 0.14647377938517178,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.025678119349005425
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 5236588544,
+        "oom": false,
+        "runtime": 44171248550,
+        "ground": 5798625280,
+        "error": 0.0969258589511754,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.00216998191681736
+        }
+    }
+}

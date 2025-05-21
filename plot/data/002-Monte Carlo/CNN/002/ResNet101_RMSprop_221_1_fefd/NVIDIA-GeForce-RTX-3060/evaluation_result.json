@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 221,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_RMSprop_221_1_fefd/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 6447022735.36,
+        "oom": false,
+        "runtime": 1303998616,
+        "ground": 6029312000,
+        "error": 0.06927999999999994,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06788869565217386
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 6004146176,
+        "oom": false,
+        "runtime": 14353172753,
+        "ground": 6029312000,
+        "error": 0.0041739130434782605,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.014956521739130434
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 5645533184,
+        "oom": false,
+        "runtime": 127997315187,
+        "ground": 6029312000,
+        "error": 0.06365217391304348,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.00591304347826087
+        }
+    }
+}

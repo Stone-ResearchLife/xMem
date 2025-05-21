@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_SGD_400_1_4ea8/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 12081577328.64,
+        "oom": false,
+        "runtime": 2541173894,
+        "ground": 10013900800,
+        "error": 0.20648062827225125,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.1742293193717277
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10198450176,
+        "oom": false,
+        "runtime": 15935664541,
+        "ground": 10013900800,
+        "error": 0.01842931937172775,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.030157068062827225
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 9850322944,
+        "oom": false,
+        "runtime": 137089082674,
+        "ground": 10013900800,
+        "error": 0.016335078534031412,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.007539267015706806
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_AdamW_400_1_437d/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2510836203.52,
+        "oom": false,
+        "runtime": 394327319,
+        "ground": 1346371584,
+        "error": 0.8648909657320872,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.646822429906542
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1423966208,
+        "oom": false,
+        "runtime": 10349416783,
+        "ground": 1346371584,
+        "error": 0.05763239875389408,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.10124610591900311
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 1214251008,
+        "oom": false,
+        "runtime": 10670302244,
+        "ground": 1346371584,
+        "error": 0.09813084112149532,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.029595015576323987
+        }
+    }
+}

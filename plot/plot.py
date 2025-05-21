@@ -4,11 +4,19 @@ import plotly.express as px
 import plotly.graph_objects as go
 import copy
 import numpy as np
+from enum import Enum
 from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
+
+
+class ApproachedName(Enum):
+    solution = "xMem (this paper)"
+    DNNmem = "DNNMem"
+    SchedTune = "SchedTune"
+    LLmem = "LLMem"
 
 
 class ExperimentPlot:
@@ -19,16 +27,16 @@ class ExperimentPlot:
         self._work_dir.mkdir(parents=True, exist_ok=True)
 
         self._color_scheme = {
-            "xMem (this paper)": "#377eb8",
-            "DNNMem": "#e41a1c",
-            "SchedTune": "#4daf4a",
-            "LLMem": "#984ea3",
+            ApproachedName.solution.value: "#377eb8",
+            ApproachedName.DNNmem.value: "#e41a1c",
+            ApproachedName.SchedTune.value: "#4daf4a",
+            ApproachedName.LLmem.value: "#984ea3",
         }
         self._name_map = {
-            "solution": "xMem (this paper)",
-            "DNNmem": "DNNMem",
-            "SchedTune": "SchedTune",
-            "LLmem": "LLMem",
+            "solution": ApproachedName.solution.value,
+            "DNNmem": ApproachedName.DNNmem.value,
+            "SchedTune": ApproachedName.SchedTune.value,
+            "LLmem": ApproachedName.LLmem.value,
         }
         self.font = dict(size=30)
         self.legend_font = dict(size=25)
@@ -246,7 +254,7 @@ class ExperimentPlot:
 
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))
-        from experiments.snapshot import SnapshotAnalyser
+        from exp.snapshot import SnapshotAnalyser
 
         pickles = filter_files(".pickle", data_dir, fuzz=True)
         outputs = {}
@@ -420,7 +428,7 @@ class ExperimentPlot:
         self.legend_font.update(dict(size=legend_font_size))
         if str(data_dir) not in self._cache.keys():
             from perf_estimator.allocator import AllocatorSim
-            from experiments.snapshot import SnapshotAnalyser
+            from exp.snapshot import SnapshotAnalyser
 
             max_gpu_memory_in_gb = max_gpu_memory_in_gb
             max_sample = 23000
@@ -585,10 +593,10 @@ class ExperimentPlot:
             model = row["model"]
             name = row["tool"]
             x_offset_mapping = {
-                "xMem (this paper)": -30,
-                "DNNMem": -15,
-                "SchedTune": 15,
-                "LLMem": 30,
+                ApproachedName.solution.value: -30,
+                ApproachedName.DNNmem.value: -15,
+                ApproachedName.SchedTune.value: 15,
+                ApproachedName.LLmem.value: 30,
             }
 
             fig.add_annotation(
@@ -1043,6 +1051,7 @@ class ExperimentPlot:
             color="tool",  # Differentiates points by 'name' using color
             symbol="tool",  # Differentiates points by 'name' using marker symbols
             hover_data=[
+                "model",
                 "Correct_Estimation_False_Count",
                 "Correct_Estimation_True_Count",
                 "Mean_Error",
@@ -1706,12 +1715,16 @@ class ExperimentPlot:
             "runtime": "Average Runtime (s)",
         }
         for field in field_list:
-            dnnmem_value = merged_df[merged_df["tool"] == "DNNMem"][field].values[0]
-            schedtune_value = merged_df[merged_df["tool"] == "SchedTune"][field].values[
-                0
-            ]
-            llmem_value = merged_df[merged_df["tool"] == "LLMem"][field].values[0]
-            xmem_value = merged_df[merged_df["tool"] == "xMem (this paper)"][
+            dnnmem_value = merged_df[merged_df["tool"] == ApproachedName.DNNmem.value][
+                field
+            ].values[0]
+            schedtune_value = merged_df[
+                merged_df["tool"] == ApproachedName.SchedTune.value
+            ][field].values[0]
+            llmem_value = merged_df[merged_df["tool"] == ApproachedName.LLmem.value][
+                field
+            ].values[0]
+            xmem_value = merged_df[merged_df["tool"] == ApproachedName.solution.value][
                 field
             ].values[0]
 

@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ConvNeXtTiny",
+        "batch_size": 683,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ConvNeXtTiny_RMSprop_683_1_d5c9/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ConvNeXtTiny",
+            "zero_out": 1
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 10524441968.64,
+        "oom": false,
+        "runtime": 1631714512,
+        "ground": 10880024576,
+        "error": 0.03268215111796459,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.013771202775636027
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 11016339456,
+        "oom": false,
+        "runtime": 15944920643,
+        "ground": 10880024576,
+        "error": 0.012528912875867387,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.010601387818041635
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 7713325056,
+        "oom": false,
+        "runtime": 24861449908,
+        "ground": 10880024576,
+        "error": 0.2910562837316885,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

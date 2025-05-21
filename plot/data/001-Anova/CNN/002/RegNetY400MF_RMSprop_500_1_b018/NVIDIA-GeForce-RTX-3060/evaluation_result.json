@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 500,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_RMSprop_500_1_b018/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4677351505.92,
+        "oom": false,
+        "runtime": 723832887,
+        "ground": 3630170112,
+        "error": 0.28846620450606586,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.29193240901213174
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3395289088,
+        "oom": false,
+        "runtime": 17763028131,
+        "ground": 3630170112,
+        "error": 0.06470248411322935,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.011554015020219527
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3590324224,
+        "oom": false,
+        "runtime": 42434209013,
+        "ground": 3630170112,
+        "error": 0.01097631426920855,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.04563835932986713
+        }
+    }
+}

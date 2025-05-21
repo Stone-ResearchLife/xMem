@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 215,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_RMSprop_215_0_2767/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 1
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 6252207800.32,
+        "oom": false,
+        "runtime": 1193274876,
+        "ground": 5637144576,
+        "error": 0.10910900297619042,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.15003162202380946
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 5888802816,
+        "oom": false,
+        "runtime": 13950597306,
+        "ground": 5637144576,
+        "error": 0.044642857142857144,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.04389880952380952
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 5511315456,
+        "oom": false,
+        "runtime": 120530001900,
+        "ground": 5637144576,
+        "error": 0.022321428571428572,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.021577380952380952
+        }
+    }
+}

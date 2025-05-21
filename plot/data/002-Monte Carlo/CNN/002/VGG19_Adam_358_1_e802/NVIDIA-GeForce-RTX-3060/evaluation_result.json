@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "VGG19",
+        "batch_size": 358,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060",
+        "fp16": false
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "VGG19_Adam_358_1_e802/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "VGG19",
+            "zero_out": 0,
+            "fp16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 6849067745.28,
+        "oom": false,
+        "runtime": 2221412864,
+        "ground": 10605297664,
+        "error": 0.35418429899149695,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 9718202368,
+        "oom": false,
+        "runtime": 5614543467,
+        "ground": 10605297664,
+        "error": 0.08364643069013249,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.043701799485861184
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 6444548096,
+        "oom": false,
+        "runtime": 33543350803,
+        "ground": 10605297664,
+        "error": 0.3923274668775954,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

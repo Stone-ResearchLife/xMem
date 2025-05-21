@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Large",
+        "batch_size": 575,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Large_Adagrad_575_0_995a/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Large",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 8194264924.16,
+        "oom": false,
+        "runtime": 823845343,
+        "ground": 5232394240,
+        "error": 0.566064128256513,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.5007334669338677
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 5129633792,
+        "oom": false,
+        "runtime": 14152008838,
+        "ground": 5232394240,
+        "error": 0.01963927855711423,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.045691382765531065
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 4385144832,
+        "oom": false,
+        "runtime": 20075756897,
+        "ground": 5232394240,
+        "error": 0.16192384769539078,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

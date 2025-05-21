@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_Adagrad_300_1_9eec/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2940899164.16,
+        "oom": false,
+        "runtime": 452380147,
+        "ground": 1799356416,
+        "error": 0.6344172494172493,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.5353496503496503
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1749024768,
+        "oom": false,
+        "runtime": 12791961989,
+        "ground": 1799356416,
+        "error": 0.027972027972027972,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06876456876456877
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 1746927616,
+        "oom": false,
+        "runtime": 40675935333,
+        "ground": 1799356416,
+        "error": 0.029137529137529136,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.017482517482517484
+        }
+    }
+}

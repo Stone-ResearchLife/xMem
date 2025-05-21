@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 280,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_Adagrad_280_0_1466/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 6968500551.68,
+        "oom": false,
+        "runtime": 1699139880,
+        "ground": 7214202880,
+        "error": 0.03405813953488368,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.030767441860465157
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 7151288320,
+        "oom": false,
+        "runtime": 15286419656,
+        "ground": 7214202880,
+        "error": 0.00872093023255814,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.01744186046511628
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 7006584832,
+        "oom": false,
+        "runtime": 124152686419,
+        "ground": 7214202880,
+        "error": 0.02877906976744186,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.01918604651162791
+        }
+    }
+}

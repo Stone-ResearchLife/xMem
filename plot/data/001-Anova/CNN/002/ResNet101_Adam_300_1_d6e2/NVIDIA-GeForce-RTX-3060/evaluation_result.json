@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_Adam_300_1_d6e2/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 7392534200.32,
+        "oom": false,
+        "runtime": 1893063614,
+        "ground": 7589593088,
+        "error": 0.02596435479414207,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0005429676706272853
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 7935623168,
+        "oom": false,
+        "runtime": 16895551124,
+        "ground": 7589593088,
+        "error": 0.04559270516717325,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06161923183199779
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 7526678528,
+        "oom": false,
+        "runtime": 123327404098,
+        "ground": 7589593088,
+        "error": 0.008289582757667864,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0027631942525559545
+        }
+    }
+}

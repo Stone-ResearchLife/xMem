@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobileNetV2",
+        "batch_size": 329,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobileNetV2_RMSprop_329_1_26a1/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobileNetV2",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4700577464.32,
+        "oom": false,
+        "runtime": 701572093,
+        "ground": 5444206592,
+        "error": 0.13659090909090915,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.00015793528505387306
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 4831838208,
+        "oom": false,
+        "runtime": 9553893457,
+        "ground": 5444206592,
+        "error": 0.11248073959938366,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.021956856702619414
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3548381184,
+        "oom": false,
+        "runtime": 13165211706,
+        "ground": 5444206592,
+        "error": 0.34822804314329736,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

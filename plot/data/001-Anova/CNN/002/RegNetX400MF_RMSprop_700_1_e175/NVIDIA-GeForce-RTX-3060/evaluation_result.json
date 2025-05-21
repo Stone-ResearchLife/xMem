@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 700,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_RMSprop_700_1_e175/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5530053509.12,
+        "oom": false,
+        "runtime": 765109035,
+        "ground": 4005560320,
+        "error": 0.38059424083769633,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.3627931937172775
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3682598912,
+        "oom": false,
+        "runtime": 20698034833,
+        "ground": 4005560320,
+        "error": 0.0806282722513089,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.028795811518324606
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3630170112,
+        "oom": false,
+        "runtime": 42702627456,
+        "ground": 4005560320,
+        "error": 0.093717277486911,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.002617801047120419
+        }
+    }
+}

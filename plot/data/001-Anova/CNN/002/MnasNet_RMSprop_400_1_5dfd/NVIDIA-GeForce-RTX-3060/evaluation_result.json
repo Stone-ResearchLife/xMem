@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MnasNet",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MnasNet_RMSprop_400_1_5dfd/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MnasNet",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4700577464.32,
+        "oom": false,
+        "runtime": 666087746,
+        "ground": 3730833408,
+        "error": 0.25992692523889815,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.30883080382237205
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3716153344,
+        "oom": false,
+        "runtime": 11058884396,
+        "ground": 3730833408,
+        "error": 0.0039347948285553686,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03541315345699832
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3477078016,
+        "oom": false,
+        "runtime": 16139866521,
+        "ground": 3730833408,
+        "error": 0.06801573917931422,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.023608768971332208
+        }
+    }
+}

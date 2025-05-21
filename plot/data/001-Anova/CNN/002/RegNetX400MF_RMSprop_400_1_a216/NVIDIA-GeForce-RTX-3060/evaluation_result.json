@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_RMSprop_400_1_a216/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 3536228188.16,
+        "oom": false,
+        "runtime": 532774372,
+        "ground": 2445279232,
+        "error": 0.4461449399656946,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.6039493996569467
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 2304770048,
+        "oom": false,
+        "runtime": 14675092852,
+        "ground": 2445279232,
+        "error": 0.057461406518010294,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.044596912521440824
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 2260729856,
+        "oom": false,
+        "runtime": 41033121434,
+        "ground": 2445279232,
+        "error": 0.07547169811320754,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.012006861063464836
+        }
+    }
+}

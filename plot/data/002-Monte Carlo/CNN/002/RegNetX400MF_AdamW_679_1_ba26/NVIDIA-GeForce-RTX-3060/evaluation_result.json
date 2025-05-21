@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 679,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_AdamW_679_1_ba26/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 1
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5530053509.12,
+        "oom": false,
+        "runtime": 709497552,
+        "ground": 3988783104,
+        "error": 0.3864011566771819,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.3743086225026288
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3670016000,
+        "oom": false,
+        "runtime": 21079560000,
+        "ground": 3988783104,
+        "error": 0.07991587802313355,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.033123028391167195
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3594518528,
+        "oom": false,
+        "runtime": 43084812652,
+        "ground": 3988783104,
+        "error": 0.09884332281808622,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.023133543638275498
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 600,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_SGD_600_1_987b/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5519588720.64,
+        "oom": false,
+        "runtime": 849452330,
+        "ground": 4154458112,
+        "error": 0.3285941443715296,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.33061332660272597
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3904897024,
+        "oom": false,
+        "runtime": 18454072121,
+        "ground": 4154458112,
+        "error": 0.06007067137809187,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.030792529025744572
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 4118806528,
+        "oom": false,
+        "runtime": 42593260552,
+        "ground": 4154458112,
+        "error": 0.008581524482584554,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.008581524482584554
+        }
+    }
+}

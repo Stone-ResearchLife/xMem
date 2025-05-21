@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_Adam_300_1_2e+85/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 7392534200.32,
+        "oom": false,
+        "runtime": 1793491852,
+        "ground": 7568621568,
+        "error": 0.0232654474923802,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0010986422831809769
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 7935623168,
+        "oom": false,
+        "runtime": 16816517835,
+        "ground": 7568621568,
+        "error": 0.048489886395123305,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.061789969520642835
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 7526678528,
+        "oom": false,
+        "runtime": 126224984664,
+        "ground": 7568621568,
+        "error": 0.005541701302299806,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0022166805209199226
+        }
+    }
+}

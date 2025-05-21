@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 500,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_Adagrad_500_1_c0e1/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2783560335.36,
+        "oom": false,
+        "runtime": 416918888,
+        "ground": 1646264320,
+        "error": 0.6908343949044586,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.5341464968152867
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 1709178880,
+        "oom": false,
+        "runtime": 11283605455,
+        "ground": 1646264320,
+        "error": 0.03821656050955414,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06496815286624204
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 1480589312,
+        "oom": false,
+        "runtime": 10653574794,
+        "ground": 1646264320,
+        "error": 0.10063694267515924,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.014012738853503185
+        }
+    }
+}

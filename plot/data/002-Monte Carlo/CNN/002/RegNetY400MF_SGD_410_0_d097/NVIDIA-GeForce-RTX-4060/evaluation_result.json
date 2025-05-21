@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetY400MF",
+        "batch_size": 410,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetY400MF_SGD_410_0_d097/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetY400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 3761472798.72,
+        "oom": false,
+        "runtime": 603256558,
+        "ground": 3009413120,
+        "error": 0.24990243902439016,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.2645365853658536
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 2692743168,
+        "oom": false,
+        "runtime": 14732634080,
+        "ground": 3009413120,
+        "error": 0.10522648083623694,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.02229965156794425
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 2833252352,
+        "oom": false,
+        "runtime": 41337323012,
+        "ground": 3009413120,
+        "error": 0.05853658536585366,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03623693379790941
+        }
+    }
+}

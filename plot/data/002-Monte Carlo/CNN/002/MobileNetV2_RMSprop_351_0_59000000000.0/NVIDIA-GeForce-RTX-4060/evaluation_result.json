@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobileNetV2",
+        "batch_size": 351,
+        "target_iteration": 3,
+        "optimiser": "RMSprop",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobileNetV2_RMSprop_351_0_59000000000.0/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobileNetV2",
+            "zero_out": 2
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5296294461.44,
+        "oom": false,
+        "runtime": 720604297,
+        "ground": 5022679040,
+        "error": 0.05447599164926923,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.01689770354906046
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 5062524928,
+        "oom": false,
+        "runtime": 9800983552,
+        "ground": 5022679040,
+        "error": 0.007933194154488519,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.016701461377870562
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3718250496,
+        "oom": false,
+        "runtime": 13351330600,
+        "ground": 5022679040,
+        "error": 0.25970772442588724,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

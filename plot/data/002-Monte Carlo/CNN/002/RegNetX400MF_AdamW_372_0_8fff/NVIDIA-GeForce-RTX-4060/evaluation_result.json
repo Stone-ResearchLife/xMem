@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 372,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_AdamW_372_0_8fff/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 2
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 3360937738.24,
+        "oom": false,
+        "runtime": 477337191,
+        "ground": 2283798528,
+        "error": 0.4716437098255279,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.38991735537190075
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 2160066560,
+        "oom": false,
+        "runtime": 14902253536,
+        "ground": 2283798528,
+        "error": 0.05417814508723599,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.028466483011937556
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 2189426688,
+        "oom": false,
+        "runtime": 41133962802,
+        "ground": 2283798528,
+        "error": 0.04132231404958678,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.024793388429752067
+        }
+    }
+}

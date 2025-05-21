@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 600,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_Adam_600_1_9ba0/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4677351505.92,
+        "oom": false,
+        "runtime": 676514530,
+        "ground": 3586129920,
+        "error": 0.30428947368421055,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.32300292397660824
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3330277376,
+        "oom": false,
+        "runtime": 19211751110,
+        "ground": 3586129920,
+        "error": 0.07134502923976609,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.03508771929824561
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3267362816,
+        "oom": false,
+        "runtime": 41784085367,
+        "ground": 3586129920,
+        "error": 0.08888888888888889,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0017543859649122807
+        }
+    }
+}

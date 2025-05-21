@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 200,
+        "target_iteration": 3,
+        "optimiser": "Adam",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_Adam_200_1_ff56/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2042909163.52,
+        "oom": false,
+        "runtime": 309546919,
+        "ground": 679477248,
+        "error": 2.0065895061728396,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 1.679429012345679
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 805306368,
+        "oom": false,
+        "runtime": 7058966225,
+        "ground": 679477248,
+        "error": 0.18518518518518517,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.2222222222222222
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 696254464,
+        "oom": false,
+        "runtime": 9795254328,
+        "ground": 679477248,
+        "error": 0.024691358024691357,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.024691358024691357
+        }
+    }
+}

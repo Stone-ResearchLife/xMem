@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "VGG19",
+        "batch_size": 547,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060",
+        "fp16": false
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "VGG19_SGD_547_1_45ea/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "VGG19",
+            "zero_out": 2,
+            "fp16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 10105661685.76,
+        "oom": false,
+        "runtime": 3238800770,
+        "ground": 11580473344,
+        "error": 0.1273533140166606,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06207080767837742
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 12389974016,
+        "oom": false,
+        "runtime": 8394344096,
+        "ground": 11580473344,
+        "error": 0.06990220934444041,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.15737051792828685
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 10060038144,
+        "oom": false,
+        "runtime": 35595044028,
+        "ground": 11580473344,
+        "error": 0.13129300977906555,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.048714233973198115
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "MobeNetV3Small",
+        "batch_size": 231,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 2,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "MobeNetV3Small_AdamW_231_1_35c3/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "MobeNetV3Small",
+            "zero_out": 2
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2118721208.32,
+        "oom": false,
+        "runtime": 314709582,
+        "ground": 801112064,
+        "error": 1.6447251308900523,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 1.2782329842931937
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 905969664,
+        "oom": false,
+        "runtime": 7292369341,
+        "ground": 801112064,
+        "error": 0.13089005235602094,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.21204188481675393
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 799014912,
+        "oom": false,
+        "runtime": 10302858466,
+        "ground": 801112064,
+        "error": 0.002617801047120419,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.049738219895287955
+        }
+    }
+}

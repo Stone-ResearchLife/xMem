@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_AdamW_300_1_380b/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 7392534200.32,
+        "oom": false,
+        "runtime": 1831677850,
+        "ground": 7566524416,
+        "error": 0.022994733924612015,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0005446230598670027
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 7935623168,
+        "oom": false,
+        "runtime": 16930638644,
+        "ground": 7566524416,
+        "error": 0.04878048780487805,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.06180709534368071
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 7526678528,
+        "oom": false,
+        "runtime": 137218394858,
+        "ground": 7566524416,
+        "error": 0.005266075388026608,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0024944567627494456
+        }
+    }
+}

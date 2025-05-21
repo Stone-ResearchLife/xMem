@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "VGG16",
+        "batch_size": 372,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060",
+        "fp16": false
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "VGG16_AdamW_372_1_bf17/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "VGG16",
+            "zero_out": 0,
+            "fp16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 5985722695.68,
+        "oom": false,
+        "runtime": 2081973097,
+        "ground": 9940500480,
+        "error": 0.39784493670886073,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10087301120,
+        "oom": false,
+        "runtime": 5723866808,
+        "ground": 9940500480,
+        "error": 0.014767932489451477,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.15126582278481013
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 6710886400,
+        "oom": false,
+        "runtime": 26851704981,
+        "ground": 9940500480,
+        "error": 0.32489451476793246,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

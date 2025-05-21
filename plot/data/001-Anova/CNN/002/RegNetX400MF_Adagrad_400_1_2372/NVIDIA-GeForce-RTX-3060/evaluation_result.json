@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 400,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_Adagrad_400_1_2372/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 3536228188.16,
+        "oom": false,
+        "runtime": 559791086,
+        "ground": 2434793472,
+        "error": 0.4523729543496985,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.6099956933677864
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 2304770048,
+        "oom": false,
+        "runtime": 14546034436,
+        "ground": 2434793472,
+        "error": 0.053402239448751075,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.037037037037037035
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 2260729856,
+        "oom": false,
+        "runtime": 40665025735,
+        "ground": 2434793472,
+        "error": 0.0714900947459087,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.012058570198105082
+        }
+    }
+}

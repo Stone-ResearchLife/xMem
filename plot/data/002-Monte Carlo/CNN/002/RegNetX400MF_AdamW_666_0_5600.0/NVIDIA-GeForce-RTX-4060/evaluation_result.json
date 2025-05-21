@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "RegNetX400MF",
+        "batch_size": 666,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 8318222336,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 4060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "RegNetX400MF_AdamW_666_0_5600.0/NVIDIA-GeForce-RTX-4060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "RegNetX400MF",
+            "zero_out": 1
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4448719994.88,
+        "oom": false,
+        "runtime": 762950430,
+        "ground": 3814719488,
+        "error": 0.16619846069268832,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.12496701484332054
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 3600809984,
+        "oom": false,
+        "runtime": 20784329827,
+        "ground": 3814719488,
+        "error": 0.056074766355140186,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.021440351841671246
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3525312512,
+        "oom": false,
+        "runtime": 42294641199,
+        "ground": 3814719488,
+        "error": 0.07586586036283673,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.017042330951072018
+        }
+    }
+}

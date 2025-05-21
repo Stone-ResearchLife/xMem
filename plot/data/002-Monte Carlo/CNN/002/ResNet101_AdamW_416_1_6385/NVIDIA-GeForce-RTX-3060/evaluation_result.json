@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "ResNet101",
+        "batch_size": 416,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060",
+        "fp16": false
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet101_AdamW_416_1_6385/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet101",
+            "zero_out": 0,
+            "fp16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 12081577328.64,
+        "oom": false,
+        "runtime": 2538500868,
+        "ground": 10546577408,
+        "error": 0.14554483992841513,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.16721912905150124
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10674503680,
+        "oom": false,
+        "runtime": 19375645417,
+        "ground": 10546577408,
+        "error": 0.012129648041360111,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.023861602704314974
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 10259267584,
+        "oom": false,
+        "runtime": 138699320436,
+        "ground": 10546577408,
+        "error": 0.027241996420759595,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.011731954662954862
+        }
+    }
+}

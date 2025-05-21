@@ -1,0 +1,77 @@
+{
+    "train info": {
+        "model": "ResNet152",
+        "batch_size": 300,
+        "target_iteration": 3,
+        "optimiser": "Adagrad",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "CNN-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "ResNet152_Adagrad_300_1_5922/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "ResNet152",
+            "zero_out": 0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 10193448468.48,
+        "oom": false,
+        "runtime": 2451754450,
+        "ground": 10666115072,
+        "error": 0.04431478568619745,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.0022837200157294103
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10762584064,
+        "oom": false,
+        "runtime": 28021991081,
+        "ground": 10666115072,
+        "error": 0.009044435705859222,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.02182461659457334
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 10284433408,
+        "oom": false,
+        "runtime": 222380430632,
+        "ground": 10666115072,
+        "error": 0.03578450648839953,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.010420762878489972
+        }
+    }
+}
