@@ -124,7 +124,7 @@ class Experiments(AbcExecutor):
         else:
             dir_name = "CNN-Exp"
         if kwargs.get('enable_large_model', False):
-            dir_name = "Modarate-Transformer-Exp"
+            dir_name = "Large-Transformer-Exp"
         src = Path().home().joinpath(dir_name)
         dest_container = self._home_in_container().joinpath(dir_name)
         runtime_conf.add_volume(

@@ -68,16 +68,15 @@ class TransformerExperiments(ExperimentConfig):
 
 class LargeTransformerExperiments(TransformerExperiments):
     """Configuration for transformer experiments."""
-
     batch_range: tuple[int] = Field(
-        default=(1, 5, 2), description="Batch size for the experiment."
+        default=(1, 9, 2), description="Batch size for the experiment."
     )
     run_id: str = Field(
-        default="Modarate-Transformer-Exp", description="Run ID for the experiment."
+        default="Large-Transformer-Exp", description="Run ID for the experiment."
     )
     models: list[str] = Field(
         default=[
-            "EleutherAI/pythia-1b"
+            "EleutherAI/pythia-1b",
             "Qwen/Qwen3-0.6B",
         ],
         description="List of transformer models.",
