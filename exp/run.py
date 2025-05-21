@@ -15,7 +15,7 @@ from ures.string import format_memory
 from ures.files import filter_files
 from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file, search_snapshot_file
-from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments, ModarateSizeTransformerExperiments
+from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments, LargeTransformerExperiments
 from exp.trainer.trainer import ModelPreparer
 from paper_container.evaluations import Experiments
 from ures.docker.container import Container
@@ -374,6 +374,9 @@ class ExperimentRun:
         self._job_list: list[_ExperimentExecutor] = []
         self._config = config
 
+    @property
+    def jobs(self) -> list[_ExperimentExecutor]:
+        return self._job_list
 
     @property
     def base_dir(self) -> Path:
@@ -516,7 +519,7 @@ class ExperimentRun:
                     ground=True,
                     paper=True,
                     fp16=self._config.fp16,
-                    enable_large_model=isinstance(self._config, ModarateSizeTransformerExperiments)
+                    enable_large_model=isinstance(self._config, LargeTransformerExperiments)
                 )
             exp.execute(manual_container=True)
         else:
@@ -631,7 +634,7 @@ class ExperimentRun:
                     "llmem": False,
                     "ground": False,
                     "fp16": self._config.fp16,
-                    "enable_large_model": isinstance(self._config, ModarateSizeTransformerExperiments)
+                    "enable_large_model": isinstance(self._config, LargeTransformerExperiments)
                 }
                 for est in estimators:
                     if est.value in summary_data.keys() and force is False:
@@ -859,7 +862,7 @@ def estimate(
 
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
     if enable_large_model:
-        conf = ModarateSizeTransformerExperiments()
+        conf = LargeTransformerExperiments()
     conf.fp16 = fp16
     conf.debug = debug
     exp = ExperimentRun(config=conf)

@@ -97,6 +97,7 @@ class FastRunner:
             tuple: A tuple containing the configuration and a boolean indicating if the training occurred OOM.
 
         """
+        print("Training on CPU Started")
         cpu_config = self.config.model_copy(deep=True)
         cpu_config.task_id = f"CPU_{uuid.uuid4().hex[:3]}"
         profilers = [
@@ -113,17 +114,21 @@ class FastRunner:
                 )
             )
             profilers.append(SnapshotPlugin(config=cpu_config))
+        print("Initializing Training...")
         trainer = ModelTrainer(
             model=copy.deepcopy(self.model_preparer.model),
             data_loader=copy.deepcopy(self.model_preparer.dl),
+            # model=self.model_preparer.model,
+            # data_loader=self.model_preparer.dl,
             on_cpu=True,
             gpu_id=self.gpu_id,
-            iterations=3,
+            iterations=2,
             optimiser=self.model_preparer.optimiser,
             config=cpu_config,
             plugins=profilers,
             zero_grad_mode=self.config.trainer.zero_out,
         )
+        print("Training...")
         return trainer.train(is_transformer=self.model_preparer.is_transformer)
 
     def train_on_gpu(self, fraction_gpu: Optional[float] = None):
@@ -152,6 +157,8 @@ class FastRunner:
         trainer = ModelTrainer(
             model=copy.deepcopy(self.model_preparer.model),
             data_loader=copy.deepcopy(self.model_preparer.dl),
+            # model=self.model_preparer.model,
+            # data_loader=self.model_preparer.dl,
             on_cpu=False,
             gpu_id=self.gpu_id,
             iterations=3,

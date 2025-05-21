@@ -62,33 +62,32 @@ class TransformerExperiments(ExperimentConfig):
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=["SGD", "Adam", "AdamW"],
+        default=["SGD", "Adam", "AdamW", "Adafactor"],
         description="Optimiser to use for the experiment.",
     )
 
-class ModarateSizeTransformerExperiments(TransformerExperiments):
+class LargeTransformerExperiments(TransformerExperiments):
     """Configuration for transformer experiments."""
 
     batch_range: tuple[int] = Field(
-        default=(1, 2, 2), description="Batch size for the experiment."
+        default=(1, 5, 2), description="Batch size for the experiment."
     )
     run_id: str = Field(
         default="Modarate-Transformer-Exp", description="Run ID for the experiment."
     )
     models: list[str] = Field(
         default=[
-            # "EleutherAI/pythia-1b"
-            # "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-            "facebook/opt-350m",
+            "EleutherAI/pythia-1b"
+            "Qwen/Qwen3-0.6B",
         ],
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
         default=[
             "Adafactor",
-            # "AdamW",
-            # "Adam",
-            # "SGD"
+            "AdamW",
+            "Adam",
+            "SGD"
         ],
         description="Optimiser to use for the experiment.",
     )

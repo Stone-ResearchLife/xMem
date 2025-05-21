@@ -4,7 +4,7 @@ import platform
 from typing import Optional, List, Tuple
 from perf_estimator.config import Config, default_setting
 from perf_estimator.models import AllModels
-from .train_loop import conv_train_loop, transformer_train_loop
+from .train_loop import conv_train_loop, transformer_train_loop, transformer_mixed_precision_train_loop
 
 
 class ModelPreparer:
@@ -47,8 +47,8 @@ class ModelPreparer:
             else:
                 config.torch_dtype = torch.float32
             model = model_class.from_config(config)
-            if self._fp16:
-                model.half()
+            # if self._fp16:
+            #     model.half()
             self.is_transformer = True
             model.train()
         else:
@@ -61,8 +61,13 @@ class ModelPreparer:
             from transformers import AutoTokenizer, DataCollatorForLanguageModeling
             from datasets import load_dataset
             model_name = self.model.name_or_path
-            if model_name in ["EleutherAI/pythia-1b", "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"]:
-                token_padding = True
+            
+            model_list = [
+                "EleutherAI/pythia", 
+                "deepseek-ai/DeepSeek-R1",
+                "Qwen/Qwen3"
+            ]
+            token_padding = any([model in model_name for model in model_list])
             
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             if tokenizer.pad_token is None:
@@ -159,8 +164,14 @@ class ModelTrainer:
             self.show_summary()
 
         if is_transformer:
-            func = transformer_train_loop
+            if self._config.trainer.fp16:
+                print(f"Using Mixed Precision (FP16) Training loop.")
+                func = transformer_mixed_precision_train_loop
+            else:
+                print(f"Using Mixed Precision (FP32) Training loop.")
+                func = transformer_train_loop
         else:
+            print(f"Using Convolutional Training loop.")
             func = conv_train_loop
 
         _conf = self._config.model_copy(deep=True)

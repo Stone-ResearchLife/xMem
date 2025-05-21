@@ -114,16 +114,17 @@ class AllocatorSim:
                         _snapshot_files.append(_snapshot_img)
                         self._allocator.plot(_snapshot_img)
             except Exception as e:
-                _snapshot_img = os.path.join(_log_dir, f"Last-frame.png")
-                _snapshot_files.append(_snapshot_img)
-                self._allocator.plot(_snapshot_img)
-                print(
-                    f"Memory allocation failed at block {_index}/{_sub_index}\nthe memory capture is saved at {_snapshot_img}"
-                )
-                _snapshot_img = os.path.join(_log_dir, f"Last-GPU-frame.png")
-                self._allocator._gpu_device.plot(_snapshot_img)
-                self._allocator.oom = True
-                print(f"the memory capture is saved at {_snapshot_img}")
+                if self._config.debug:
+                    _snapshot_img = os.path.join(_log_dir, f"Last-frame.png")
+                    _snapshot_files.append(_snapshot_img)
+                    self._allocator.plot(_snapshot_img)
+                    print(
+                        f"Memory allocation failed at block {_index}/{_sub_index}\nthe memory capture is saved at {_snapshot_img}"
+                    )
+                    _snapshot_img = os.path.join(_log_dir, f"Last-GPU-frame.png")
+                    self._allocator._gpu_device.plot(_snapshot_img)
+                    self._allocator.oom = True
+                    print(f"the memory capture is saved at {_snapshot_img}")
                 break
 
         _result = self._allocator
