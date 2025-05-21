@@ -1027,7 +1027,7 @@ class ExperimentPlot:
 
         # Step 2: Aggregate 'error' by mean
         error_agg = (
-            df[df["real_oom"] == False]
+            df[(df["real_oom"] == False) & (df["oom"] == False)]
             .groupby(group_by_list)["error"]
             .median()
             .reset_index()
@@ -1548,7 +1548,7 @@ class ExperimentPlot:
 
         # Relative Error
         median_error = (
-            df[df["real_oom"] == False]
+            df[(df["real_oom"] == False) & (df["oom"] == False)]
             .groupby(groupby_list)["error"]
             .median()
             .reset_index()
