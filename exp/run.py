@@ -774,14 +774,15 @@ class ExperimentRun:
             if summary_file.is_file():
                 with open(summary_file) as f:
                     summary_json = json.load(f)
-                sche_data = summary_json[SummarySectionName.schedtune.value]
-                task._unified_format(
-                    name=SummarySectionName.schedtune,
-                    memory=sche_data["memory"],
-                    runtime=sche_data["runtime"],
-                    oom=sche_data["oom"],
-                    verify=True
-                )
+                if SummarySectionName.schedtune.value in summary_json.keys():
+                    sche_data = summary_json[SummarySectionName.schedtune.value]
+                    task._unified_format(
+                        name=SummarySectionName.schedtune,
+                        memory=sche_data["memory"],
+                        runtime=sche_data["runtime"],
+                        oom=sche_data["oom"],
+                        verify=True
+                    )
 
     def to_evaluation_result(self):
         """
