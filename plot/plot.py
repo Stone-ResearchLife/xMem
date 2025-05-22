@@ -374,7 +374,7 @@ class ExperimentPlot:
             ),
             showlegend=True,
             template=self._plotly_template,
-            margin=dict(l=50, r=20, t=20, b=50, pad=4),
+            margin=dict(l=50, r=10, t=20, b=50, pad=2),
         )
         if view_mode is False:
             fig.write_image(
@@ -532,6 +532,7 @@ class ExperimentPlot:
             ),
             showlegend=True,
             template=self._plotly_template,
+            margin=dict(l=100, r=30, t=20, b=50, pad=6),
         )
         if view_mode is False:
             fig.write_image(
