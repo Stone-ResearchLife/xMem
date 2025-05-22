@@ -568,7 +568,8 @@ class ExperimentPlot:
         df = self.data_processing(data_dir)
         if optimiser is not None:
             df = df[df["optimiser"] == optimiser]
-        model_order = sorted(df["model"].unique())
+        df["shortName"] = df["model"].apply(lambda x: x.split("/")[-1])
+        model_order = sorted(df["shortName"].unique())
         df["error"] = df["error"] * 100
 
         # Filter out rows where is runtime = -1 and memory = -1, meaning that that estimator does not support this model
@@ -577,10 +578,10 @@ class ExperimentPlot:
         # Create a box plot grouped by 'Category'
         fig = px.box(
             df,
-            x="model",
+            x="shortName",
             y="error",
             color="tool",
-            category_orders={"model": model_order},
+            category_orders={"shortName": model_order},
             labels={"tool": "Estimator", "error": "Error", "model": "Model"},
             boxmode="group",
             color_discrete_map=self._color_scheme,
@@ -1705,8 +1706,8 @@ class ExperimentPlot:
             "Median Error",
             "probability",
             "GPU Memory",
-            "performance_score_1",
-            "performance_score_2",
+            # "performance_score_1",
+            # "performance_score_2",
             "runtime",
         ]
         field_map = {
@@ -1744,9 +1745,9 @@ class ExperimentPlot:
             ]
 
         tool_summary = merged_df[merged_df[["tool"] + field_list].columns].round(2)
-        tool_summary = tool_summary.sort_values(
-            by="performance_score_1", ascending=False
-        )
+        # tool_summary = tool_summary.sort_values(
+        #     by="performance_score_1", ascending=False
+        # )
         summarized_result = pd.DataFrame(summarized_result)
 
         # standardize the columns name

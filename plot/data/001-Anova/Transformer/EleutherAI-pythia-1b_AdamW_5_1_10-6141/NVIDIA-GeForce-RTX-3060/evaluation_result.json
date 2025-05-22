@@ -1,0 +1,78 @@
+{
+    "train info": {
+        "model": "EleutherAI/pythia-1b",
+        "batch_size": 5,
+        "target_iteration": 3,
+        "optimiser": "AdamW",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12622168064,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "Large-Transformer-Exp",
+        "debug": 0.0,
+        "save2tmp": false,
+        "run_id": "EleutherAI-pythia-1b_AdamW_5_1_10-6141/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "EleutherAI/pythia-1b",
+            "zero_out": 0,
+            "fp16": 0.0
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 4455315537.92,
+        "oom": false,
+        "runtime": 1313066231,
+        "ground": 12494831616,
+        "error": 0.6434273246055723,
+        "real_oom": true,
+        "correct_estimation": false,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 12801015808,
+        "oom": true,
+        "runtime": 29107005559,
+        "ground": 12494831616,
+        "error": 0.02450486740516952,
+        "real_oom": true,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": null,
+            "error": null
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 7423918080,
+        "oom": false,
+        "runtime": 6035837590,
+        "ground": 12494831616,
+        "error": 0.40584088620342396,
+        "real_oom": true,
+        "correct_estimation": false,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

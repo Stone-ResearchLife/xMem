@@ -11,13 +11,16 @@ import os
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-
-from numpy.polynomial.laguerre import Laguerre
 from ures.string import format_memory
 from ures.files import filter_files
 from perf_estimator.config import Config
 from utils import search_nvml_file, search_profiler_file, search_snapshot_file
-from exp.config import ExperimentConfig, CNNExperiments, TransformerExperiments, LargeTransformerExperiments
+from exp.config import (
+    ExperimentConfig,
+    CNNExperiments,
+    TransformerExperiments,
+    LargeTransformerExperiments,
+)
 from exp.trainer.trainer import ModelPreparer
 from paper_container.evaluations import Experiments
 from ures.docker.container import Container
@@ -191,6 +194,7 @@ class _ExperimentExecutor:
 
     def run_solution(self):
         from exp.trainer import FastRunner
+
         print(f"Solution: CPU-based Running...")
         runner = FastRunner(
             model_name=self.model_name,
@@ -294,7 +298,9 @@ class _ExperimentExecutor:
         }
         _formatted_data.update(kwargs)
         if verify and not oom:
-            print(f"{name}: Verification of Estimated Memory {format_memory(memory)}...")
+            print(
+                f"{name}: Verification of Estimated Memory {format_memory(memory)}..."
+            )
             mem_fraction = self._get_mem_fraction(memory)
             ground, oom = self._verify_est_mem(mem_fraction=mem_fraction)
             _formatted_data["verification"] = {
@@ -359,7 +365,7 @@ class _ExperimentExecutor:
             memory=solution.estimate_memory + self._get_framework_mem,
             oom=solution.oom,
             runtime=solution.execute_time,
-            fp16=config.trainer.fp16
+            fp16=config.trainer.fp16,
         )
 
         return est_date
@@ -523,7 +529,9 @@ class ExperimentRun:
                     ground=True,
                     paper=True,
                     fp16=self._config.fp16,
-                    enable_large_model=isinstance(self._config, LargeTransformerExperiments)
+                    enable_large_model=isinstance(
+                        self._config, LargeTransformerExperiments
+                    ),
                 )
             exp.execute(manual_container=True)
         else:
@@ -609,10 +617,7 @@ class ExperimentRun:
             self.run_experiments()
 
     def run_experiments(self):
-        est_list = [
-            SummarySectionName.DNNmem,
-            SummarySectionName.schedtune
-        ]
+        est_list = [SummarySectionName.DNNmem, SummarySectionName.schedtune]
         self.run_group_truth(in_docker=True)
         if isinstance(self._config, TransformerExperiments):
             est_list.append(SummarySectionName.LLmem)
@@ -664,8 +669,10 @@ class ExperimentRun:
                     "llmem": False,
                     "ground": False,
                     "fp16": self._config.fp16,
-                    "enable_large_model": isinstance(self._config, LargeTransformerExperiments),
-                    "result_verification": self._config.result_verification
+                    "enable_large_model": isinstance(
+                        self._config, LargeTransformerExperiments
+                    ),
+                    "result_verification": self._config.result_verification,
                 }
                 for est in estimators:
                     if est.value in summary_data.keys() and force is False:
@@ -702,9 +709,13 @@ class ExperimentRun:
                             if est == SummarySectionName.solution:
                                 result = task.run_solution()
                             elif est == SummarySectionName.DNNmem:
-                                result = task.run_ddnmem(self._config.result_verification)
+                                result = task.run_ddnmem(
+                                    self._config.result_verification
+                                )
                             elif est == SummarySectionName.schedtune:
-                                result = task.run_schedtune(self._config.result_verification)
+                                result = task.run_schedtune(
+                                    self._config.result_verification
+                                )
                             elif est == SummarySectionName.LLmem:
                                 logger.warning(
                                     "LLmem Estimator could be only run in-docker mode, skipped"
@@ -781,7 +792,7 @@ class ExperimentRun:
                         memory=sche_data["memory"],
                         runtime=sche_data["runtime"],
                         oom=sche_data["oom"],
-                        verify=True
+                        verify=True,
                     )
 
     def to_evaluation_result(self):
