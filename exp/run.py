@@ -622,10 +622,10 @@ class ExperimentRun:
 
     def run_experiments_solving_compatibility_issue(self):
         est_list = [
-        #     SummarySectionName.DNNmem,
+            SummarySectionName.DNNmem,
         ]
         self._config.result_verification = True
-        # self.run_group_truth(in_docker=True)
+        self.run_group_truth(in_docker=True)
         if isinstance(self._config, TransformerExperiments):
             est_list.append(SummarySectionName.LLmem)
         self.run_estimation(estimators=est_list, in_docker=True)
