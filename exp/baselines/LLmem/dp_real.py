@@ -443,7 +443,7 @@ def train():
         plugin = GeminiPlugin(
             device=get_current_device(),
             placement_policy="cuda",
-            precision="fp16" if fp16 else "fp32",
+            precision="fp16",
             pin_memory=False,
             strict_ddp_mode=False,
             initial_scale=2**5,

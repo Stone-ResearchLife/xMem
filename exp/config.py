@@ -20,6 +20,9 @@ class ExperimentConfig(BaseModel):
     gpu_id: int = Field(default=0, description="GPU ID to use.")
     debug: bool = Field(default=False, description="Enable debug mode.")
     fp16: bool = Field(default=False, description="Enable FP16 mode.")
+    result_verification: bool = Field(
+        default=False, description="Enable verification process after estimation"
+    )
 
 
 class CNNExperiments(ExperimentConfig):

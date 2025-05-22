@@ -11,6 +11,8 @@ import os
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+
+from numpy.polynomial.laguerre import Laguerre
 from ures.string import format_memory
 from ures.files import filter_files
 from perf_estimator.config import Config
@@ -147,7 +149,7 @@ class _ExperimentExecutor:
         with open(self.summary_json_path, "w") as f:
             json.dump(summary_data, f, indent=4)
 
-    def run_ddnmem(self):
+    def run_ddnmem(self, verification: bool = True):
         from exp.baselines.dnnmem import DNNmem
 
         model_p = self._get_model_p_instance()
@@ -164,9 +166,10 @@ class _ExperimentExecutor:
             memory=dnn.estimate_memory + self._get_framework_mem,
             runtime=dnn.execute_time,
             oom=dnn.estimate_memory > self.gpu_total_memory,
+            verify=verification,
         )
 
-    def run_schedtune(self):
+    def run_schedtune(self, verification: bool = True):
         from exp.baselines.schedtune import ScheduleTune
 
         model_p = self._get_model_p_instance()
@@ -183,6 +186,7 @@ class _ExperimentExecutor:
             memory=schedtune.estimate_memory,
             runtime=schedtune.execute_time,
             oom=schedtune.estimate_memory > self.gpu_total_memory,
+            verify=verification,
         )
 
     def run_solution(self):
@@ -560,6 +564,7 @@ class ExperimentRun:
             "debug": self._config.debug,
             "fp16": kwargs.get("fp16", False),
             "enable_large_model": kwargs.get("enable_large_model", False),
+            "result_verification": kwargs.get("result_verification", True),
         }
 
         # Only add the container if at least one estimator is selected
@@ -588,23 +593,48 @@ class ExperimentRun:
         self._job_list: list[_ExperimentExecutor] = []
         self.prepare_monte_carlo_experiments_data(number)
         print(f"{'='*10} Monte Carlo Experiment #{len(self._job_list)} runs {'='*10}")
-        self.run_experiments()
+        if isinstance(self._config, LargeTransformerExperiments):
+            self.run_experiments_solving_compatibility_issue()
+        else:
+            self.run_experiments()
 
     def run_anova_experiments(self):
         self.basic_info()
         self._job_list: list[_ExperimentExecutor] = []
         self.prepare_regular_experiments_data()
         print(f"{'='*10} ANOVA Experiment #{len(self._job_list)} runs {'='*10}")
-        self.run_experiments()
+        if isinstance(self._config, LargeTransformerExperiments):
+            self.run_experiments_solving_compatibility_issue()
+        else:
+            self.run_experiments()
 
     def run_experiments(self):
-        est_list = [SummarySectionName.DNNmem, SummarySectionName.schedtune]
+        est_list = [
+            SummarySectionName.DNNmem,
+            SummarySectionName.schedtune
+        ]
         self.run_group_truth(in_docker=True)
         if isinstance(self._config, TransformerExperiments):
             est_list.append(SummarySectionName.LLmem)
         self.run_estimation(estimators=est_list, in_docker=True)
         if isinstance(self._config, TransformerExperiments):
             self.verify_llmem_result()
+
+    def run_experiments_solving_compatibility_issue(self):
+        est_list = [
+        #     SummarySectionName.DNNmem,
+        ]
+        self._config.result_verification = True
+        # self.run_group_truth(in_docker=True)
+        if isinstance(self._config, TransformerExperiments):
+            est_list.append(SummarySectionName.LLmem)
+        self.run_estimation(estimators=est_list, in_docker=True)
+        if isinstance(self._config, TransformerExperiments):
+            self.verify_llmem_result()
+        print("Dedicatly Run SchedTune to resolve python package confilct issue")
+        self._config.result_verification = False
+        self.run_estimation(estimators=[SummarySectionName.schedtune], in_docker=True)
+        self.verify_schedtune_result()
 
     def run_estimation(
         self,
@@ -634,7 +664,8 @@ class ExperimentRun:
                     "llmem": False,
                     "ground": False,
                     "fp16": self._config.fp16,
-                    "enable_large_model": isinstance(self._config, LargeTransformerExperiments)
+                    "enable_large_model": isinstance(self._config, LargeTransformerExperiments),
+                    "result_verification": self._config.result_verification
                 }
                 for est in estimators:
                     if est.value in summary_data.keys() and force is False:
@@ -671,9 +702,9 @@ class ExperimentRun:
                             if est == SummarySectionName.solution:
                                 result = task.run_solution()
                             elif est == SummarySectionName.DNNmem:
-                                result = task.run_ddnmem()
+                                result = task.run_ddnmem(self._config.result_verification)
                             elif est == SummarySectionName.schedtune:
-                                result = task.run_schedtune()
+                                result = task.run_schedtune(self._config.result_verification)
                             elif est == SummarySectionName.LLmem:
                                 logger.warning(
                                     "LLmem Estimator could be only run in-docker mode, skipped"
@@ -732,6 +763,24 @@ class ExperimentRun:
                     runtime=llmem_json["time"],
                     oom=llmem_json["oom"],
                     version=is_supported,
+                )
+
+    def verify_schedtune_result(self):
+        if len(self._job_list) == 0:
+            self._job_list: list[_ExperimentExecutor] = []
+            self.load_from_exist_data()
+        for index, task in enumerate(tqdm.tqdm(self._job_list)):
+            summary_file = task.config.base_dir.joinpath("summary.json")
+            if summary_file.is_file():
+                with open(summary_file) as f:
+                    summary_json = json.load(f)
+                sche_data = summary_json[SummarySectionName.schedtune.value]
+                task._unified_format(
+                    name=SummarySectionName.schedtune,
+                    memory=sche_data["memory"],
+                    runtime=sche_data["runtime"],
+                    oom=sche_data["oom"],
+                    verify=True
                 )
 
     def to_evaluation_result(self):
@@ -844,6 +893,7 @@ def estimate(
     debug: bool = False,
     fp16: bool = False,
     enable_large_model: bool = False,
+    result_verification: bool = False,
 ):
     if not any([llmem, schedtune, paper, dnnmem, ground]):
         raise ValueError(
@@ -865,6 +915,7 @@ def estimate(
         conf = LargeTransformerExperiments()
     conf.fp16 = fp16
     conf.debug = debug
+    conf.result_verification = result_verification
     exp = ExperimentRun(config=conf)
     exp.add_task(
         model_name=model,

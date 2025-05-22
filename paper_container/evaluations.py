@@ -103,6 +103,7 @@ class Experiments(AbcExecutor):
             "--debug", debug,
             "--fp16", kwargs.get("fp16", False),
             "--enable_large_model", kwargs.get("enable_large_model", False),
+            "--result_verification", kwargs.get("result_verification", True),
         ]
         if task_id is not None:
             command += ["--task_id", task_id]
