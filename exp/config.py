@@ -69,10 +69,12 @@ class TransformerExperiments(ExperimentConfig):
         description="Optimiser to use for the experiment.",
     )
 
+
 class LargeTransformerExperiments(TransformerExperiments):
     """Configuration for transformer experiments."""
+
     batch_range: tuple[int] = Field(
-        default=(2, 10, 2), description="Batch size for the experiment."
+        default=(1, 10, 1), description="Batch size for the experiment."
     )
     run_id: str = Field(
         default="Large-Transformer-Exp", description="Run ID for the experiment."
@@ -85,11 +87,6 @@ class LargeTransformerExperiments(TransformerExperiments):
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=[
-            "Adafactor",
-            "AdamW",
-            "Adam",
-            "SGD"
-        ],
+        default=["Adafactor", "AdamW", "Adam", "SGD"],
         description="Optimiser to use for the experiment.",
     )
