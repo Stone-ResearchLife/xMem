@@ -444,6 +444,7 @@ class ExperimentRun:
         _exe_config = Config(name=project_name, run_id=run_id, save2tmp=False)
         _exe_config.trainer.zero_out = zero_out
         _exe_config.trainer.fp16 = self._config.fp16
+        _exe_config.trainer.bf16 = self._config.bf16
         _exe_config.debug = self._config.debug
 
         _exe_instance = _ExperimentExecutor(

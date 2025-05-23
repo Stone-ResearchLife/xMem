@@ -4,7 +4,12 @@ import platform
 from typing import Optional, List, Tuple
 from perf_estimator.config import Config, default_setting
 from perf_estimator.models import AllModels
-from .train_loop import conv_train_loop, transformer_train_loop, transformer_mixed_precision_train_loop
+from .train_loop import (
+    conv_train_loop,
+    transformer_train_loop,
+    transformer_mixed_precision_train_loop,
+    transformer_bf16_train_loop,
+)
 
 
 class ModelPreparer:
@@ -24,11 +29,16 @@ class ModelPreparer:
         self.optimiser = getattr(torch.optim, optimiser or "AdamW", None)
         if self.optimiser is None:
             import transformers
+
             self.optimiser = getattr(transformers, optimiser, None)
             if self.optimiser is None:
-                raise ValueError(f"Invalid optimiser: {optimiser}. The optimiser must be available in torch.optim or transformers.")
+                raise ValueError(
+                    f"Invalid optimiser: {optimiser}. The optimiser must be available in torch.optim or transformers."
+                )
 
-        print(f"Loaded {model_name} in data type: {next(self.model.parameters()).dtype}")
+        print(
+            f"Loaded {model_name} in data type: {next(self.model.parameters()).dtype}"
+        )
 
     def get_model(self, model_name: str) -> torch.nn.Module:
         if getattr(AllModels, model_name, None) is None:
@@ -56,19 +66,18 @@ class ModelPreparer:
 
         return model
 
-    def get_dataloader(self, batch_size: int, token_padding: bool = False) -> torch.utils.data.DataLoader:
+    def get_dataloader(
+        self, batch_size: int, token_padding: bool = False
+    ) -> torch.utils.data.DataLoader:
         if self.is_transformer:
             from transformers import AutoTokenizer, DataCollatorForLanguageModeling
             from datasets import load_dataset
+
             model_name = self.model.name_or_path
-            
-            model_list = [
-                "EleutherAI/pythia", 
-                "deepseek-ai/DeepSeek-R1",
-                "Qwen/Qwen3"
-            ]
+
+            model_list = ["EleutherAI/pythia", "deepseek-ai/DeepSeek-R1", "Qwen/Qwen3"]
             token_padding = any([model in model_name for model in model_list])
-            
+
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
@@ -77,7 +86,13 @@ class ModelPreparer:
             # 3. participle
             def tokenize_function(examples):
                 if token_padding:
-                    return tokenizer(examples["text"], truncation=True, max_length=128, return_tensors="pt", padding=True)
+                    return tokenizer(
+                        examples["text"],
+                        truncation=True,
+                        max_length=128,
+                        return_tensors="pt",
+                        padding=True,
+                    )
                 else:
                     return tokenizer(examples["text"], truncation=True, max_length=128)
 
@@ -165,8 +180,12 @@ class ModelTrainer:
 
         if is_transformer:
             if self._config.trainer.fp16:
-                print(f"Using Mixed Precision (FP16) Training loop.")
-                func = transformer_mixed_precision_train_loop
+                if self._config.trainer.bf16 and self._device.type == "cpu":
+                    print(f"Using Mixed Precision (BF16) Training loop.")
+                    func = transformer_bf16_train_loop
+                else:
+                    print(f"Using Mixed Precision (FP16) Training loop.")
+                    func = transformer_mixed_precision_train_loop
             else:
                 print(f"Using Mixed Precision (FP32) Training loop.")
                 func = transformer_train_loop
