@@ -72,7 +72,7 @@ class TransformerExperiments(ExperimentConfig):
 class LargeTransformerExperiments(TransformerExperiments):
     """Configuration for transformer experiments."""
     batch_range: tuple[int] = Field(
-        default=(1, 9, 2), description="Batch size for the experiment."
+        default=(2, 10, 2), description="Batch size for the experiment."
     )
     run_id: str = Field(
         default="Large-Transformer-Exp", description="Run ID for the experiment."
