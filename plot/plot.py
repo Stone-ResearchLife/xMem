@@ -592,7 +592,7 @@ class ExperimentPlot:
         models_with_outliers = df[df["error"] > y_max]
 
         for _, row in models_with_outliers.iterrows():
-            model = row["model"]
+            model = row["shortName"]
             name = row["tool"]
             x_offset_mapping = {
                 ApproachedName.solution.value: -30,
