@@ -19,7 +19,7 @@
         "name": "Large-Transformer-Exp",
         "debug": false,
         "save2tmp": false,
-        "run_id": "google-gemma-2-2b-it_Adafactor_1_0_6-8674/NVIDIA-A100-SXM4-40GB",
+        "run_id": "google-gemma-2-2b-it_Adafactor_1_0_6-494b/NVIDIA-A100-SXM4-40GB",
         "task_id": null,
         "dataset": {
             "shuffle": true
@@ -35,11 +35,11 @@
     },
     "solution": {
         "tool": "solution",
-        "memory": 27546091520,
+        "memory": 24731713536,
         "oom": false,
-        "runtime": 1054985133550,
-        "ground": 29026680832,
-        "error": 0.05100787515352937,
+        "runtime": 902549027288,
+        "ground": 28720496640,
+        "error": 0.13888280394304492,
         "real_oom": false,
         "correct_estimation": true,
         "2nd verification": {
