@@ -166,7 +166,7 @@ def transformer_mixed_precision_train_loop(
         [_plugin.stop() for _plugin in plugins]
 
 
-def transformer_bf16_train_loop(
+def transformer_cpu_f16_train_loop(
     model: torch.nn.Module,
     data_loader: torch.utils.data.DataLoader,
     epochs: int,
@@ -185,7 +185,7 @@ def transformer_bf16_train_loop(
     zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
     optimizer = optimizer(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    model, optimizer = ipex.optimize(model, optimizer=optimizer, dtype=torch.bfloat16)
+    model, optimizer = ipex.optimize(model, optimizer=optimizer, dtype=torch.float16)
     try:
         print("loading Model...")
         model.to(device)
@@ -197,7 +197,7 @@ def transformer_bf16_train_loop(
                 print("Forwarding...")
                 with torch.set_grad_enabled(True):
                     batch = {k: v.to(device) for k, v in batch.items()}
-                    with torch.amp.autocast("cpu", dtype=torch.bfloat16):
+                    with torch.amp.autocast("cpu", dtype=torch.float16):
                         outputs = model(**batch)
                         if zero_grad_mode == 1:
                             optimizer.zero_grad()
