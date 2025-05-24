@@ -180,12 +180,7 @@ class ModelTrainer:
 
         if is_transformer:
             if self._config.trainer.fp16:
-                if self._device.type == "cpu":
-                    print(f"Using Mixed Precision (BF16) Training loop.")
-                    func = transformer_cpu_f16_train_loop
-                else:
-                    print(f"Using Mixed Precision (FP16) Training loop.")
-                    func = transformer_mixed_precision_train_loop
+                func = transformer_mixed_precision_train_loop
             else:
                 print(f"Using Mixed Precision (FP32) Training loop.")
                 func = transformer_train_loop

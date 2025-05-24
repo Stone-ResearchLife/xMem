@@ -30,7 +30,7 @@ class EvaluateRuntime(SimpleRuntime):
                 logging.error(f"[Failed] {container.image_name} failed to start")
                 continue
             else:
-                timeout = 600
+                timeout = 60 * 60
                 start_time = time.time()
                 while container.is_running:
                     time.sleep(5)
@@ -147,6 +147,7 @@ class Experiments(AbcExecutor):
             )
             llmem_conf.add_env("MODELNAME", model)
             llmem_conf.add_env("BATCH", str(batch))
+            llmem_conf.add_env("FP16", str(kwargs.get("fp16", False)))
             self._add_huggingface_cache_volume(config=llmem_conf)
             self._add_pytorch_dataset_volume(config=llmem_conf)
             self._add_colossalai_cache_volume(config=llmem_conf)

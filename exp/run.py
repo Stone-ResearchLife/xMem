@@ -926,9 +926,9 @@ def estimate(
     conf = TransformerExperiments() if is_transformer else CNNExperiments()
     if enable_large_model:
         conf = LargeTransformerExperiments()
-    conf.fp16 = fp16
-    conf.debug = debug
-    conf.result_verification = result_verification
+    conf.fp16 = bool(fp16)
+    conf.debug = bool(debug)
+    conf.result_verification = bool(result_verification)
     exp = ExperimentRun(config=conf)
     exp.add_task(
         model_name=model,
