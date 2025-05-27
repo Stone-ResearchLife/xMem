@@ -8,6 +8,8 @@ from enum import Enum
 from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
+
+from exp.run import SummarySectionName
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
 
@@ -105,7 +107,7 @@ class ExperimentPlot:
             df["tool"] = df["tool"].replace(self._name_map)
             df["color"] = df["tool"].replace(self._color_scheme)
             self._cache[str(data_dir)] = df
-        return self._cache[str(data_dir)].copy()
+        return self._cache[str(data_dir)].copy(deep=True)
 
     def _add_four_quadrant(
         self, fig, quadrant_thresholds: tuple, max_y: int, font_size: int = 45
@@ -274,6 +276,7 @@ class ExperimentPlot:
                 "segment": [seg / 1024**3 for seg in segs],
             }
 
+        outputs = dict(sorted(outputs.items(), key=lambda x: x[0], reverse=True))
         num_plots = len(outputs.keys())
         cols = min(num_plots, 3)
         rows = 1 if num_plots <= 3 else ((num_plots - 1) // 3) + 1
@@ -460,6 +463,7 @@ class ExperimentPlot:
             self._cache[str(data_dir)] = outputs
 
         outputs = self._cache[str(data_dir)]
+        outputs = dict(sorted(outputs.items(), key=lambda x: x[0], reverse=True))
         num_plots = len(outputs.keys())
         cols = min(num_plots, 3)
         rows = 1 if num_plots <= 3 else ((num_plots - 1) // 3) + 1
@@ -1413,55 +1417,8 @@ class ExperimentPlot:
             group_by = ("model", "tool")
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))
+        merged_memory = self.memory_conservation_processint(data_dir, overall=overall)
         df = self.data_processing(data_dir)
-        df = df[(df["runtime"] != -1) & (df["memory"] != -1)]
-
-        group_by = list(group_by)
-        total_df = (
-            df.groupby(group_by)
-            .agg(
-                total_runs=("memory", "sum"),
-            )
-            .reset_index()
-        )
-
-        memory_save = (
-            df[(df["accurate_estimation"] == True)]
-            .groupby(group_by)
-            .agg(
-                save_memory_sum=("save_memory", "sum"),
-                success_count=("save_memory", "count"),
-            )
-            .reset_index()
-        )
-
-        # Calculate memory_waste
-        memory_waste = (
-            df[(df["accurate_estimation"] == False)]
-            .groupby(group_by)
-            .agg(
-                total_assign_memory=("memory", "sum"),
-                failed_count=("memory", "count"),
-            )
-            .reset_index()
-        )
-
-        # Merge memory_save and memory_waste
-        merged_memory = total_df.merge(memory_save, on=group_by, how="left")
-        merged_memory = merged_memory.merge(memory_waste, on=group_by, how="left")
-
-        # Fill NaN values with 0
-        merged_memory = merged_memory.fillna(0)
-
-        # Calculate average
-        merged_memory["average"] = (
-            merged_memory["save_memory_sum"] - merged_memory["total_assign_memory"]
-        ) / (merged_memory["success_count"] + merged_memory["failed_count"])
-
-        merged_memory["average"] = merged_memory["average"] / 1024**3
-
-        # Sort values
-        merged_memory = merged_memory.sort_values(by="save_memory_sum", ascending=False)
         model_order = sorted(df["model"].unique())
 
         if overall:
@@ -1469,7 +1426,7 @@ class ExperimentPlot:
             fig = px.bar(
                 merged_memory,
                 x="tool",
-                y="average",
+                y="GPU Memory",
                 color="tool",
                 barmode="group",
                 color_discrete_map=self._color_scheme,
@@ -1480,7 +1437,7 @@ class ExperimentPlot:
             fig = px.bar(
                 merged_memory,
                 x="model",
-                y="average",
+                y="GPU Memory",
                 color="tool",
                 barmode="group",
                 color_discrete_map=self._color_scheme,
@@ -1540,11 +1497,70 @@ class ExperimentPlot:
         df = self.summarize_data(data_dir, with_llmem)
         print()
 
+    def memory_conservation_processint(
+        self, data_dir: Union[str, Path], overall: bool = False
+    ):
+        if overall:
+            group_by = ["tool"]
+        else:
+            group_by = ("model", "tool")
+        df = self.data_processing(data_dir)
+        df = df[(df["runtime"] != -1) & (df["memory"] != -1)]
+
+        group_by = list(group_by)
+        total_df = (
+            df.groupby(group_by)
+            .agg(
+                total_runs=("memory", "sum"),
+            )
+            .reset_index()
+        )
+
+        memory_save = (
+            df[(df["accurate_estimation"] == True)]
+            .groupby(group_by)
+            .agg(
+                save_memory_sum=("save_memory", "sum"),
+                success_count=("save_memory", "count"),
+            )
+            .reset_index()
+        )
+
+        # Calculate memory_waste
+        memory_waste = (
+            df[(df["accurate_estimation"] == False)]
+            .groupby(group_by)
+            .agg(
+                total_assign_memory=("memory", "sum"),
+                failed_count=("memory", "count"),
+            )
+            .reset_index()
+        )
+
+        # Merge memory_save and memory_waste
+        merged_memory = total_df.merge(memory_save, on=group_by, how="left")
+        merged_memory = merged_memory.merge(memory_waste, on=group_by, how="left")
+
+        # Fill NaN values with 0
+        merged_memory = merged_memory.fillna(0)
+
+        # Calculate average
+        merged_memory["GPU Memory"] = (
+            merged_memory["save_memory_sum"] - merged_memory["total_assign_memory"]
+        ) / (merged_memory["success_count"] + merged_memory["failed_count"])
+
+        merged_memory["GPU Memory"] = merged_memory["GPU Memory"] / 1024**3
+
+        # Sort values
+        merged_memory = merged_memory.sort_values(by="save_memory_sum", ascending=False)
+        return merged_memory
+
     def summarize_data(
         self,
         data_dir: Union[str, Path],
     ):
         df = self.data_processing(data_dir)
+        df_mc = df[(df["runtime"] != -1) & (df["memory"] != -1)]
         # Calculating median error by 'tool'
         groupby_list = ["tool"]
 
@@ -1587,47 +1603,7 @@ class ExperimentPlot:
         runtime["runtime"] = runtime["runtime"] / 1000**3
 
         # GPU Memory conservation
-        total_df = (
-            df.groupby(groupby_list)
-            .agg(
-                total_runs=("memory", "sum"),
-            )
-            .reset_index()
-        )
-        memory_save = (
-            df[(df["accurate_estimation"] == True)]
-            .groupby(groupby_list)
-            .agg(
-                save_memory_sum=("save_memory", "sum"),
-                success_count=("save_memory", "count"),
-            )
-            .reset_index()
-        )
-
-        # Calculate memory_waste
-        memory_waste = (
-            df[(df["accurate_estimation"] == False)]
-            .groupby(groupby_list)
-            .agg(
-                total_assign_memory=("memory", "sum"),
-                failed_count=("memory", "count"),
-            )
-            .reset_index()
-        )
-
-        # Merge memory_save and memory_waste
-        merged_memory = total_df.merge(memory_waste, on=groupby_list, how="left")
-        merged_memory = merged_memory.merge(memory_save, on=groupby_list, how="left")
-
-        # Fill NaN values with 0
-        merged_memory = merged_memory.fillna(0)
-
-        # Calculate memory conserved average
-        merged_memory["GPU Memory"] = (
-            merged_memory["save_memory_sum"] - merged_memory["total_assign_memory"]
-        ) / (merged_memory["success_count"] + merged_memory["failed_count"])
-
-        merged_memory["GPU Memory"] = merged_memory["GPU Memory"] / 1024**3
+        merged_memory = self.memory_conservation_processint(data_dir, overall=True)
 
         # 1st validation performance CDF
         df_dict = {"tool": [], "performance_score_1": []}
