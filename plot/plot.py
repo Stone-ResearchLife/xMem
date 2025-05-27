@@ -1682,8 +1682,6 @@ class ExperimentPlot:
             "Median Error",
             "probability",
             "GPU Memory",
-            # "performance_score_1",
-            # "performance_score_2",
             "runtime",
         ]
         field_map = {
@@ -1734,4 +1732,4 @@ class ExperimentPlot:
             lambda col: field_map.get(col, col)
         )
 
-        return tool_summary, summarized_result
+        return tool_summary, summarized_result.drop("Average Runtime (s)", axis=1)
