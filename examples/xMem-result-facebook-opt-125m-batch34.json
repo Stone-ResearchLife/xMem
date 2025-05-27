@@ -1,9 +1,0 @@
-{
-    "OOM": true,
-    "Max GPU Memory": 4294967296,
-    "memory": {
-        "tensor": 3747735552,
-        "segment": 3881828352
-    },
-    "runtime": 13899762453
-}

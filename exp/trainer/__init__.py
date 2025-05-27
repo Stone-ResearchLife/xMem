@@ -26,12 +26,15 @@ class FastRunner:
             optimiser=optimiser,
             fp16=config.trainer.fp16
         )
-        assert self.model_preparer.is_transformer and optimiser in [
-            "AdamW",
-            "SGD",
-            "Adam",
-            "Adafactor"
-        ], f"Unsupported optimiser: {optimiser}. Supported optimisers are AdamW, SGD, Adam, Adafactor"
+        if self.model_preparer.is_transformer:
+            assert optimiser in [
+                "AdamW",
+                "SGD",
+                "Adam",
+                "Adafactor"
+            ], f"Unsupported optimiser: {optimiser}. Supported optimisers are AdamW, SGD, Adam, Adafactor"
+        else:
+            assert optimiser in ["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"], f"Unsupported optimiser: {optimiser}. Supported optimisers are AdamW, SGD, Adam, Adafactor"
 
         self._info = {
             "model_name": model_name,

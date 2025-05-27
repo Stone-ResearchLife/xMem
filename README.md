@@ -114,13 +114,11 @@ Result shows below:
 ```text
 ======================== Basic Information ========================
 Batch Size: 130
-Input Size: [3, 86, 86]
 Max GPU Memory: 4 GB
-Runtime: 39.01 s
+Runtime: 17205559489 s
 ======================== Estimated Result ========================
-OOM: True      <---- This means that 4GB is not enough to run the model
+OOM: True  <---- This means that 4GB is not enough to run the model
 4.00 GB is not enough to run the model
-
 ```
 
 The Last Frame of Memory Snapshot will be saved in the log folder. The file name will be `Last-frame.png`.
@@ -164,6 +162,11 @@ Please use 'xmem_profile.py' to generate the profiler file.
 ```shell
 # python xProfile.py --help for more usage detail
 python xProfile.py -m "VGG19" -b 130 -o "SGD"
+```
+
+```shell
+# python xProfile.py --help for more usage detail
+python xProfile.py -m "facebook/opt-350m" -b 10 -o "SGD"
 ```
 
 There are only the below models supported for profiling
