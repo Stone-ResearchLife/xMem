@@ -216,7 +216,7 @@ pip install -r requirement-r.txt
 > [!WARNING]
 > Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
 
-Install the required packages and read [here](experiments/README.md) for more details
+Install the required packages and read [here](exp/README.md) for more details
 
 ```shell
 pip install -r requirement-r.txt
