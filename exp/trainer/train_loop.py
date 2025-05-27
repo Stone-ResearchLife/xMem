@@ -88,23 +88,19 @@ def transformer_train_loop(
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     try:
-        print("loading Model...")
         model.to(device)
         for epoch in range(epochs):
             for index, batch in enumerate(data_loader):
                 [_plugin.step() for _plugin in plugins]
                 if zero_grad_mode == 0:
                     optimizer.zero_grad()
-                print("Forwarding...")
                 with torch.set_grad_enabled(True):
                     batch = {k: v.to(device) for k, v in batch.items()}
                     outputs = model(**batch)
                     if zero_grad_mode == 1:
                         optimizer.zero_grad()
                     loss = outputs.loss
-                    print("Backwarding...")
                     loss.backward()
-                    print("Optimizing...")
                     optimizer.step()
                 if zero_grad_mode == 2:
                     optimizer.zero_grad()
@@ -136,14 +132,12 @@ def transformer_mixed_precision_train_loop(
     optimizer = optimizer(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     try:
-        print("loading Model...")
         model.to(device)
         for epoch in range(epochs):
             for index, batch in enumerate(data_loader):
                 [_plugin.step() for _plugin in plugins]
                 if zero_grad_mode == 0:
                     optimizer.zero_grad()
-                print("Forwarding...")
                 with torch.set_grad_enabled(True):
                     batch = {k: v.to(device) for k, v in batch.items()}
                     with torch.amp.autocast("cpu", dtype=torch.float16):
@@ -151,9 +145,7 @@ def transformer_mixed_precision_train_loop(
                         if zero_grad_mode == 1:
                             optimizer.zero_grad()
                         loss = outputs.loss
-                        print("Backwarding...")
                     loss.backward()
-                    print("Optimizing...")
                     optimizer.step()
                 if zero_grad_mode == 2:
                     optimizer.zero_grad()
@@ -187,14 +179,12 @@ def transformer_cpu_f16_train_loop(
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     model, optimizer = ipex.optimize(model, optimizer=optimizer, dtype=torch.float16)
     try:
-        print("loading Model...")
         model.to(device)
         for epoch in range(epochs):
             for index, batch in enumerate(data_loader):
                 [_plugin.step() for _plugin in plugins]
                 if zero_grad_mode == 0:
                     optimizer.zero_grad()
-                print("Forwarding...")
                 with torch.set_grad_enabled(True):
                     batch = {k: v.to(device) for k, v in batch.items()}
                     with torch.amp.autocast("cpu", dtype=torch.float16):
@@ -202,9 +192,7 @@ def transformer_cpu_f16_train_loop(
                         if zero_grad_mode == 1:
                             optimizer.zero_grad()
                         loss = outputs.loss
-                        print("Backwarding...")
                     loss.backward()
-                    print("Optimizing...")
                     optimizer.step()
                 if zero_grad_mode == 2:
                     optimizer.zero_grad()
