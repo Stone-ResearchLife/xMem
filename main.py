@@ -14,12 +14,16 @@ def main(
     gpu_memory_in_gb: Union[int, float] = 8,
 ):
     assert (
-        is_transformer and model_name is not None
+        (is_transformer is True and model_name is not None) or (is_transformer is False and model_name is None)
     ), "model_name must be provided when is_transformer is True"
     _conf = Config(save2tmp=False)
     if is_transformer:
         _conf.trainer.huggingface_enable = True
         _conf.trainer.huggingface_model_name = model_name
+    else:
+        _conf.trainer.huggingface_enable = False
+        _conf.trainer.huggingface_model_name = model_name
+
     init_logging(level="WARNING", conf=_conf)
     xmen = XMem(
         batch_size=batch_size,
@@ -32,7 +36,6 @@ def main(
     output_file = _p_file.parent.joinpath(f"xMem-result-{_p_name}.json")
     with open(output_file, "w") as f:
         import json
-
         json.dump(estimated_result, f, indent=4)
     print(f"Estimated result is saved in {output_file}")
 

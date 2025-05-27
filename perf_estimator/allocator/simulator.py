@@ -123,8 +123,8 @@ class AllocatorSim:
                     )
                     _snapshot_img = os.path.join(_log_dir, f"Last-GPU-frame.png")
                     self._allocator._gpu_device.plot(_snapshot_img)
-                    self._allocator.oom = True
                     print(f"the memory capture is saved at {_snapshot_img}")
+                self._allocator.oom = True
                 break
 
         _result = self._allocator

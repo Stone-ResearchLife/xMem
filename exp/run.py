@@ -371,12 +371,14 @@ class _ExperimentExecutor:
         return est_date
 
     def _get_model_p_instance(self) -> ModelPreparer:
-        return ModelPreparer(
+        m_p = ModelPreparer(
             model_name=self.model_name,
             batch_size=self.batch_size,
             optimiser=self.optimiser,
             fp16=self.config.trainer.fp16,
         )
+        self._config.trainer.huggingface_enable = m_p.is_transformer
+        return m_p
 
 
 class ExperimentRun:

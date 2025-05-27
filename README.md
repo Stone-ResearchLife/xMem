@@ -28,7 +28,7 @@ Please check [README](experiments/README.md) for Hardware Compatibility
 You can follow the below steps to create a new environment and install the required packages.
 
 ```shell
-conda create -n xmem python=3.10 -y
+conda create -n xmem python=3.11 -y
 ```
 
 ```shell
@@ -120,6 +120,7 @@ Runtime: 39.01 s
 ======================== Estimated Result ========================
 OOM: True      <---- This means that 4GB is not enough to run the model
 4.00 GB is not enough to run the model
+
 ```
 
 The Last Frame of Memory Snapshot will be saved in the log folder. The file name will be `Last-frame.png`.
@@ -136,13 +137,13 @@ Result shows below:
 ```text
 ======================== Basic Information ========================
 Batch Size: 130
-Input Size: [3, 86, 86]
 Max GPU Memory: 8 GB
-Runtime: 37.01 s
+Runtime: 17227396749 s
 ======================== Estimated Result ========================
 OOM: False
-Estimated Peak GPU Memory: 5.26GB    <---- This is the peak memory that the model will use in the GPU
-Estimated Peak Tensor Memory: 4.99GB
+Estimated Peak GPU Memory: 5.22 GB
+Estimated Peak Tensor Memory: 4.96 GB
+Estimated result is saved in examples/xMem-result-convnext-base-batch130.json
 ```
 
 ### 🚀Quick Example for Transformer Model
