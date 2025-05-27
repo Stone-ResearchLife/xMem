@@ -599,10 +599,10 @@ class ExperimentRun:
         print(f"CUDA version: {torch.cuda.is_available()}")
         print(f"CUDA device count: {torch.cuda.device_count()}")
 
-    def run_monte_carlo_experiments(self, number: int = 600):
+    def run_monte_carlo_experiments(self, number: int = 600, gpus=None):
         self.basic_info()
         self._job_list: list[_ExperimentExecutor] = []
-        self.prepare_monte_carlo_experiments_data(number)
+        self.prepare_monte_carlo_experiments_data(number, gpus=gpus)
         print(f"{'='*10} Monte Carlo Experiment #{len(self._job_list)} runs {'='*10}")
         if isinstance(self._config, LargeTransformerExperiments):
             self.run_experiments_solving_compatibility_issue()

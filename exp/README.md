@@ -80,10 +80,16 @@ llmem                   latest                        1af477f97e32   9 minutes a
 pytorch/pytorch         2.6.0-cuda12.4-cudnn9-devel   7d57e307bd9c   3 months ago    13.2GB
 pytorch/pytorch         2.3.1-cuda12.1-cudnn8-devel   b40b101922fd   11 months ago   17.1GB
 pytorch/pytorch         2.0.1-cuda11.7-cudnn8-devel   42a0e9b621e2   2 years ago     13.2GB
-
 ```
 
+
 ## 5️⃣ Run Experiments
+
+
+>[!IMPORTANT]
+> Please ensure that 
+> - PyTorch is installed with a CUDA version
+> - `notebook` has been installed in environment
 
 > [!WARNING]
 > Do not run any GPU-related tasks on the GPUs used during the experiment, as they will be occupied for specific purposes.
