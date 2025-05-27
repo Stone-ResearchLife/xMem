@@ -1,0 +1,65 @@
+{
+    "train info": {
+        "model": "meta-llama/Llama-3.2-3B-Instruct",
+        "batch_size": 1,
+        "target_iteration": 3,
+        "optimiser": "Adafactor",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 42474471424,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA A100-SXM4-40GB"
+    },
+    "config": {
+        "name": "Large-Transformer-Exp",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "meta-llama-Llama-3.2-3B-Instruct_Adafactor_1_0_10-1801/NVIDIA-A100-SXM4-40GB",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "meta-llama/Llama-3.2-3B-Instruct",
+            "zero_out": 0,
+            "fp16": false,
+            "bf16": false
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 27956084736,
+        "oom": false,
+        "runtime": 568146868810,
+        "ground": 30742151168,
+        "error": 0.09062691861654956,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 15790505984,
+        "oom": false,
+        "runtime": 21215345369,
+        "ground": 30742151168,
+        "error": 0.48635650453646223,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": null,
+            "error": null
+        }
+    }
+}

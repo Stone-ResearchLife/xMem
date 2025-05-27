@@ -1,0 +1,65 @@
+{
+    "train info": {
+        "model": "Qwen/Qwen3-4B",
+        "batch_size": 1,
+        "target_iteration": 3,
+        "optimiser": "SGD",
+        "device": 0,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 42474471424,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA A100-SXM4-40GB"
+    },
+    "config": {
+        "name": "Large-Transformer-Exp",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "Qwen-Qwen3-4B_SGD_1_0_4-5e63/NVIDIA-A100-SXM4-40GB",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "Qwen/Qwen3-4B",
+            "zero_out": 0,
+            "fp16": false,
+            "bf16": false
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 35103178752,
+        "oom": false,
+        "runtime": 1343076362720,
+        "ground": 36704354304,
+        "error": 0.043623585875899894,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 20345520128,
+        "oom": false,
+        "runtime": 11561435540,
+        "ground": 36704354304,
+        "error": 0.44569192092332305,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": null,
+            "error": null
+        }
+    }
+}

@@ -599,10 +599,10 @@ class ExperimentPlot:
             model = row["shortName"]
             name = row["tool"]
             x_offset_mapping = {
-                ApproachedName.solution.value: -30,
+                ApproachedName.solution.value: -10,
                 ApproachedName.DNNmem.value: -15,
-                ApproachedName.SchedTune.value: 15,
-                ApproachedName.LLmem.value: 30,
+                ApproachedName.SchedTune.value: -15,
+                ApproachedName.LLmem.value: 22,
             }
 
             fig.add_annotation(
