@@ -947,7 +947,7 @@ def estimate(
         torch.cuda.empty_cache()
         time.sleep(2)
 
-    results = exp.run_estimation(estimators=estimate_list)
+    results = exp.run_estimation(estimators=estimate_list, force=True)
     print(results)
 
 
