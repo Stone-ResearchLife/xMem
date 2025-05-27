@@ -34,36 +34,7 @@ The result data is consist of three parts:
 
 # 3️⃣ Plotting
 
-## Using Jupyter Notebook
-
 We provided a Jupyter notebook in the respority to plot the experimental results. You can find the notebook in the `plot` directory, named as `Figures in Paper.ipynb`
-
-## Using Python Code Snippet
-
-```python
-from pathlib import Path
-from plot.plot import ExperimentPlot
-
-# There are data directories for each experiment
-# 1. ANOVA Experments: <project base>/plot/data/ANOVA
-# 2. Monte Carlo: <project base>/plot/data/MonteCarlo
-data_dir = Path("<Path of data dir>")
-output_dir = Path("<Directory for saving plots>")
-output_dir.mkdir(exist_ok=True, parents=True)
-
-# Initialize the ExperimentPlot object
-e_plot = ExperimentPlot(output_dir=output_dir)
-
-# plot a relative error box diagram as an exmaple
-
-fig = e_plot.plot_relative_error_in_box_diagram_with_verification_data(
-	title="Evaluation-Relative Error Experiments Result across Estimators-SGD",
-	data_dir=data_dir,
-	overall_median=False, # show overall median relative error near the legend box, only working for image size (2000, 450)
-    view_mode = True, # pre-configured size for the plot
-)
-fig.show()
-```
 
 # 4️⃣ Output
 
