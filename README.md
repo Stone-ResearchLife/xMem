@@ -168,7 +168,7 @@ python xProfile.py -m "VGG19" -b 130 -o "SGD"
 There are only the below models supported for profiling
 
 ```text
-MODELS SUPPORTED:
+CNN MODELS SUPPORTED:
         VGG16
         VGG19
         ResNet101
@@ -188,6 +188,11 @@ Optimizer Supported:
         RMSprop
         Adagrad
         AdamW
+        Adafactor
+
+Transformer Models Supported:
+    Technically, all the transformer models supported by HuggingFace are supported.
+    However, the training loop and data loader are not implemented for all the models.
 ```
 
 # 📊 Plot the Results

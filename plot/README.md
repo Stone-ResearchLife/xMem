@@ -11,9 +11,9 @@ The result data is consist of three parts:
 - `train info`: contains all training parameters, such as batch size, model name, optimizer, etc.
 - `config`: contains all basic information realted to this run.
 - `solution`: denotes the evaluation result by xMem, termed as `xMem (this paper)`
-- `dnnmem`: denotes the evaluation result by DNNMem, termed as `DNNMem`
-- `schedtune`: denotes the evaluation result by SchedTune, termed as `SchedTune`
-- `llmem`: denotes the evaluation result by LLMem, termed as `LLMem`
+- `DNNmem`: denotes the evaluation result by DNNMem, termed as `DNNMem`
+- `CchedtTune`: denotes the evaluation result by SchedTune, termed as `SchedTune`
+- `LLmem`: denotes the evaluation result by LLMem, termed as `LLMem`
 
 ## Evaluation Result Structure
 
