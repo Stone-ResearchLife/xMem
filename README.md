@@ -67,6 +67,9 @@ After run, a webpage will also be opened in your browser, showing the memory usa
 ```shell
 export PYTHONPATH="$(pwd)"
 ```
+> [!TIP]
+> [xProfile Tool](#cpu-based-profiler) could help you to generate the profiler file,
+> or you can use the profiler file in the `examples` folder by following the instructions in `Quick Example` section below.
 
 Command Usage
 
