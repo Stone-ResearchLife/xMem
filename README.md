@@ -419,11 +419,14 @@ pytorch/pytorch         2.0.1-cuda11.7-cudnn8-devel   42a0e9b621e2   2 years ago
 > - `~/Large-Transformer-Exp` to store result related to Qwen3 0.6B and Pythia 1B
 
 ### Run ANOVA Experiment
+> [!IMPORTANT] Ensure that you have right configuration of interpreter for Jupyter environment
 
 Use a Jupyter [Notebook](exp/Experiments-ANOVA.ipynb) for this experiments
 
 
 ### Run Monte Carlo Experiment
+> [!IMPORTANT] Ensure that you have right configuration of interpreter for Jupyter environment
+ 
 Use a Jupyter [Notebook](exp/Experiments-Mento%20Carlo.ipynb) for this experiments
 
 ## 🧹(Optional) Clean Up
