@@ -39,3 +39,11 @@ We provided a Jupyter notebook in the respority to plot the experimental results
 # 4️⃣ Output
 
 The figure in PDF format will be saved into your output folder with the name you typed in the `title` parameter.
+
+# 5️⃣ Our Results
+
+- ANOVA Result: `data/001-ANOVA`
+- Monte Carlo Result: `data/002-Monte Carlo`
+- Memory Change Result: `data/003-MemoryChange`
+- Simulation Assessment Result: `data/004-SimulationAssessment`
+- Scalability Result: `data/005-ScalabilityOnCoLab`
