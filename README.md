@@ -1,5 +1,6 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
+
 xMem is a novel framework designed to accurately estimate the peak GPU
 memory consumption for DL training jobs using data from a profiler, a
 performance analyzer frequently used during DL model development.
@@ -10,6 +11,34 @@ and stability. Specifically, precise GPU memory estimation for DL jobs enables
 decision systems within shared GPU clusters to implement more effective intelligent resource
 scheduling, leading to substantial GPU memory conservation and optimized asset
 utilization, which in turn helps mitigate the prevailing GPU scarcity.
+
+## 📂Project Structure
+> [!NOTE] This project structure is temporary for prototype and will be refactored in the future.
+
+```text
+exp/                                    # Experiments related to xMem
+    ├── baselines/                      # Baselines for xMem
+    │   ├── LLMem/                      # LLMem Baseline
+    │   ├── SchedTune/                  # SchedTune Baseline
+    │   ├── dnnmem/                     # DNNMem Baseline
+    │   └── solution/                   # a xMem class implementation for Experiments, following the same Interface as other baselines
+    │── Experiments-ANOVA.ipynb         # Jupyter Notebook for ANOVA Experiment
+    │── Experiments-Mento Carlo.ipynb   # Jupyter Notebook for Monte Carlo Experiment
+    └── CoLab_large_Model.ipynb         # Jupyter Notebook for Large Model Experiment in CoLab
+paper_container/                        # Base image building code
+perf_estimator/                         # xMem Estimator code
+    │── allocator/                      # Code for the Two-Layers Simulator
+    │── profiler/                       # Code for the Analyzer
+    │── estimator.py                    # Code for Orchestrator
+    └── xmem.py                         # The entry point of xMem
+plot/                                   # Code for plotting the results
+xProfile.py                             # CPU-based profiler for generating the profiler file
+main.py                                 # The CLI entry point for xMem
+apps.py                                 # The CLI entry point for docker building and cleanup stuffs.
+requirement.txt                         # Requirements for xMem
+requirement-r.txt                       # Requirements for experiments
+```
+
 
 
 ## ✅Compatibility
@@ -195,17 +224,25 @@ CNN MODELS SUPPORTED:
         RegNetX400MF
         RegNetY400MF
 
-Optimizer Supported:
+
+Optimizer for Transformer Models Supported:
+        SGD
+        Adam
+        AdamW
+        Adafactor
+
+
+Optimizer for CNN Models Supported:
         SGD
         Adam
         RMSprop
         Adagrad
         AdamW
-        Adafactor
 
 Transformer Models Supported:
     Technically, all the transformer models supported by HuggingFace are supported.
     However, the training loop and data loader are not implemented for all the models.
+
 ```
 
 
@@ -269,7 +306,7 @@ cd exp/baselines/LLmem
 docker build -t llmem .
 ```
 
-After build, you will get a image, called `llmem`.
+After build, you will get a base image, called `llmem`.
 ```text
 REPOSITORY        TAG                           IMAGE ID       CREATED          SIZE
 llmem             latest                        1af477f97e32   54 seconds ago   13.7GB
@@ -356,6 +393,12 @@ pip install -r requirement-r.txt
 
 Solution is that download `Visual C++ Redistributable for Visual Studio 2019` from Microsoft official website and install it.
 The download linke is [here](https://my.visualstudio.com/Downloads?q=c++%20redistributable)
+
+
+# ✅ To-Do List
+- [ ] Refactor the project structure
+- [ ] Optimization of Analyzer for runtime performance
+- [ ] Handle a new memory allocation event when the previous memory remains in use because the deallocation event between these two moments is missing.
 
 
 
