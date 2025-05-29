@@ -245,6 +245,11 @@ Transformer Models Supported:
 
 ```
 
+## 🧹(Optional) Clean Up
+```shell
+conda env remove --name xmem
+```
+
 
 # ⚖️ Execute Experiments
 
@@ -264,6 +269,19 @@ Transformer Models Supported:
 
 
 ## 🚧 Installation
+
+### Miniconda (Optional)
+
+[Miniconda](https://docs.anaconda.com/miniconda/) is recommended to manage the environment.
+You can follow the below steps to create a new environment and install the required packages.
+
+```shell
+conda create -n xmem-exp python=3.11 -y
+```
+
+```shell
+conda activate xmem-exp
+```
 
 The below command, as an example, was used in experiments with the local environment (CUDA 12.4).
 ```shell
@@ -364,13 +382,19 @@ Use a Jupyter [Notebook](exp/Experiments-ANOVA.ipynb) for this experiments
 ### Run Monte Carlo Experiment
 Use a Jupyter [Notebook](exp/Experiments-Mento%20Carlo.ipynb) for this experiments
 
-## Images Cleaning Up (Optional)
+## 🧹(Optional) Clean Up
 
+### Docker Instances
 > [!IMPORTANT]
 > - The command will remove all stopped containers and all dangling images
 > - Please do not execute this command if you have concerns about the code, as it involves a `delete` operation.
 ```shell
 python app.py cleanup
+```
+
+### Conda Environment
+```shell
+conda env remove --name xmem-exp
 ```
 
 
