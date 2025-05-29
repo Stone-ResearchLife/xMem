@@ -74,7 +74,7 @@ class DataAggregation:
             subsubdir_path = subdir / subsubdir
             subsubdir_path.mkdir(parents=True, exist_ok=True)
             print(f"Copying {src_path} to {subsubdir_path}")
-            shutil.copytree(src_path, subsubdir_path, dirs_exist_ok=True)
+            shutil.move(src_path, subsubdir_path)
         return subdir
 
 
