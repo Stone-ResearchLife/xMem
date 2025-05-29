@@ -26,7 +26,7 @@ class _HostMetrics:
         if features is None:
             features = []
         for feature in features:
-            module = importlib.import_module("perf_estimator.trainer.plugins.monitor")
+            module = importlib.import_module("exp.trainer.plugins.monitor")
             _class = getattr(module, feature.value)
             _initialized_class = _class()
             _is_pass = _initialized_class.self_check()

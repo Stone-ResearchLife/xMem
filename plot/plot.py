@@ -4,11 +4,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import copy
 import numpy as np
+import shutil
+import datetime
 from enum import Enum
 from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
-
 from exp.run import SummarySectionName
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
@@ -19,6 +20,62 @@ class ApproachedName(Enum):
     DNNmem = "DNNMem"
     SchedTune = "SchedTune"
     LLmem = "LLMem"
+
+
+class DataAggregation:
+    def __init__(self):
+        self._dest = Path().home().joinpath("xMem-Plot", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+        self._name_map = {
+            "C": "CNN",
+            "T": "Transformer",
+            "O": "Other"
+        }
+
+    @property
+    def root_dir(self) -> Path:
+        return self._dest
+
+    @property
+    def transformer_dir_name(self) -> str:
+        return self._name_map["T"]
+
+    @property
+    def cnn_dir_name(self) -> str:
+        return self._name_map["C"]
+
+    @property
+    def other_dir_name(self) -> str:
+        return self._name_map["O"]
+
+    def aggregate(self, *args, subdir_name: str) -> Path:
+        """Aggregate all data in a set of folders to a specific subdir
+
+        Args:
+            subdir_name (str): subdir name
+            *args: src data directories
+
+        Returns:
+            return: subdir path
+        """
+        subdir = self.root_dir / subdir_name
+        for arg in args:
+            src_path = Path(arg)
+            if not src_path.is_dir():
+                print(f"Dir not exist, skipping {src_path}")
+                continue
+            if src_path.name in ["Transformer-Exp", "Large-Transformer-Exp"]:
+                subsubdir = self._name_map["T"]
+            elif src_path.name == "CNN-Exp":
+                subsubdir = self._name_map["C"]
+            else:
+                subsubdir = self._name_map["O"]
+            if subdir.is_dir() is False:
+                subdir.mkdir(parents=True, exist_ok=True)
+            subsubdir_path = subdir / subsubdir
+            subsubdir_path.mkdir(parents=True, exist_ok=True)
+            print(f"Copying {src_path} to {subsubdir_path}")
+            shutil.copytree(src_path, subsubdir_path, dirs_exist_ok=True)
+        return subdir
 
 
 class ExperimentPlot:
@@ -1071,7 +1128,8 @@ class ExperimentPlot:
         fig = self._add_four_quadrant(
             fig,
             (20, 20),
-            correctness_counts["Mean_Error"].max(),
+            # correctness_counts["Mean_Error"].max(),
+            max_y=100,
             font_size=quadrant_font_size,
         )
 

@@ -55,6 +55,9 @@ requirement-r.txt                       # Requirements for experiments
 |  Experiments   |                 ✅                 |       ❌        |        ❌        |
 
 ## 🚧 Installation
+> [!IMPORTANT]
+> Please jump to [Experiments](#-execute-experiments) if you want to run the experiments directly.
+
 
 ### Miniconda (Optional)
 
@@ -68,9 +71,6 @@ conda create -n xmem python=3.11 -y
 ```shell
 conda activate xmem
 ```
-
-> [!IMPORTANT]
-> Please jump to [Experiments](#-execute-experiments) if you want to run the experiments directly.
 
 
 ### PyTorch
@@ -87,6 +87,89 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 pip install -r requirement.txt
 ```
 
+## 📏 (Optional) CPU-Based Profiler
+
+> [!TIP]
+> xProfile Tool blow could help you to generate the profiler file,
+> or you can use the profiler file in `examples` folder via instructionms in below sections:
+> - [Example 1](#quick-example---non-oom-example)
+> - [Example 2 - OOM](#quick-example---oom-example)
+> - [Example 3 - Transformer](#quick-example-for-transformer-model)
+
+
+Ensure that you alreayd export the right PYTHONPATH. If not, run commands below.
+
+After run, a webpage will also be opened in your browser, showing the memory usage curve of the model by plotly.
+
+```shell
+export PYTHONPATH="$(pwd)"
+```
+
+
+Please use 'xProfile.py' to generate the profiler file.
+
+- The profiling file is a json file that contains the memory usage in the model.
+- The profiling file is used as an input to the main.py to estimate the peak memory usage of the model.
+- Ensure that you run a profiler job on Linux.
+
+```shell
+# python xProfile.py --help for more usage detail
+python xProfile.py -m "VGG19" -b 130 -o "SGD"
+```
+
+```shell
+# python xProfile.py --help for more usage detail
+python xProfile.py -m "facebook/opt-350m" -b 10 -o "AdamW"
+```
+
+There are only the below models supported for profiling
+
+```text
+CNN MODELS SUPPORTED:
+        VGG16
+        VGG19
+        ResNet101
+        esNet152
+        MobileNetV2
+        MobeNetV3Small
+        MobeNetV3Large
+        MnasNet
+        ConvNeXtTiny
+        ConvNeXtBase
+        RegNetX400MF
+        RegNetY400MF
+
+
+Optimizer for Transformer Models Supported:
+        SGD
+        Adam
+        AdamW
+        Adafactor
+
+
+Optimizer for CNN Models Supported:
+        SGD
+        Adam
+        RMSprop
+        Adagrad
+        AdamW
+
+Transformer Models Supported:
+    Technically, all the transformer models supported by HuggingFace are supported.
+    However, the training loop and data loader are not implemented for all the models.
+```
+
+The path of profiling data JSON file will be shown in the last line of stdout, like
+```text
+Preparing facebook/opt-350m with fp16: False and optimiser: AdamW
+Loaded facebook/opt-350m in data type: torch.float32
+Training on CPU Started
+Initializing Training...
+Training...
+Profiled data for facebook/opt-350m with batch size 10 and optimizer AdamW
+The file is saved to ~/DL-Estimator/20250529-161258-7fbd/results  <---- Path of file shows here
+```
+
 ## ⚙️ Usage
 
 Ensure that you alreayd export the right PYTHONPATH. If not, run commands below.
@@ -96,9 +179,6 @@ After run, a webpage will also be opened in your browser, showing the memory usa
 ```shell
 export PYTHONPATH="$(pwd)"
 ```
-> [!TIP]
-> [xProfile Tool](#cpu-based-profiler) could help you to generate the profiler file,
-> or you can use the profiler file in the `examples` folder by following the instructions in `Quick Example` section below.
 
 Command Usage
 
@@ -159,9 +239,6 @@ OOM: True  <---- This means that 4GB is not enough to run the model
 4.00 GB is not enough to run the model
 ```
 
-The Last Frame of Memory Snapshot will be saved in the log folder. The file name will be `Last-frame.png`.
-The Image is only for debugging purpose and is shown [here](docs/Last-frame.png)
-
 ### 🚀Quick Example - Non OOM Example
 
 ```shell
@@ -188,64 +265,25 @@ Estimated result is saved in examples/xMem-result-convnext-base-batch130.json
 python main.py ./examples/facebook-opt-125m-batch34.json -b 34 -g 12 -m 'facebook/opt-125m' -i
 ```
 
-
-## 📏 CPU-Based Profiler
-
-Please use 'xmem_profile.py' to generate the profiler file.
-
-- The profiling file is a json file that contains the memory usage in the model.
-- The profiling file is used as an input to the main.py to estimate the peak memory usage of the model.
-- Ensure that you run a profiler job on Linux.
-
-```shell
-# python xProfile.py --help for more usage detail
-python xProfile.py -m "VGG19" -b 130 -o "SGD"
-```
-
-```shell
-# python xProfile.py --help for more usage detail
-python xProfile.py -m "facebook/opt-350m" -b 10 -o "SGD"
-```
-
-There are only the below models supported for profiling
-
+Result shows below:
 ```text
-CNN MODELS SUPPORTED:
-        VGG16
-        VGG19
-        ResNet101
-        esNet152
-        MobileNetV2
-        MobeNetV3Small
-        MobeNetV3Large
-        MnasNet
-        ConvNeXtTiny
-        ConvNeXtBase
-        RegNetX400MF
-        RegNetY400MF
-
-
-Optimizer for Transformer Models Supported:
-        SGD
-        Adam
-        AdamW
-        Adafactor
-
-
-Optimizer for CNN Models Supported:
-        SGD
-        Adam
-        RMSprop
-        Adagrad
-        AdamW
-
-Transformer Models Supported:
-    Technically, all the transformer models supported by HuggingFace are supported.
-    However, the training loop and data loader are not implemented for all the models.
+======================== Basic Information ========================
+Batch Size: 34
+Max GPU Memory: 12 GB
+Runtime: 13838115258 s
+======================== Estimated Result ========================
+OOM: False
+Estimated Peak GPU Memory: 7.70 GB
+Estimated Peak Tensor Memory: 6.86 GB
+Estimated result is saved in examples/xMem-result-facebook-opt-125m-batch34.json
 
 ```
+
 
 ## 🧹(Optional) Clean Up
+```shell
+conda deactivate
+```
 ```shell
 conda env remove --name xmem
 ```
@@ -306,7 +344,13 @@ Image Link: [here](https://hub.docker.com/layers/pytorch/pytorch/2.3.1-cuda12.1-
 
 ```shell
 docker pull pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel
+```
+
+```shell
 docker pull pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+```
+
+```shell
 docker pull pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel
 ```
 
@@ -393,6 +437,10 @@ python app.py cleanup
 ```
 
 ### Conda Environment
+
+```shell
+conda deactivate
+```
 ```shell
 conda env remove --name xmem-exp
 ```
