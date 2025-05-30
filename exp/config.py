@@ -22,7 +22,7 @@ class ExperimentConfig(BaseModel):
     fp16: bool = Field(default=False, description="Enable FP16 mode.")
     bf16: bool = Field(default=False, description="Enable BF16 mode.")
     result_verification: bool = Field(
-        default=False, description="Enable verification process after estimation"
+        default=True, description="Enable verification process after estimation"
     )
 
 
