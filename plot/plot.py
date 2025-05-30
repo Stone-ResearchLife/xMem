@@ -10,7 +10,6 @@ from enum import Enum
 from plotly.subplots import make_subplots
 from pathlib import Path
 from typing import Union, Dict, Optional
-from exp.run import SummarySectionName
 from perf_estimator.utilis import filter_files
 from perf_estimator.utilis.utilis import temp_dir_with_specific_path
 
@@ -23,8 +22,10 @@ class ApproachedName(Enum):
 
 
 class DataAggregation:
-    def __init__(self):
-        self._dest = Path().home().joinpath("xMem-Plot", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    def __init__(self, random_dir: bool = True):
+        self._dest = Path().home().joinpath("xMem-Plot")
+        if random_dir:
+            self._dest = self._dest / datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         self._name_map = {
             "C": "CNN",
             "T": "Transformer",
@@ -60,15 +61,15 @@ class DataAggregation:
         subdir = self.root_dir / subdir_name
         for arg in args:
             src_path = Path(arg)
-            if not src_path.is_dir():
-                print(f"Dir not exist, skipping {src_path}")
-                continue
             if src_path.name in ["Transformer-Exp", "Large-Transformer-Exp"]:
                 subsubdir = self._name_map["T"]
             elif src_path.name == "CNN-Exp":
                 subsubdir = self._name_map["C"]
             else:
                 subsubdir = self._name_map["O"]
+            if not src_path.is_dir():
+                print(f"Dir not exist, skipping {src_path}")
+                continue
             if subdir.is_dir() is False:
                 subdir.mkdir(parents=True, exist_ok=True)
             subsubdir_path = subdir / subsubdir
@@ -115,6 +116,8 @@ class ExperimentPlot:
     def data_processing(self, data_dir: Union[str, Path]) -> pd.DataFrame:
         if str(data_dir) not in self._cache.keys():
             evaluates_files = filter_files("evaluation_result.json", data_dir, False)
+            if len(evaluates_files) == 0:
+                raise FileNotFoundError(f"No evaluation result found in {data_dir}, please check the path")
             random_result = []
             for eva_file in evaluates_files:
                 with open(eva_file, "r") as f:

@@ -1,5 +1,7 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
+> [!IMPORTANT] The current version is still in prototype. Due to the 
+> unoptimized code, it may take a longer execution time.
 
 xMem is a novel framework designed to accurately estimate the peak GPU
 memory consumption for DL training jobs using data from a profiler, a
@@ -87,7 +89,11 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 pip install -r requirement.txt
 ```
 
-## 📏 (Optional) CPU-Based Profiler
+
+## ⚙️ Usage
+
+
+### Option 1 - (Recommanded) When you don't have profiling data, Using CPU-Based Profiler
 
 > [!TIP]
 > xProfile Tool blow could help you to generate the profiler file,
@@ -117,9 +123,40 @@ Please use 'xProfile.py' to generate the profiler file.
 python xProfile.py -m "VGG19" -b 130 -o "SGD"
 ```
 
+> [!HIT] Both path of the profiling file and estimation command are shown in STDOUT, like below
+
+Output is shown below
+```text
+Preparing VGG19 with fp16: False and optimiser: SGD
+Loaded VGG19 in data type: torch.float32
+Training on CPU Started
+Initializing Training...
+Training...
+Using Convolutional Training loop.
+Profiled data for VGG19 with batch size 130 and optimizer SGD
+The file is saved to <path of result>
+Command for Estimation: <------ a command can be run directly in shell, change max GPU memory before run
+python main.py <path of profiling file> -b 130 -g <int: max mem in GB>
+
+```
+
 ```shell
 # python xProfile.py --help for more usage detail
 python xProfile.py -m "facebook/opt-350m" -b 10 -o "AdamW"
+```
+
+Output is shown below
+```text
+Preparing facebook/opt-350m with fp16: False and optimiser: Adafactor
+Loaded facebook/opt-350m in data type: torch.float32
+Training on CPU Started
+Initializing Training...
+Training...
+Using Mixed Precision (FP32) Training loop.
+Profiled data for facebook/opt-350m with batch size 10 and optimizer Adafactor
+The file is saved to <path of result>
+Command for Estimation: <------ a command can be run directly in shell, change max GPU memory before run
+python main.py <path of profiling file> -b 10 -m 'facebook/opt-350m' -i -g <int: max mem in GB>
 ```
 
 There are only the below models supported for profiling
@@ -129,7 +166,7 @@ CNN MODELS SUPPORTED:
         VGG16
         VGG19
         ResNet101
-        esNet152
+        ResNet152
         MobileNetV2
         MobeNetV3Small
         MobeNetV3Large
@@ -156,21 +193,12 @@ Optimizer for CNN Models Supported:
 
 Transformer Models Supported:
     Technically, all the transformer models supported by HuggingFace are supported.
-    However, the training loop and data loader are not implemented for all the models.
+    However, the training loop and data loader (only wiki-text available) are not implemented for all the models.
 ```
 
-The path of profiling data JSON file will be shown in the last line of stdout, like
-```text
-Preparing facebook/opt-350m with fp16: False and optimiser: AdamW
-Loaded facebook/opt-350m in data type: torch.float32
-Training on CPU Started
-Initializing Training...
-Training...
-Profiled data for facebook/opt-350m with batch size 10 and optimizer AdamW
-The file is saved to ~/DL-Estimator/20250529-161258-7fbd/results  <---- Path of file shows here
-```
 
-## ⚙️ Usage
+
+### Option 2 - When you want to estimate your own profiling data
 
 Ensure that you alreayd export the right PYTHONPATH. If not, run commands below.
 
@@ -214,7 +242,7 @@ NOTES
     Option -m is mandatory if option -i is set to True.
 ```
 
-### 🚀Quick Example - OOM Example
+#### 🚀Quick Example - OOM Example
 
 > [!WARNING]
 > Failed to import pytorch `fbgemm.dll` warnning in Windows.
@@ -239,7 +267,7 @@ OOM: True  <---- This means that 4GB is not enough to run the model
 4.00 GB is not enough to run the model
 ```
 
-### 🚀Quick Example - Non OOM Example
+#### 🚀Quick Example - Non OOM Example
 
 ```shell
 python main.py ./examples/convnext-base-batch130.json -b 130 -g 8
@@ -259,7 +287,7 @@ Estimated Peak Tensor Memory: 4.96 GB
 Estimated result is saved in examples/xMem-result-convnext-base-batch130.json
 ```
 
-### 🚀Quick Example for Transformer Model
+#### 🚀Quick Example for Transformer Model
 
 ```shell
 python main.py ./examples/facebook-opt-125m-batch34.json -b 34 -g 12 -m 'facebook/opt-125m' -i
@@ -278,6 +306,7 @@ Estimated Peak Tensor Memory: 6.86 GB
 Estimated result is saved in examples/xMem-result-facebook-opt-125m-batch34.json
 
 ```
+
 
 
 ## 🧹(Optional) Clean Up
@@ -468,6 +497,11 @@ pip install -r requirement-r.txt
 
 Solution is that download `Visual C++ Redistributable for Visual Studio 2019` from Microsoft official website and install it.
 The download linke is [here](https://my.visualstudio.com/Downloads?q=c++%20redistributable)
+
+## Insufficient RAM
+
+Solution is Swap. You could create a large Swap file for your linux instead of RAM. The link below may helps you setting Swap file.
+- https://linuxize.com/post/create-a-linux-swap-file/
 
 
 # ✅ To-Do List
