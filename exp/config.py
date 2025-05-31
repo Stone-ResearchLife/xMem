@@ -34,7 +34,13 @@ class CNNExperiments(ExperimentConfig):
     )
     run_id: str = Field(default="CNN-Exp", description="Run ID for the experiment.")
     optimisers: list[str] = Field(
-        default=["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"],
+        default=[
+            "SGD",
+            "Adam",
+            "RMSprop",
+            "Adagrad",
+            "AdamW"
+        ],
         description="Optimiser to use for the experiment.",
     )
     models: list[str] = Field(
@@ -66,7 +72,12 @@ class TransformerExperiments(ExperimentConfig):
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=["SGD", "Adam", "AdamW", "Adafactor"],
+        default=[
+            "SGD",
+            "Adam",
+            "AdamW",
+            "Adafactor"
+        ],
         description="Optimiser to use for the experiment.",
     )
 
