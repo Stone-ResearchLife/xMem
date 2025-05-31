@@ -8,7 +8,6 @@ from .train_loop import (
     conv_train_loop,
     transformer_train_loop,
     transformer_mixed_precision_train_loop,
-    transformer_cpu_f16_train_loop,
 )
 
 
