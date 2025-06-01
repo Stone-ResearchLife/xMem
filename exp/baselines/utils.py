@@ -167,7 +167,10 @@ class GenComputationalGraph:
 
         model = self.model
         dataloader = self.dataloader
-        optimizer = self.op(model.parameters(), lr=1e-5)
+        if self.op.__name__ == "Adafactor":
+            optimizer = self.op(model.parameters(), lr=1e-5, relative_step=False)
+        else:
+            optimizer = self.op(model.parameters(), lr=1e-5)
         for name, module in model.named_modules():
             # Only attach hooks to leaf modules (modules without children)
             if len(list(module.children())) == 0:

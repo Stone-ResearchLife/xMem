@@ -28,17 +28,14 @@ def conv_train_loop(
     zero_grad_mode = zero_grad_mode or 0
     zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
     [_plugin.start() for _plugin in plugins]
+    model.to(device)
+    model.train()
+    if optimizer is None:
+        optimizer = torch.optim.SGD
+    optimizer = optimizer(params=model.parameters(), lr=lr)
+    criterion = torch.nn.CrossEntropyLoss()
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     try:
-        model.to(device)
-        model.train()
-        if optimizer is None:
-            optimizer = torch.optim.SGD
-        if isinstance(optimizer, Adafactor):
-            optimizer = optimizer(params=model.parameters(), lr=lr, relative_step=False)
-        else:
-            optimizer = optimizer(params=model.parameters(), lr=lr)
-        criterion = torch.nn.CrossEntropyLoss()
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
         for epoch in range(epochs):
             for index, (inputs, labels) in enumerate(data_loader):
                 [_plugin.step() for _plugin in plugins]
@@ -86,14 +83,14 @@ def transformer_train_loop(
 
     [_plugin.start() for _plugin in plugins]
     time.sleep(2)
+    zero_grad_mode = zero_grad_mode or 0
+    zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
+    if isinstance(optimizer, type(Adafactor)):
+        optimizer = optimizer(params=model.parameters(), lr=lr, relative_step=False)
+    else:
+        optimizer = optimizer(params=model.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     try:
-        zero_grad_mode = zero_grad_mode or 0
-        zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
-        if isinstance(optimizer, type(Adafactor)):
-            optimizer = optimizer(params=model.parameters(), lr=lr, relative_step=False)
-        else:
-            optimizer = optimizer(params=model.parameters(), lr=lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
         model.to(device)
         for epoch in range(epochs):
             for index, batch in enumerate(data_loader):
@@ -133,14 +130,14 @@ def transformer_mixed_precision_train_loop(
 
     [_plugin.start() for _plugin in plugins]
     time.sleep(2)
+    zero_grad_mode = zero_grad_mode or 0
+    zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
+    if isinstance(optimizer, type(Adafactor)):
+        optimizer = optimizer(params=model.parameters(), lr=lr, relative_step=False)
+    else:
+        optimizer = optimizer(params=model.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     try:
-        zero_grad_mode = zero_grad_mode or 0
-        zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
-        if isinstance(optimizer, type(Adafactor)):
-            optimizer = optimizer(params=model.parameters(), lr=lr, relative_step=False)
-        else:
-            optimizer = optimizer(params=model.parameters(), lr=lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
         model.to(device)
         for epoch in range(epochs):
             for index, batch in enumerate(data_loader):
