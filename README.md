@@ -395,6 +395,7 @@ Since a special build requirement of LLMem, we have to build base image for LLMe
 ```bash
 cd exp/baselines/LLmem
 docker build -t llmem .
+cd ../../..
 ```
 
 After build, you will get a base image, called `llmem`.

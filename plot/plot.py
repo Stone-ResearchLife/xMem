@@ -622,10 +622,11 @@ class ExperimentPlot:
         median_box_offset=(0.8, 0.92, 0.08),
     ):
         if view_mode:
-            image_size = (1200, 350)
+            image_size = (800, 350)
             font_size = 15
             legend_font_size = 12
             tickfont_size = 15
+            yrange = (0, 150)
 
         self.font.update(dict(size=font_size))
         self.legend_font.update(dict(size=legend_font_size))

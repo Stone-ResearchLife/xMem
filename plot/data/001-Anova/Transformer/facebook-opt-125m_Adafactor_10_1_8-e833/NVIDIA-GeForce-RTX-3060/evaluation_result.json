@@ -1,0 +1,93 @@
+{
+    "train info": {
+        "model": "facebook/opt-125m",
+        "batch_size": 10,
+        "target_iteration": 3,
+        "optimiser": "Adafactor",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12499812352,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "Transformer-Exp",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "facebook-opt-125m_Adafactor_10_1_8-e833/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "facebook/opt-125m",
+            "zero_out": 0,
+            "fp16": false,
+            "bf16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 2326884515.84,
+        "oom": false,
+        "runtime": 242703774,
+        "ground": 2533359616,
+        "error": 0.08150248344370854,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 2715811840,
+        "oom": false,
+        "runtime": 13.57,
+        "ground": 2533359616,
+        "error": 0.07201986754966887,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.09437086092715231
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 3607101440,
+        "oom": false,
+        "runtime": 1596959650,
+        "ground": 2533359616,
+        "error": 0.423841059602649,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.3394039735099338
+        }
+    },
+    "LLmem": {
+        "tool": "LLmem",
+        "memory": 5035261952,
+        "oom": false,
+        "runtime": 23026809060,
+        "ground": 2533359616,
+        "error": 0.9875827814569537,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.9735099337748344
+        }
+    }
+}

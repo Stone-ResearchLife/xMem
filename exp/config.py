@@ -22,7 +22,7 @@ class ExperimentConfig(BaseModel):
     fp16: bool = Field(default=False, description="Enable FP16 mode.")
     bf16: bool = Field(default=False, description="Enable BF16 mode.")
     result_verification: bool = Field(
-        default=False, description="Enable verification process after estimation"
+        default=True, description="Enable verification process after estimation"
     )
 
 
@@ -34,7 +34,13 @@ class CNNExperiments(ExperimentConfig):
     )
     run_id: str = Field(default="CNN-Exp", description="Run ID for the experiment.")
     optimisers: list[str] = Field(
-        default=["SGD", "Adam", "RMSprop", "Adagrad", "AdamW"],
+        default=[
+            "SGD",
+            "Adam",
+            "RMSprop",
+            "Adagrad",
+            "AdamW"
+        ],
         description="Optimiser to use for the experiment.",
     )
     models: list[str] = Field(
@@ -54,19 +60,24 @@ class TransformerExperiments(ExperimentConfig):
     )
     models: list[str] = Field(
         default=[
-            "EleutherAI/gpt-neo-125M",
-            "facebook/opt-125m",
-            "facebook/opt-350m",
-            "cerebras/Cerebras-GPT-111M",
-            "T5-small",
-            "t5-base",
-            "distilbert/distilgpt2",
+            # "EleutherAI/gpt-neo-125M",
+            # "facebook/opt-125m",
+            # "facebook/opt-350m",
+            # "cerebras/Cerebras-GPT-111M",
+            # "T5-small",
+            # "t5-base",
+            # "distilbert/distilgpt2",
             "openai-community/gpt2",
         ],
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=["SGD", "Adam", "AdamW", "Adafactor"],
+        default=[
+            # "SGD",
+            # "Adam",
+            # "AdamW",
+            "Adafactor"
+        ],
         description="Optimiser to use for the experiment.",
     )
 
