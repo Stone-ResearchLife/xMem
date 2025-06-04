@@ -1,0 +1,79 @@
+{
+    "train info": {
+        "model": "EleutherAI/pythia-1b",
+        "batch_size": 9,
+        "target_iteration": 3,
+        "optimiser": "Adafactor",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 0,
+        "total_gpu_memory": 12499812352,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "Large-Transformer-Exp",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "EleutherAI-pythia-1b_Adafactor_9_1_10-9473/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "EleutherAI/pythia-1b",
+            "zero_out": 0,
+            "fp16": false,
+            "bf16": false
+        }
+    },
+    "SchedTune": {
+        "tool": "SchedTune",
+        "memory": 6418218352.64,
+        "oom": false,
+        "runtime": 2097173836,
+        "ground": 12060721152,
+        "error": 0.4678412450008694,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 12127830016,
+        "oom": false,
+        "runtime": 31.16,
+        "ground": 12060721152,
+        "error": 0.0055642496957050945,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.011997913406364111
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 10330570752,
+        "oom": false,
+        "runtime": 8252513370,
+        "ground": 12060721152,
+        "error": 0.14345331246739698,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

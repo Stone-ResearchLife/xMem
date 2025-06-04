@@ -1,0 +1,65 @@
+{
+    "train info": {
+        "model": "Qwen/Qwen3-0.6B",
+        "batch_size": 5,
+        "target_iteration": 3,
+        "optimiser": "Adafactor",
+        "device": 1,
+        "input_size": [
+            86,
+            86,
+            3
+        ],
+        "zero_grad_mode": 1,
+        "total_gpu_memory": 12499812352,
+        "used_gpu_memory": null,
+        "gpu_name": "NVIDIA GeForce RTX 3060"
+    },
+    "config": {
+        "name": "Large-Transformer-Exp",
+        "debug": false,
+        "save2tmp": false,
+        "run_id": "Qwen-Qwen3-0.6B_Adafactor_5_1_4-74b6/NVIDIA-GeForce-RTX-3060",
+        "task_id": null,
+        "dataset": {
+            "shuffle": true
+        },
+        "trainer": {
+            "lr": 0.001,
+            "epochs": 1,
+            "huggingface_enable": true,
+            "huggingface_model_name": "Qwen/Qwen3-0.6B",
+            "zero_out": 1,
+            "fp16": false,
+            "bf16": false
+        }
+    },
+    "solution": {
+        "tool": "solution",
+        "memory": 10093592576,
+        "oom": false,
+        "runtime": 215.62,
+        "ground": 10009706496,
+        "error": 0.008380473496752567,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": false,
+            "error": 0.05049235281793421
+        }
+    },
+    "DNNmem": {
+        "tool": "DNNmem",
+        "memory": 9086959616,
+        "oom": false,
+        "runtime": 4598785334,
+        "ground": 10009706496,
+        "error": 0.09218520846427823,
+        "real_oom": false,
+        "correct_estimation": true,
+        "2nd verification": {
+            "oom": true,
+            "error": null
+        }
+    }
+}

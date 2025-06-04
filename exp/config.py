@@ -60,22 +60,22 @@ class TransformerExperiments(ExperimentConfig):
     )
     models: list[str] = Field(
         default=[
-            # "EleutherAI/gpt-neo-125M",
-            # "facebook/opt-125m",
-            # "facebook/opt-350m",
-            # "cerebras/Cerebras-GPT-111M",
-            # "T5-small",
-            # "t5-base",
-            # "distilbert/distilgpt2",
+            "EleutherAI/gpt-neo-125M",
+            "facebook/opt-125m",
+            "facebook/opt-350m",
+            "cerebras/Cerebras-GPT-111M",
+            "T5-small",
+            "t5-base",
+            "distilbert/distilgpt2",
             "openai-community/gpt2",
         ],
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
         default=[
-            # "SGD",
-            # "Adam",
-            # "AdamW",
+            "SGD",
+            "Adam",
+            "AdamW",
             "Adafactor"
         ],
         description="Optimiser to use for the experiment.",
@@ -99,6 +99,11 @@ class LargeTransformerExperiments(TransformerExperiments):
         description="List of transformer models.",
     )
     optimisers: list[str] = Field(
-        default=["Adafactor", "AdamW", "Adam", "SGD"],
+        default=[
+            "Adafactor",
+            "AdamW",
+            "Adam",
+            "SGD"
+        ],
         description="Optimiser to use for the experiment.",
     )
