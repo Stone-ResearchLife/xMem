@@ -18,7 +18,7 @@ The result data is consist of three parts:
 ## Evaluation Result Structure
 
 |          Field in JSON           |   Name in Dataframe   |            Symbol             |                                                                           Description                                                                            |
-| :------------------------------: | :-------------------: | :---------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| :------------------------------: | :-------------------: |:-----------------------------:| :--------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 |      `<estimator>.runtime`       |       `runtime`       |             None              |                                                               The actual execution time in second                                                                |
 |       `<estimator>.memory`       |       `memory`        | $\hat{M}^{\text{peak}}_{jde}$ |                                                  The peak memory usage as predicted by estimator, as expressed                                                   |
 |        `<estimator>.oom`         |         `oom`         |   $\hat{\text{OOM}}_{jde}$    |                                                        Boolean prediction of OOM occurrence by estimator                                                         |
@@ -27,14 +27,15 @@ The result data is consist of three parts:
 |      `<estimator>.real_oom`      |      `real_oom`       |      $\text{OOM}_{jd1}$       |                                           Boolean indicating actual OOM occurrence during training for 1st validation                                            |
 | `<estimator>.correct_estimation` | `correct_estimation`  |          $C_{jde1}$           |                      Boolean indicating if the prediction $\hat{\text{OOM}}_{jde}$ matches the actual $\text{OOM}_{jd1}$ for 1st validation                      |
 |        `2nd verification`        |        `None`         |             None              |                                          The Field is only available when $C_{jde1}=True \land \text{OOM}_{jd1}=False$                                           |
-|      `2nd verification.oom`      |    `2nd_real_oom`     |      $\text{OOM}_{jd2}$       |                                           Boolean indicating actual OOM occurrence during training for 2nd validation                                            |
+|      `2nd verification.oom`      |    `2nd_real_oom`     |      $\text{OOM}_{jde2}$      |                                           Boolean indicating actual OOM occurrence during training for 2nd validation                                            |
 |     `2nd verification.error`     |      `2nd_error`      |     $\text{error}_{jde2}$     | The relative error of $M^{\text{peak}}_{jd2}$ relative to $\hat{M}^{\text{peak}}_{jde}$ for 2nd validation. It set to `null` when `2nd verification.oom` is True |
 |              `None`              | `accurate_estimation` |          $C_{jde2}$           |                                                     Boolean indicating if the prediction for 1st validation                                                      |
 |              `None`              |     `save_memory`     |    $M^{\text{save}}_{jde}$    |                                                                The memory conserved by estimator                                                                 |
 
 # 3️⃣ Plotting
 
-We provided a Jupyter notebook in the respority to plot the experimental results. You can find the notebook in the `plot` directory, named as `Figures in Paper.ipynb`
+We provided a Jupyter notebook in the respority to plot the experimental results. You can find the 
+notebook in the `plot` directory, named as [`Figures in Paper.ipynb`](Figures%20in%20Paper.ipynb)
 
 # 4️⃣ Output
 
