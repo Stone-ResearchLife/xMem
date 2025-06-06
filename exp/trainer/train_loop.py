@@ -132,7 +132,7 @@ def transformer_mixed_precision_train_loop(
     time.sleep(2)
     zero_grad_mode = zero_grad_mode or 0
     zero_grad_mode = 0 if zero_grad_mode > 2 else zero_grad_mode
-    if isinstance(optimizer, type(Adafactor)):
+    if optimizer.__name__ == "Adafactor":
         optimizer = optimizer(params=model.parameters(), lr=lr, relative_step=False)
     else:
         optimizer = optimizer(params=model.parameters(), lr=lr)
