@@ -1,6 +1,6 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
-> [!IMPORTANT] The current version is still in prototype. Due to the 
+> [!IMPORTANT] The current version is still in prototype. Due to the
 > unoptimized code, it may take a longer execution time.
 
 xMem is a novel framework designed to accurately estimate the peak GPU
@@ -25,7 +25,7 @@ exp/                                    # Experiments related to xMem
     │   ├── dnnmem/                     # DNNMem Baseline
     │   └── solution/                   # a xMem class implementation for Experiments, following the same Interface as other baselines
     │── Experiments-ANOVA.ipynb         # Jupyter Notebook for ANOVA Experiment
-    │── Experiments-Mento Carlo.ipynb   # Jupyter Notebook for Monte Carlo Experiment
+    │── Experiments-Monte Carlo.ipynb   # Jupyter Notebook for Monte Carlo Experiment
     └── CoLab_large_Model.ipynb         # Jupyter Notebook for Large Model Experiment in CoLab
 paper_container/                        # Base image building code
 perf_estimator/                         # xMem Estimator code
@@ -456,7 +456,7 @@ Use a Jupyter [Notebook](exp/Experiments-ANOVA.ipynb) for this experiments
 
 ### Run Monte Carlo Experiment
 > [!IMPORTANT] Ensure that you have right configuration of interpreter for Jupyter environment
- 
+
 Use a Jupyter [Notebook](exp/Experiments-Mento%20Carlo.ipynb) for this experiments
 
 ## 🧹(Optional) Clean Up
