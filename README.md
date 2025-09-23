@@ -1,6 +1,6 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
-> [!Important] 
+> [!Important]
 > The current version is still in prototype. Due to the
 > unoptimized code, it may take a longer execution time.
 
@@ -16,7 +16,7 @@ scheduling, leading to substantial GPU memory conservation and optimized asset
 utilization, which in turn helps mitigate the prevailing GPU scarcity.
 
 ## 📂Project Structure
-> [!Note] 
+> [!Note]
 > This project structure is temporary for prototype and will be refactored in the future.
 
 ```text
@@ -63,7 +63,7 @@ requirement-r.txt                       # Requirements for experiments
 > The installation instructions in this section is **Only** for xMem itself, not for Experiment.
 >
 > Please jump to [Experiments](#-installation-1) and follow the installation instructions under it
-> if you want to run the experiments as experimental env is also work for xMem. Therefore, you can 
+> if you want to run the experiments as experimental env is also work for xMem. Therefore, you can
 > use that env to run both code (xMem itself and experiments).
 
 
@@ -130,7 +130,7 @@ Please use 'xProfile.py' to generate the profiler file.
 python xProfile.py -m "VGG19" -b 130 -o "SGD"
 ```
 
-> [!HIT] 
+> [!HIT]
 > Both path of the profiling file and estimation command are shown in STDOUT, like below
 
 Output is shown below
@@ -457,15 +457,15 @@ pytorch/pytorch         2.0.1-cuda11.7-cudnn8-devel   42a0e9b621e2   2 years ago
 > - `~/Large-Transformer-Exp` to store result related to Qwen3 0.6B and Pythia 1B
 
 ### Run ANOVA Experiment
-> [!IMPORTANT] 
-> Ensure that you have right configuration of interpreter for Jupyter environment. 
+> [!IMPORTANT]
+> Ensure that you have right configuration of interpreter for Jupyter environment.
 > Additionally, the entire ANOVA experiment generally take more than a week time to run.
 
-> [!Caution] 
-> The result can be only valid and visualized when entire experiment are completely finished, 
+> [!Caution]
+> The result can be only valid and visualized when entire experiment are completely finished,
 > due to all samples will be run once with xMem and other baselines.
 
-> [!Caution] 
+> [!Caution]
 > Please note, the ANOVA experiment will create more than thousands docker instants each times.
 
 Notions of variable in this notebook:
@@ -482,19 +482,22 @@ Use a Jupyter [Notebook](exp/Experiments-ANOVA.ipynb) for this experiments
 
 
 ### Run Monte Carlo Experiment
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > Ensure that you have right configuration of interpreter for Jupyter environment
 
-> [!Caution] 
-> Please note, the Monte Carlo experiment will create amount of docker instants, which equal 
+> [!Caution]
+> Please note, the Monte Carlo experiment will create amount of docker instants, which equal
 > to the number of 'total_run' in notebook.
-> 
+>
 > Moreover, we used two GPUs in this experiment, so the default value of variable `gpu_ids` is `[0, 1]`.
 > You can change this list.
 
 Notions of variable in this notebook:
 - `total_run`: total desired samples you want to run (min >= 20, just in case, to prevent unexpected issue).
 - `gpu_ids`: The GPU index pool used for the Monte Carlo experiment randomly picking gpu index from it.
+- `config.repeats = 1`: do not change
+- `config.gpu_id = 0`: ignore this value in monte carlo experiment. The value will be overwritten by random picked gpu index from `gpu_ids`
+- `config.result_verification = True`: do not change
 
 Use a Jupyter [Notebook](exp/Experiments-Mento%20Carlo.ipynb) for this experiments
 
