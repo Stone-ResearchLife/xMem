@@ -1,19 +1,29 @@
 # 🧮 XMem: A Cross-Architecture GPU Memory Estimator
 
 > [!Important]
-> The current version is still in prototype. Due to the
-> unoptimized code, it may take a longer execution time.
+> The current version is still in prototype. Due to the unoptimized code, it may take a longer execution time.
 
-xMem is a novel framework designed to accurately estimate the peak GPU
-memory consumption for DL training jobs using data from a profiler, a
-performance analyzer frequently used during DL model development.
+The widespread adoption of Deep Learning (DL) in diverse application areas has significantly increased the demand for
+GPUs. Consequently, GPU resources are scarce and are managed in clusters to maximize resource utilization. However,
+this shift introduces new debugging challenges when training DL models on shared clusters particularly Out-Of-Memory (OOM)
+errors, an issue commonly reported in industry and academic literature. Existing solutions for avoiding OOM primarily
+rely on static analysis of the DL model’s computational graph, or leverage GPU resources directly or indirectly to
+estimate the peak memory required for training the given task on the target GPU. Unfortunately, relying on GPUs for
+these predictions exacerbates resource contention and increases scheduling challenges. Furthermore, the dynamic nature
+of model development limits the accuracy of static analysis to estimate peak memory usage. To address these limitations,
+we propose xMem, a novel tool that uses CPU-based analysis to accurately predict the memory required for model training
+on a GPU. By eliminating the reliance on GPUs for memory estimation, xMem promotes efficient GPU utilization while
+mitigating OOM errors. Our empirical evaluation of 16 DL models (a total of 5,040 runs) demonstrates that, compared to
+state-of-the-art GPU memory estimators, xMem decreases the median relative error by 84.32%, reduces the average
+probability of estimation failure by 73.44%, accelerates the runtime by 50.16%, and improves memory conservation
+by 125.36%.
 
-Its accurate GPU memory estimation is essential to mitigate these costly
-OOM failures, optimize scheduling, and improve the overall cluster efficiency
-and stability. Specifically, precise GPU memory estimation for DL jobs enables
-decision systems within shared GPU clusters to implement more effective intelligent resource
-scheduling, leading to substantial GPU memory conservation and optimized asset
-utilization, which in turn helps mitigate the prevailing GPU scarcity.
+
+Through this README, you can use xMem to estimate peak GPU memory for various deep learning models, run the entire
+experiments to compare xMem against the baseline methods (DNNMem, SchedTune, and LLMem), and replicate the experimental
+data presented in the figures and tables of the paper.
+
+
 
 ## 📂Project Structure
 > [!Note]
@@ -42,8 +52,6 @@ apps.py                                 # The CLI entry point for docker buildin
 requirement.txt                         # Requirements for xMem
 requirement-r.txt                       # Requirements for experiments
 ```
-
-
 
 ## ✅Compatibility
 
@@ -345,11 +353,13 @@ conda env remove --name xmem
 
 ## 🚧 Installation
 
-### Miniconda (Optional)
+### Miniconda
+This project requires Miniconda for Python package management and Docker to run the evaluation experiments.
+Please install them before proceeding:
+- [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install)
+- [Docker](https://docs.docker.com/engine/install/)
 
-[Miniconda](https://docs.anaconda.com/miniconda/) is recommended to manage the environment.
-You can follow the below steps to create a new environment and install the required packages.
-
+First, create and activate a new Conda environment for this project:
 ```shell
 conda create -n xmem-exp python=3.11 -y
 ```
@@ -358,26 +368,25 @@ conda create -n xmem-exp python=3.11 -y
 conda activate xmem-exp
 ```
 
-The below command, as an example, was used in experiments with the local environment (CUDA 12.4).
+Next, install PyTorch. The following command installs the version used in our experiments (PyTorch 2.6.0 for CUDA 12.4).
 ```shell
 pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 ```
-You can also see official document of PyTorch 2.6.0 installation [here](https://pytorch.org/get-started/previous-versions/)
+For other CUDA versions, please refer to the [PyTorch 2.6.0 installation documentation](https://pytorch.org/get-started/previous-versions/).
 
 ### 📦 Install Dependencies
-
+Finally, install the remaining Python packages using the provided requirements file:
 ```shell
 pip install notebook # For Jupyter Notebook
 pip install -r requirement-r.txt
 ```
 
 ### 💿Base Images
-Ensure Docker Client is installed on your machine. If not follow the instructions [here](https://docs.docker.com/engine/install/).
 
 #### 1️⃣ Docker Pull Images
 
-Pull the base image from Docker Hub. This image is used to build images for the experiments.
-Image Link: [here](https://hub.docker.com/layers/pytorch/pytorch/2.3.1-cuda12.1-cudnn8-devel/images/sha256-a22a1fca37f8361c8a1e859cd6eb6bd9d1fb384f9c0dcb2cfc691a178eb03d17?context=explore)
+First, pull the base PyTorch images from Docker Hub, which are required to build the specific environments for xMem
+and the baseline estimators. The exact image link for version 2.3.1 can be found [here](https://hub.docker.com/layers/pytorch/pytorch/2.3.1-cuda12.1-cudnn8-devel/images/sha256-a22a1fca37f8361c8a1e859cd6eb6bd9d1fb384f9c0dcb2cfc691a178eb03d17?context=explore)
 
 ```shell
 docker pull pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel
@@ -396,7 +405,7 @@ docker pull pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel
 > [!WARNING]
 > Ensure you set the right PYTHONPATH before running the experiments. The PYTHONPATH should be the root directory of the project.
 
-Since a special build requirement of LLMem, we have to build base image for LLMem by
+The LLMem baseline requires a custom Docker image due to specific dependencies. Build it using the following commands:
 
 >[!TIP]
 > You could also build environment yourself via this [link](https://github.com/taehokim20/LLMem)
@@ -419,6 +428,9 @@ Next, an auto-build script should be run to build rest of images.
 
 > [!WARNING]
 > You have to change workdir to root of project.
+
+After preparing the base images, run the provided script to automatically build the remaining Docker images
+for the experiments:
 ```shell
 python apps.py experiments prepare
 ```
@@ -475,8 +487,9 @@ Notions of variable in this notebook:
   - `2`: Larger Transformer models. The data is used for Research Question 5 in the Paper.
 - `config.repeats = 5`: how many times does each test configuration run repeatedly. Default is 5
 - `config.gpu_id = 0`: Index of GPU
-- `config.result_verification = True`: do not change
+- `config.result_verification = True`: do not change, as it enables estimated memory verification on the GPU.
 - `config.debug = False`: do not change
+
 
 Use a Jupyter [Notebook](exp/Experiments-ANOVA.ipynb) for this experiments
 
@@ -493,11 +506,11 @@ Use a Jupyter [Notebook](exp/Experiments-ANOVA.ipynb) for this experiments
 > You can change this list.
 
 Notions of variable in this notebook:
-- `total_run`: total desired samples you want to run (min >= 20, just in case, to prevent unexpected issue).
-- `gpu_ids`: The GPU index pool used for the Monte Carlo experiment randomly picking gpu index from it.
-- `config.repeats = 1`: do not change
-- `config.gpu_id = 0`: ignore this value in monte carlo experiment. The value will be overwritten by random picked gpu index from `gpu_ids`
-- `config.result_verification = True`: do not change
+- **`total_run`**: The total number of random configurations to sample and run. A minimum of 20 is recommended.
+- **`gpu_ids`**: A list of GPU device indices (e.g., `[0, 1]`) from which the experiment will randomly select a GPU for each run.
+- **`config.repeats`**: Must remain `1` for Monte Carlo experiments since the given random test configuration should be only run once.
+- **`config.gpu_id`**: This value is ignored and will be overwritten by a randomly selected index from `gpu_ids` for each run.
+- **`config.result_verification`**: do not change, as it enables estimated memory verification on the GPU.
 
 Use a Jupyter [Notebook](exp/Experiments-Mento%20Carlo.ipynb) for this experiments
 
@@ -526,8 +539,11 @@ conda env remove --name xmem-exp
 > [!WARNING]
 > Ensure that you have already installed the PyTorch following the above [steps](#pytorch)
 
-Install the required packages and
-follow [steps](plot/README.md) to generate all the plots mentioned in the paper.
+The instructions for plotting the figures presented in the paper (e.g., Figures 7, 8, and 9) from the raw
+experimental data are located in a separate directory.
+
+To reproduce all figures, please follow the detailed steps provided in
+this guide: [here](plot/README.md).
 
 ```shell
 pip install notebook # For Jupyter Notebook
