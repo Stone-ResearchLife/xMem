@@ -573,3 +573,4 @@ Solution is Swap. You could create a large Swap file for your linux instead of R
 # 📚 Resources
 - [SchedTune Source Code](https://github.com/hadeelalbahar/SchedTune)
 - [LLMem Source Code](https://github.com/taehokim20/LLMem)
+- [ColossalAI-Version 0.3.0](https://github.com/hpcaitech/ColossalAI/tree/v0.3.0)
