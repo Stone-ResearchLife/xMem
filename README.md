@@ -23,6 +23,10 @@ Through this README, you can use xMem to estimate peak GPU memory for various de
 experiments to compare xMem against the baseline methods (DNNMem, SchedTune, and LLMem), and replicate the experimental
 data presented in the figures and tables of the paper.
 
+## Third-Party Code & Licensing
+- The `exp/baselines/LLmem/` directory contains code from the [LLMem](https://github.com/taehokim20/LLMem) project. This code is subject to its original license, the full text of which is included in the `LICENSE` file within that directory.
+- The `exp/baselines/LLmem/ColossalAI/` directory contains code from the [Colossal-AI](https://github.com/hpcaitech/ColossalAI/tree/v0.3.0) project. This code is subject to its original license, the full text of which is included in the `LICENSE` file within that directory.
+- The `exp/baselines/schedtune/` directory contains code from the [SchedTune](https://github.com/hadeelalbahar/SchedTune) project. This code is subject to its original license, the full text of which is included in the `LICENSE` file within that directory.
 
 
 ## 📂Project Structure
