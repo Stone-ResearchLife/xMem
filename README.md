@@ -578,3 +578,20 @@ Solution is Swap. You could create a large Swap file for your linux instead of R
 - [SchedTune Source Code](https://github.com/hadeelalbahar/SchedTune)
 - [LLMem Source Code](https://github.com/taehokim20/LLMem)
 - [ColossalAI-Version 0.3.0](https://github.com/hpcaitech/ColossalAI/tree/v0.3.0)
+
+# Citation
+If you use our code, please cite us
+```bib
+@inproceedings{jiaboXMemCPUBasedApproach2025,
+  title = {{{xMem}}: {{A CPU-Based Approach}} for {{Accurate Estimation}} of {{GPU Memory}} in {{Deep Learning Training Workloads}}},
+  booktitle = {Proceedings of the 26th {{International Middleware Conference}}},
+  author = {Jiabo, Shi and Dimitrios, Pezaros and Yehia, Elkhatib},
+  year = 2025,
+  month = dec,
+  publisher = {ACM},
+  address = {Nashville, TN, USA},
+  doi = {10.1145/3721462.3770773},
+  isbn = {979-8-4007-1554-9},
+}
+
+```
