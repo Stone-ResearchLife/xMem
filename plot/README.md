@@ -12,7 +12,7 @@ The result data is consist of three parts:
 - `config`: contains all basic information realted to this run.
 - `solution`: denotes the evaluation result by xMem, termed as `xMem (this paper)`
 - `DNNmem`: denotes the evaluation result by DNNMem, termed as `DNNMem`
-- `CchedtTune`: denotes the evaluation result by SchedTune, termed as `SchedTune`
+- `ShedtTune`: denotes the evaluation result by SchedTune, termed as `SchedTune`
 - `LLmem`: denotes the evaluation result by LLMem, termed as `LLMem`
 
 ## Evaluation Result Structure
@@ -34,7 +34,7 @@ The result data is consist of three parts:
 
 # 3️⃣ Plotting
 
-We provided a Jupyter notebook in the respority to plot the experimental results. You can find the 
+We provided a Jupyter notebook in the repository to plot the experimental results. You can find the 
 notebook in the `plot` directory, named as [`Figures in Paper.ipynb`](Figures%20in%20Paper.ipynb)
 
 # 4️⃣ Output
@@ -43,8 +43,8 @@ The figure in PDF format will be saved into your output folder with the name you
 
 # 5️⃣ Our Results
 
-- ANOVA Result: `data/001-ANOVA`
-- Monte Carlo Result: `data/002-Monte Carlo`
-- Memory Change Result: `data/003-MemoryChange`
-- Simulation Assessment Result: `data/004-SimulationAssessment`
-- Scalability Result: `data/005-ScalabilityOnCoLab`
+- ANOVA Result: `<project root>/plot/data/001-ANOVA`
+- Monte Carlo Result: `<project root>/plot/data/002-Monte Carlo`
+- Memory Change Result: `<project root>/plot/data/003-MemoryChange`
+- Simulation Assessment Result: `<project root>/plot/data/004-SimulationAssessment`
+- Scalability Result: `<project root>/plot/data/005-ScalabilityOnCoLab`

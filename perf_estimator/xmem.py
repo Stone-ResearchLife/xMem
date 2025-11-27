@@ -51,7 +51,7 @@ class XMem:
         after_run = time.time()
         estimation_result.update({"runtime": round(after_run - before_run, 2)})
         if not output_only:
-            allocator.plot_memory_change()
+            # allocator.plot_memory_change()
             estimation_result = self.display_output(estimation_result)
 
         return estimation_result
