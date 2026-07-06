@@ -35,7 +35,10 @@ def main(
             raise FileNotFoundError(f"No profiling files found in {out_dir}")
 
         text = " Command for Estimation "
-        temminal_size = os.get_terminal_size().columns
+        try:
+            temminal_size = os.get_terminal_size().columns
+        except OSError:  # no tty, e.g. piped or background execution
+            temminal_size = 80
         half_temminal_size = (temminal_size - len(text)) // 2
         command_title = f"{'='*half_temminal_size}{text}{'='*half_temminal_size}"
         print(f"\033[33m{command_title}\033[0m")
