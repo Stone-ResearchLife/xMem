@@ -442,10 +442,11 @@ class IterationData:
         if self._memory_search_src is not activities:
             self._memory_search_src = activities
             self._memory_search_keys = list(activities.keys())
-        result = self._search_trace(
+        # Activities are keyed by alloc_time and the key list is sorted, so
+        # _search_trace already returns blocks in alloc_time order.
+        return self._search_trace(
             activities, start, end, self._memory_search_keys
         )
-        return sorted(result, key=lambda x: x.alloc_time)
 
     def ops_search(
         self, start: Optional[float] = None, end: Optional[float] = None
