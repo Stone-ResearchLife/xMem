@@ -131,6 +131,10 @@ class IterationData:
             None
         )
         self._optimiser: Optional[str] = None
+        self._ops_search_data: Optional[Dict[Union[int, float], OperatorNode]] = None
+        self._ops_search_keys: Optional[List[Union[int, float]]] = None
+        self._memory_search_src: Optional[Dict[int, List[MemoryBlock]]] = None
+        self._memory_search_keys: Optional[List[int]] = None
 
     @property
     def start(self):
@@ -345,21 +349,39 @@ class IterationData:
         return self.memory_search(start, end)
 
     def _stackup_nodes(self, nodes: List[ProfilerNode]) -> List[ProfilerNode]:
+        # Nodes sorted by (start, -end) are visited outer-before-inner, so a
+        # stack of currently open intervals yields each node's innermost
+        # container in O(n log n) overall.
+        intervals = [(node.start_time, node.end_time) for node in nodes]
+        groups: Dict[Tuple[int, int], List[ProfilerNode]] = {}
+        for node, interval in zip(nodes, intervals):
+            groups.setdefault(interval, []).append(node)
+        order = sorted(
+            range(len(nodes)), key=lambda i: (intervals[i][0], -intervals[i][1], i)
+        )
         root_stacks: List[ProfilerNode] = []
-        for node in nodes:
-            matched_result = list(
-                filter(
-                    lambda x: x.start_time <= node.start_time
-                    and x.end_time >= node.end_time,
-                    nodes,
-                )
-            )
-            matched_result.remove(node)
-            if len(matched_result) == 0:
-                root_stacks.append(node)
+        stack: List[Tuple[int, int, ProfilerNode]] = []
+        for i in order:
+            node = nodes[i]
+            start, end = intervals[i]
+            while stack and stack[-1][1] < end:
+                stack.pop()
+            if len(groups[(start, end)]) > 1:
+                pass  # identical-interval twins are wired after the sweep
+            elif stack:
+                stack[-1][2].add_child(node)
             else:
-                matched_result.sort(key=lambda x: (x.start_time, -x.end_time))
-                matched_result[-1].add_child(node)
+                root_stacks.append(node)
+            stack.append((start, end, node))
+        # Nodes sharing an identical (start, end) interval mutually contain
+        # each other: every earlier twin becomes a child of the last one and
+        # the last a child of the second-to-last, so none of them is a root.
+        # This mirrors the previous O(n^2) implementation exactly.
+        for group in groups.values():
+            if len(group) > 1:
+                for twin in group[:-1]:
+                    group[-1].add_child(twin)
+                group[-2].add_child(group[-1])
         return root_stacks
 
     def get_memory_activities(self) -> Dict[int, List[MemoryBlock]]:
@@ -393,10 +415,12 @@ class IterationData:
         list_data: Dict[int, List[Any]],
         start: Optional[Union[float, int]],
         end: Optional[Union[float, int]],
+        sorted_timestamps: Optional[list] = None,
     ) -> list:
         start = start or 0
         end = end or max(list_data.keys())
-        sorted_timestamps = list(list_data.keys())
+        if sorted_timestamps is None:
+            sorted_timestamps = list(list_data.keys())
         start_idx = bisect_left(sorted_timestamps, start)
         end_idx = bisect_right(sorted_timestamps, end)
 
@@ -412,14 +436,27 @@ class IterationData:
     def memory_search(
         self, start: Optional[float] = None, end: Optional[float] = None
     ) -> List[MemoryBlock]:
-        result = self._search_trace(self.get_memory_activities(), start, end)
+        # The activities dict can be swapped by construct_memory_sequence, so
+        # the cached key list is tied to the dict's identity.
+        activities = self.get_memory_activities()
+        if self._memory_search_src is not activities:
+            self._memory_search_src = activities
+            self._memory_search_keys = list(activities.keys())
+        result = self._search_trace(
+            activities, start, end, self._memory_search_keys
+        )
         return sorted(result, key=lambda x: x.alloc_time)
 
     def ops_search(
         self, start: Optional[float] = None, end: Optional[float] = None
     ) -> List[OperatorNode]:
+        if self._ops_search_data is None:
+            self._ops_search_data = dict(
+                self._cat[ProfilerDataCategory.CPU_OP.value]
+            )
+            self._ops_search_keys = list(self._ops_search_data.keys())
         result = self._search_trace(
-            dict(self._cat[ProfilerDataCategory.CPU_OP.value]), start, end
+            self._ops_search_data, start, end, self._ops_search_keys
         )
         sequence_ids = set(
             [op.seq_number for op in result if op.seq_number is not None]
