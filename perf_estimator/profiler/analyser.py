@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 from enum import Enum
 from typing import List, Optional, Dict, Any, Union, Tuple
 from bisect import bisect_left, bisect_right
+from tqdm import tqdm
 from perf_estimator.utilis.utilis import format_memory
 from . import StackNode, OperatorNode, CpuInstantNode, MemoryBlock, ProfilerNode
 
@@ -283,7 +284,9 @@ class IterationData:
 
             layers = copy.deepcopy(self._cat.get("layer", {}))
             parent_layers = []
-            for name, layer in layers.items():
+            for name, layer in tqdm(
+                layers.items(), desc="Analyzer: attributing layer memory", unit="layer"
+            ):
                 back_trace = [
                     trace.function_name
                     for trace in layer._node.backward_stack()
@@ -494,7 +497,9 @@ class ProfilerDataProcessing:
     def _load(self):
         events = self.load_data()
         iteration_count = 0
-        for element in events["traceEvents"]:
+        for element in tqdm(
+            events["traceEvents"], desc="Analyzer: processing trace events", unit="ev"
+        ):
             name = element.get("name", "")
             cat = element.get("cat", "")
 
