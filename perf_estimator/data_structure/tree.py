@@ -1,9 +1,14 @@
 from __future__ import annotations
-import uuid
-from typing import Any, AnyStr, Dict, Iterator, List, Optional
+from itertools import count
+from typing import Any, Dict, Iterator, List, Optional
 
 
 class TreeNode:
+    # The id only has to be unique within the process (it is used as a dict
+    # key for children); a counter is ~100x cheaper than uuid4 at the millions
+    # of nodes a large trace produces.
+    _id_counter = count()
+
     def __init__(self, value: Any):
         """Initialize a TreeNode object.
 
@@ -11,9 +16,9 @@ class TreeNode:
             value (Any): The value of the node.
         """
         self._parent: Optional[TreeNode] = None
-        self._children: Dict[AnyStr, TreeNode] = {}
+        self._children: Dict[int, TreeNode] = {}
         self._value: Any = value
-        self._id = uuid.uuid4().hex
+        self._id = next(TreeNode._id_counter)
 
     @property
     def parent(self) -> Optional[TreeNode]:
@@ -32,7 +37,7 @@ class TreeNode:
         return self._value
 
     @property
-    def id(self) -> str:
+    def id(self) -> int:
         return self._id
 
     def add_child(self, child: TreeNode):
