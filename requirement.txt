@@ -1,4 +1,5 @@
 sortedcontainers~=2.4.0
+msgspec~=0.21.0
 plotly~=5.24.0
 pydantic~=2.10.0
 fire~=0.7.0

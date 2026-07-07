@@ -2,6 +2,7 @@ import json
 import multiprocessing
 import re
 import time
+from types import SimpleNamespace
 import copy
 import logging
 from uuid import uuid4
@@ -15,6 +16,61 @@ from . import StackNode, OperatorNode, CpuInstantNode, MemoryBlock, ProfilerNode
 
 
 logger = logging.getLogger(__name__)
+
+try:
+    import msgspec
+
+    class TraceEvent(msgspec.Struct, gc=False):
+        """Schema-decoded trace event. `args` stays as raw JSON bytes and is
+        only decoded for the small subset of events the analysis touches."""
+
+        name: str = ""
+        cat: str = ""
+        ph: str = ""
+        ts: Union[int, float] = 0
+        dur: Union[int, float] = 0
+        pid: Union[int, str] = 0
+        tid: Union[int, str] = 0
+        args: msgspec.Raw = msgspec.Raw(b"{}")
+
+    class _TraceFile(msgspec.Struct, gc=False):
+        traceEvents: List[TraceEvent] = []
+
+    class _SeqArgs(msgspec.Struct, gc=False):
+        seq_number: Optional[Union[int, float]] = msgspec.field(
+            name="Sequence number", default=None
+        )
+
+    _TRACE_DECODER = msgspec.json.Decoder(_TraceFile)
+    _SEQ_DECODER = msgspec.json.Decoder(_SeqArgs)
+    _ARGS_DECODER = msgspec.json.Decoder()
+except ImportError:  # fall back to stdlib json parsing
+    msgspec = None
+
+
+def event_to_dict(event) -> dict:
+    """Convert a decoded trace event to the plain dict the node classes use."""
+    args = event.args
+    if not isinstance(args, dict):  # msgspec.Raw bytes
+        args = _ARGS_DECODER.decode(args)
+    return {
+        "name": event.name,
+        "cat": event.cat,
+        "ph": event.ph,
+        "ts": event.ts,
+        "dur": event.dur,
+        "pid": event.pid,
+        "tid": event.tid,
+        "args": args,
+    }
+
+
+def event_seq_number(event) -> Optional[Union[int, float]]:
+    """Read args["Sequence number"] without decoding the full args payload."""
+    args = event.args
+    if isinstance(args, dict):
+        return args.get("Sequence number", None)
+    return _SEQ_DECODER.decode(args).seq_number
 
 
 class Layer:
@@ -169,10 +225,10 @@ class IterationData:
         data = sorted(data, key=lambda x: x[0])
         return data
 
-    def _materialize_op(self, event: dict) -> OperatorNode:
+    def _materialize_op(self, event) -> OperatorNode:
         node = self._op_cache.get(id(event))
         if node is None:
-            node = OperatorNode(value=event)
+            node = OperatorNode(value=event_to_dict(event))
             self._op_cache[id(event)] = node
         return node
 
@@ -217,10 +273,10 @@ class IterationData:
                 name = _name
             self._cat["layer"][name] = Layer(node)
 
-    def add_event(self, event: dict):
-        timestamp = event["ts"]
+    def add_event(self, event):
+        timestamp = event.ts
         if timestamp <= self.end:
-            cat = event.get("cat", "non-category")
+            cat = event.cat or "non-category"
 
             # Only CPU_INSTANT_EVENT events are considered before the start of the iteration
             # The memory block needs to maintain its continuity and sequence without disruption.
@@ -233,34 +289,34 @@ class IterationData:
             if cat not in self._cat.keys():
                 self._cat[cat] = []
             if cat == ProfilerDataCategory.PYTHON_FUNCTION.value:
-                node = StackNode(value=event)
+                node = StackNode(value=event_to_dict(event))
                 start_time = node.start_time
             elif cat == ProfilerDataCategory.CPU_OP.value:
-                node = event  # raw dict; materialized lazily via _materialize_op
-                start_time = event["ts"]
-                seq_number = event["args"].get("Sequence number", None)
+                node = event  # decoded event; materialized via _materialize_op
+                start_time = timestamp
+                seq_number = event_seq_number(event)
                 if seq_number is not None:
                     if seq_number not in self._sequence_ops.keys():
                         self._sequence_ops[seq_number] = []
                     self._sequence_ops[seq_number].append(event)
             elif cat == ProfilerDataCategory.CPU_INSTANT_EVENT.value:
-                node = CpuInstantNode(value=event)
+                node = CpuInstantNode(value=event_to_dict(event))
                 start_time = node.start_time
             elif cat == ProfilerDataCategory.USER_ANNOTATION.value:
                 pattern_zero_grad = "^Optimizer.zero_grad#[a-zA-Z0-9]+.zero_grad$"
                 pattern_optimizer_step = "^Optimizer.step#[a-zA-Z0-9]+.step$"
-                if re.match(pattern_zero_grad, event["name"]):
-                    self._zero_grad = (event["ts"], event["ts"] + event["dur"])
-                elif re.match(pattern_optimizer_step, event["name"]):
-                    self._optimiser_step = (event["ts"], event["ts"] + event["dur"])
+                if re.match(pattern_zero_grad, event.name):
+                    self._zero_grad = (event.ts, event.ts + event.dur)
+                elif re.match(pattern_optimizer_step, event.name):
+                    self._optimiser_step = (event.ts, event.ts + event.dur)
                     optimiser_name_pattern = r"#(\w+)\."
-                    match = re.search(optimiser_name_pattern, event["name"])
+                    match = re.search(optimiser_name_pattern, event.name)
                     if match:
                         self._optimiser = match.group(1)
                 return
             else:
                 node = event
-                start_time = node["ts"]
+                start_time = timestamp
             self._cat[cat].append((start_time, node))
 
     def layer_summary(self) -> List[Dict[str, Any]]:
@@ -481,9 +537,9 @@ class IterationData:
         )
         sequence_ids = set(
             [
-                event["args"].get("Sequence number", None)
-                for event in result
-                if event["args"].get("Sequence number", None) is not None
+                seq_number
+                for seq_number in map(event_seq_number, result)
+                if seq_number is not None
             ]
         )
         for _id in sequence_ids:
@@ -515,36 +571,62 @@ class ProfilerDataProcessing:
         assert iteration > 0
         return self._iteration.get(iteration - 1, None)
 
-    def load_data(self) -> dict:
+    def load_data(self) -> List:
+        """Decode the trace into event objects with attribute access.
+
+        With msgspec available, events are decoded against a schema and the
+        heavyweight `args` payloads stay as raw JSON bytes until touched.
+        Without it, stdlib json is used and dicts are wrapped for the same
+        attribute interface.
+        """
         _t0 = time.perf_counter()
-        with open(self._file_path, "r") as file:
-            _data = json.load(file)
+        if msgspec is not None:
+            with open(self._file_path, "rb") as file:
+                events = _TRACE_DECODER.decode(file.read()).traceEvents
+        else:
+            with open(self._file_path, "r") as file:
+                _data = json.load(file)
+            events = [
+                SimpleNamespace(
+                    name=e.get("name", ""),
+                    cat=e.get("cat", ""),
+                    ph=e.get("ph", ""),
+                    ts=e.get("ts", 0),
+                    dur=e.get("dur", 0),
+                    pid=e.get("pid", 0),
+                    tid=e.get("tid", 0),
+                    args=e.get("args", {}),
+                )
+                for e in _data.get("traceEvents", ())
+            ]
         logger.info(
             "Analyzer: parsed %s events in %.2fs",
-            len(_data.get("traceEvents", ())), time.perf_counter() - _t0,
+            len(events), time.perf_counter() - _t0,
         )
-        return _data
+        return events
 
     def _load(self):
         events = self.load_data()
         _t0 = time.perf_counter()
         iteration_count = 0
         for element in tqdm(
-            events["traceEvents"], desc="Analyzer: processing trace events", unit="ev"
+            events, desc="Analyzer: processing trace events", unit="ev"
         ):
-            name = element.get("name", "")
-            cat = element.get("cat", "")
+            name = element.name
+            cat = element.cat
 
             if cat == "user_annotation":
                 pattern = "^ProfilerStep#[0-9]+$"
                 if re.match(pattern, name):
-                    self._iteration[iteration_count] = IterationData(data=element)
+                    self._iteration[iteration_count] = IterationData(
+                        data=event_to_dict(element)
+                    )
                     iteration_count += 1
                 else:
                     for iteration in self._iteration.values():
                         iteration.add_event(element)
             elif cat == "python_function":
-                stack = StackNode(value=element)
+                stack = StackNode(value=event_to_dict(element))
                 if stack.parent_id in self._python_stack.keys():
                     self._python_stack[stack.parent_id].add_child(stack)
                 self._python_stack[stack.id] = stack

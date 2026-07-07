@@ -40,7 +40,7 @@ class _Estimator(ABC):
         for start, event in cpu_ops:
             # cheap raw-name filter replicating ProfilerNode.function_name;
             # only matches are materialized into OperatorNode objects
-            name = event["name"]
+            name = event.name
             if ": " in name:
                 function_name = " ".join(name.split(": ")[1:]).strip()
             elif "::" in name:
