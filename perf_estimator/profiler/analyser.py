@@ -184,6 +184,7 @@ class IterationData:
         # materialized lazily (and memoized) on first touch, because only a
         # small fraction of operators is ever consumed by the analysis.
         self._op_cache: Dict[int, OperatorNode] = {}
+        self._cpu_ops_sorted: Optional[List] = None
         self._sequence_ops: Dict[int, List[dict]] = {}
         self._layer = None
         self._ops: Optional[List[OperatorNode]] = None
@@ -219,11 +220,12 @@ class IterationData:
         return self._optimiser
 
     @property
-    def cpu_ops(self) -> List[Tuple[Union[int, float], dict]]:
+    def cpu_ops(self) -> List[Tuple[Union[int, float], object]]:
         """(start_time, raw cpu_op event) tuples sorted by start time."""
-        data = self._cat.get(ProfilerDataCategory.CPU_OP.value, ())
-        data = sorted(data, key=lambda x: x[0])
-        return data
+        if self._cpu_ops_sorted is None:
+            data = self._cat.get(ProfilerDataCategory.CPU_OP.value, ())
+            self._cpu_ops_sorted = sorted(data, key=lambda x: x[0])
+        return self._cpu_ops_sorted
 
     def _materialize_op(self, event) -> OperatorNode:
         node = self._op_cache.get(id(event))
@@ -609,6 +611,7 @@ class ProfilerDataProcessing:
         events = self.load_data()
         _t0 = time.perf_counter()
         iteration_count = 0
+        iteration_windows = []
         for element in tqdm(
             events, desc="Analyzer: processing trace events", unit="ev"
         ):
@@ -622,6 +625,9 @@ class ProfilerDataProcessing:
                         data=event_to_dict(element)
                     )
                     iteration_count += 1
+                    iteration_windows = [
+                        (it.start, it.end, it) for it in self._iteration.values()
+                    ]
                 else:
                     for iteration in self._iteration.values():
                         iteration.add_event(element)
@@ -633,9 +639,19 @@ class ProfilerDataProcessing:
                 if stack.is_module_layer or stack.function_name == "zero_grad":
                     for iteration in self._iteration.values():
                         iteration.add_layer(stack)
+            elif cat == "cpu_instant_event":
+                # instant events belong to every iteration ending after them
+                for _start, _end, iteration in iteration_windows:
+                    if element.ts <= _end:
+                        iteration.add_event(element)
             else:
-                for iteration in self._iteration.values():
-                    iteration.add_event(element)
+                # dispatching by window here avoids offering every event to
+                # every iteration just to be rejected inside add_event; no
+                # break, in case windows share an exact boundary timestamp
+                _ts = element.ts
+                for _start, _end, iteration in iteration_windows:
+                    if _start <= _ts <= _end:
+                        iteration.add_event(element)
 
         sorted(self._time_based_data.keys())
         logger.info(

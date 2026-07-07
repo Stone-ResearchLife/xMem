@@ -39,8 +39,12 @@ class _Estimator(ABC):
         selected_op = []
         for start, event in cpu_ops:
             # cheap raw-name filter replicating ProfilerNode.function_name;
-            # only matches are materialized into OperatorNode objects
+            # only matches are materialized into OperatorNode objects. A
+            # function_name of "to" requires "to" in the raw name, so this
+            # substring check cheaply rejects almost everything first.
             name = event.name
+            if "to" not in name:
+                continue
             if ": " in name:
                 function_name = " ".join(name.split(": ")[1:]).strip()
             elif "::" in name:
