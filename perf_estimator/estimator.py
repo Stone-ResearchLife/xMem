@@ -34,10 +34,21 @@ class _Estimator(ABC):
     ) -> List[MemoryBlock]:
         assert isinstance(iteration_index, int)
         assert iteration_index > 0
-        cpu_ops = self.profiler.get_iteration(iteration_index).cpu_ops
+        iteration = self.profiler.get_iteration(iteration_index)
+        cpu_ops = iteration.cpu_ops
         selected_op = []
-        for start, op in cpu_ops:
-            if op.function_name == "to":
+        for start, event in cpu_ops:
+            # cheap raw-name filter replicating ProfilerNode.function_name;
+            # only matches are materialized into OperatorNode objects
+            name = event["name"]
+            if ": " in name:
+                function_name = " ".join(name.split(": ")[1:]).strip()
+            elif "::" in name:
+                function_name = " ".join(name.split("::")[1:]).strip()
+            else:
+                function_name = name.strip()
+            if function_name == "to":
+                op = iteration._materialize_op(event)
                 concrete_inputs = "|".join(
                     [
                         f"{_in['index']}-{_in['concrete_input']}"

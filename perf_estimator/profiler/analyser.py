@@ -1,6 +1,7 @@
 import json
 import multiprocessing
 import re
+import time
 import copy
 import logging
 from uuid import uuid4
@@ -123,7 +124,11 @@ class IterationData:
     def __init__(self, data: dict):
         self._data = data
         self._cat = {}
-        self._sequence_ops: Dict[int, List[OperatorNode]] = {}
+        # cpu_op events are kept as raw trace dicts; OperatorNode objects are
+        # materialized lazily (and memoized) on first touch, because only a
+        # small fraction of operators is ever consumed by the analysis.
+        self._op_cache: Dict[int, OperatorNode] = {}
+        self._sequence_ops: Dict[int, List[dict]] = {}
         self._layer = None
         self._ops: Optional[List[OperatorNode]] = None
         self._memory: Optional[Dict[int, List[MemoryBlock]]] = None
@@ -158,10 +163,18 @@ class IterationData:
         return self._optimiser
 
     @property
-    def cpu_ops(self) -> List[Tuple[Union[int, float], OperatorNode]]:
+    def cpu_ops(self) -> List[Tuple[Union[int, float], dict]]:
+        """(start_time, raw cpu_op event) tuples sorted by start time."""
         data = self._cat.get(ProfilerDataCategory.CPU_OP.value, ())
         data = sorted(data, key=lambda x: x[0])
         return data
+
+    def _materialize_op(self, event: dict) -> OperatorNode:
+        node = self._op_cache.get(id(event))
+        if node is None:
+            node = OperatorNode(value=event)
+            self._op_cache[id(event)] = node
+        return node
 
     @property
     def dataset_load_time(self) -> list[float]:
@@ -223,12 +236,13 @@ class IterationData:
                 node = StackNode(value=event)
                 start_time = node.start_time
             elif cat == ProfilerDataCategory.CPU_OP.value:
-                node = OperatorNode(value=event)
-                start_time = node.start_time
-                if node.seq_number is not None:
-                    if node.seq_number not in self._sequence_ops.keys():
-                        self._sequence_ops[node.seq_number] = []
-                    self._sequence_ops[node.seq_number].append(node)
+                node = event  # raw dict; materialized lazily via _materialize_op
+                start_time = event["ts"]
+                seq_number = event["args"].get("Sequence number", None)
+                if seq_number is not None:
+                    if seq_number not in self._sequence_ops.keys():
+                        self._sequence_ops[seq_number] = []
+                    self._sequence_ops[seq_number].append(event)
             elif cat == ProfilerDataCategory.CPU_INSTANT_EVENT.value:
                 node = CpuInstantNode(value=event)
                 start_time = node.start_time
@@ -335,8 +349,11 @@ class IterationData:
 
     def get_operators(self) -> List[OperatorNode]:
         if self._ops is None:
-            data = dict(self._cat.get(ProfilerDataCategory.CPU_OP.value, [])).values()
-            data = sorted(data, key=lambda x: x.start_time)
+            raw_ops = dict(self._cat.get(ProfilerDataCategory.CPU_OP.value, [])).values()
+            data = sorted(
+                (self._materialize_op(event) for event in raw_ops),
+                key=lambda x: x.start_time,
+            )
             ops = self._stackup_nodes(data)
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 results = pool.map(self._op_get_memory, ops)
@@ -463,11 +480,20 @@ class IterationData:
             self._ops_search_data, start, end, self._ops_search_keys
         )
         sequence_ids = set(
-            [op.seq_number for op in result if op.seq_number is not None]
+            [
+                event["args"].get("Sequence number", None)
+                for event in result
+                if event["args"].get("Sequence number", None) is not None
+            ]
         )
         for _id in sequence_ids:
             result.extend(self._sequence_ops.get(_id, []))
-        result = self._stackup_nodes(list(set(result)))
+        # raw events are deduplicated by identity (as the node objects were)
+        # and only the touched subset is materialized into OperatorNodes
+        deduped = {id(event): event for event in result}.values()
+        result = self._stackup_nodes(
+            [self._materialize_op(event) for event in deduped]
+        )
         return sorted(result, key=lambda x: x.start_time)
 
 
@@ -490,12 +516,18 @@ class ProfilerDataProcessing:
         return self._iteration.get(iteration - 1, None)
 
     def load_data(self) -> dict:
+        _t0 = time.perf_counter()
         with open(self._file_path, "r") as file:
             _data = json.load(file)
+        logger.info(
+            "Analyzer: parsed %s events in %.2fs",
+            len(_data.get("traceEvents", ())), time.perf_counter() - _t0,
+        )
         return _data
 
     def _load(self):
         events = self.load_data()
+        _t0 = time.perf_counter()
         iteration_count = 0
         for element in tqdm(
             events["traceEvents"], desc="Analyzer: processing trace events", unit="ev"
@@ -524,3 +556,6 @@ class ProfilerDataProcessing:
                     iteration.add_event(element)
 
         sorted(self._time_based_data.keys())
+        logger.info(
+            "Analyzer: event processing took %.2fs", time.perf_counter() - _t0
+        )
