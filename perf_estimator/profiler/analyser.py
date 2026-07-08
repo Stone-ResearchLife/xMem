@@ -350,6 +350,54 @@ class IterationData:
             memory = self.memory_search(start, end)
         return memory
 
+    def _attribute_layer(self, layer: "Layer") -> List[str]:
+        """Attribute forward/backward/op memory to a single layer.
+
+        Reads only shared, read-only search indexes on self and mutates just
+        the given (already-copied) layer object, so distinct layers can be
+        processed independently. Returns the parent-layer names this layer
+        contributes (to be removed from the layer set afterwards).
+        """
+        back_trace = [
+            trace.function_name
+            for trace in layer._node.backward_stack()
+            if trace.is_module_layer
+        ]
+
+        forward_memory: List[MemoryBlock] = []
+        backward_memory: List[MemoryBlock] = []
+        op_used_memory: List[MemoryBlock] = []
+        # Add layer timerange memory blocks
+        memory = self.memory_search(layer.start, layer.end)
+        forward_memory.extend(memory)
+        # get stackup op list, including backward and forward ops
+        ops = self.ops_search(layer.start, layer.end)
+        ops_with_memory = []
+        for op in ops:
+            memory = self.memory_search(op.start_time, op.end_time)
+            # add all memory blocks into backward_memory, and then remove forward_memory by set.difference
+            backward_memory.extend(memory)
+            # only add memory blocks that are used by leaf ops
+            # ensuring no duplicate memory blocks or temporary memory blocks
+            for trace in op.forward_stack():
+                leaf_op = trace[-1]
+                op_memory = self.memory_search(leaf_op.start_time, leaf_op.end_time)
+                if len(op_memory) > 0:
+                    op.memory.extend(op_memory)
+                    op_used_memory.extend(op_memory)
+            op.memory = list(set(op.memory))
+            ops_with_memory.append(op)
+
+        set_forward_memory = set(forward_memory)
+        set_backward_memory = set(backward_memory).difference(forward_memory)
+        set_op_used_memory = set(op_used_memory)
+
+        layer.forward_memory.extend(set_forward_memory)
+        layer.backward_memory.extend(set_backward_memory)
+        layer.op_used_memory.extend(set_op_used_memory)
+        layer.ops = list(set(ops_with_memory))
+        return back_trace[1:]
+
     def get_layers(self) -> Dict[str, Layer]:
         if self._layer is None:
             import copy
@@ -359,47 +407,7 @@ class IterationData:
             for name, layer in tqdm(
                 layers.items(), desc="Analyzer: attributing layer memory", unit="layer"
             ):
-                back_trace = [
-                    trace.function_name
-                    for trace in layer._node.backward_stack()
-                    if trace.is_module_layer
-                ]
-                parent_layers.extend(back_trace[1:])
-
-                forward_memory: List[MemoryBlock] = []
-                backward_memory: List[MemoryBlock] = []
-                op_used_memory: List[MemoryBlock] = []
-                # Add layer timerange memory blocks
-                memory = self.memory_search(layer.start, layer.end)
-                forward_memory.extend(memory)
-                # get stackup op list, including backward and forward ops
-                ops = self.ops_search(layer.start, layer.end)
-                ops_with_memory = []
-                for op in ops:
-                    memory = self.memory_search(op.start_time, op.end_time)
-                    # add all memory blocks into backward_memory, and then remove forward_memory by set.difference
-                    backward_memory.extend(memory)
-                    # only add memory blocks that are used by leaf ops
-                    # ensuring no duplicate memory blocks or temporary memory blocks
-                    for trace in op.forward_stack():
-                        leaf_op = trace[-1]
-                        op_memory = self.memory_search(
-                            leaf_op.start_time, leaf_op.end_time
-                        )
-                        if len(op_memory) > 0:
-                            op.memory.extend(op_memory)
-                            op_used_memory.extend(op_memory)
-                    op.memory = list(set(op.memory))
-                    ops_with_memory.append(op)
-
-                set_forward_memory = set(forward_memory)
-                set_backward_memory = set(backward_memory).difference(forward_memory)
-                set_op_used_memory = set(op_used_memory)
-
-                layer.forward_memory.extend(set_forward_memory)
-                layer.backward_memory.extend(set_backward_memory)
-                layer.op_used_memory.extend(set_op_used_memory)
-                layer.ops = list(set(ops_with_memory))
+                parent_layers.extend(self._attribute_layer(layer))
             for parent_layer in set(parent_layers):
                 del layers[parent_layer]
             self._layer = layers
