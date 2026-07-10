@@ -4,6 +4,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from perf_estimator.data_structure import TreeNode
+from functools import cached_property
 
 
 class ProfilerNode(TreeNode, ABC):
@@ -35,7 +36,7 @@ class ProfilerNode(TreeNode, ABC):
     def start_time(self) -> int:
         return self.value["ts"]
 
-    @property
+    @cached_property
     def duration(self) -> int:
         return self.value.get("dur", 0)
 
@@ -118,7 +119,10 @@ class StackNode(ProfilerNode):
         It can help us rapidly locate the module layer in the stack tree.
         """
         # return "_call_impl" in self.function_name
-        return "nn.Module" in self.namespace_name or "transformers/loss/loss_utils.py" in self.namespace_name
+        return (
+            "nn.Module" in self.namespace_name
+            or "transformers/loss/loss_utils.py" in self.namespace_name
+        )
 
     @property
     def is_getattr(self) -> bool:
