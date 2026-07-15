@@ -4,6 +4,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from perf_estimator.data_structure import TreeNode
+from functools import cached_property
 
 
 class ProfilerNode(TreeNode, ABC):
@@ -42,7 +43,7 @@ class ProfilerNode(TreeNode, ABC):
     def start_time(self) -> int:
         return self.value["ts"]
 
-    @property
+    @cached_property
     def duration(self) -> int:
         return self.value.get("dur", 0)
 
