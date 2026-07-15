@@ -1,9 +1,11 @@
 from __future__ import annotations
-import uuid
-from typing import Any, AnyStr, Dict, Iterator, List, Optional
+import itertools
+from typing import Any, Dict, Iterator, List, Optional
 
 
 class TreeNode:
+    _id_counter = itertools.count()
+
     def __init__(self, value: Any):
         """Initialize a TreeNode object.
 
@@ -11,16 +13,16 @@ class TreeNode:
             value (Any): The value of the node.
         """
         self._parent: Optional[TreeNode] = None
-        self._children: Dict[AnyStr, TreeNode] = {}
+        self._children: Dict[int, TreeNode] = {}
         self._value: Any = value
-        self._id = uuid.uuid4().hex
+        self._id = next(TreeNode._id_counter)
 
     @property
     def parent(self) -> Optional[TreeNode]:
         return self._parent
 
     @property
-    def children(self) -> Dict[AnyStr, TreeNode]:
+    def children(self) -> Dict[int, TreeNode]:
         return self._children
 
     @property
@@ -32,7 +34,7 @@ class TreeNode:
         return self._value
 
     @property
-    def id(self) -> str:
+    def id(self) -> int:
         return self._id
 
     def add_child(self, child: TreeNode):
