@@ -11,7 +11,6 @@ from bisect import bisect_left, bisect_right
 from perf_estimator.utilis.utilis import format_memory
 from . import StackNode, OperatorNode, CpuInstantNode, MemoryBlock, ProfilerNode
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -131,6 +130,7 @@ class IterationData:
             None
         )
         self._optimiser: Optional[str] = None
+        self._search_trace_cache: Dict[int, tuple] = {}
 
     @property
     def start(self):
@@ -394,9 +394,16 @@ class IterationData:
         start: Optional[Union[float, int]],
         end: Optional[Union[float, int]],
     ) -> list:
+        cache_key = id(list_data)
+        cached = self._search_trace_cache.get(cache_key)
+        if cached is None or cached[0] != len(list_data):
+            sorted_timestamps = sorted(list_data.keys())
+            self._search_trace_cache[cache_key] = (len(list_data), sorted_timestamps)
+        else:
+            _, sorted_timestamps = cached
+
         start = start or 0
-        end = end or max(list_data.keys())
-        sorted_timestamps = list(list_data.keys())
+        end = end if end is not None else sorted_timestamps[-1]
         start_idx = bisect_left(sorted_timestamps, start)
         end_idx = bisect_right(sorted_timestamps, end)
 
