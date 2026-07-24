@@ -1,8 +1,11 @@
-from venv import logger
-import torch
+from functools import partial
 import platform
+from typing import List, Optional, Tuple
+from venv import logger
+
+import torch
 import transformers
-from typing import Optional, List, Tuple
+
 from perf_estimator.config import Config, default_setting
 from perf_estimator.models import AllModels
 from .train_loop import (
@@ -180,8 +183,16 @@ class ModelTrainer:
             self.show_summary()
 
         if is_transformer:
-            if self._config.trainer.fp16:
-                func = transformer_mixed_precision_train_loop
+            if self._config.trainer.bf16:
+                func = partial(
+                    transformer_mixed_precision_train_loop,
+                    autocast_dtype=torch.bfloat16,
+                )
+            elif self._config.trainer.fp16:
+                func = partial(
+                    transformer_mixed_precision_train_loop,
+                    autocast_dtype=torch.float16,
+                )
             else:
                 print(f"Using Mixed Precision (FP32) Training loop.")
                 func = transformer_train_loop

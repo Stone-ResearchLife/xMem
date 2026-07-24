@@ -126,6 +126,7 @@ def transformer_mixed_precision_train_loop(
     lr: float = 0.001,
     plugins: List[InterfacePlugin] = [],
     zero_grad_mode: Optional[int] = None,
+    autocast_dtype: torch.dtype = torch.bfloat16,
 ):
 
     [_plugin.start() for _plugin in plugins]
@@ -146,7 +147,7 @@ def transformer_mixed_precision_train_loop(
                     optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     batch = {k: v.to(device) for k, v in batch.items()}
-                    with torch.amp.autocast("cpu", dtype=torch.float16):
+                    with torch.amp.autocast("cpu", dtype=autocast_dtype):
                         outputs = model(**batch)
                         if zero_grad_mode == 1:
                             optimizer.zero_grad()
@@ -162,4 +163,3 @@ def transformer_mixed_precision_train_loop(
         raise RuntimeError(f"Training failed: {e}") from e
     finally:
         [_plugin.stop() for _plugin in plugins]
-
