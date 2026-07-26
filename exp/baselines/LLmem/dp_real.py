@@ -530,8 +530,15 @@ def train():
             "oom": True
         }
 
-    home_dir = Path().home()
-    output_dir = home_dir.joinpath("output")
+    # home_dir = Path().home()
+    # output_dir = home_dir.joinpath("output")
+    # output_dir.mkdir(parents=True, exist_ok=True)
+    # Enhance the capability of redirection output path
+    output_override = os.environ.get("LLMEM_OUTPUT_DIR", "").strip()
+    if output_override:
+        output_dir = Path(output_override).expanduser()
+    else:
+        output_dir = Path().home().joinpath("output")
     output_dir.mkdir(parents=True, exist_ok=True)
     file_name = f"llmem_result.json"
     with open(output_dir.joinpath(file_name), "w") as f:
