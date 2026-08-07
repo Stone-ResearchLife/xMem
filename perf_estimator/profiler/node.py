@@ -4,12 +4,14 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from perf_estimator.data_structure import TreeNode
+from functools import cached_property
 
 
 class ProfilerNode(TreeNode, ABC):
     def __init__(self, value: dict):
         assert isinstance(value, dict)
         super().__init__(value)
+        self.__parsed_name: Optional[list] = None
 
     @property
     def ph(self) -> str:
@@ -24,18 +26,24 @@ class ProfilerNode(TreeNode, ABC):
         return self.value["name"]
 
     @property
+    def _parsed_name_cached(self) -> list:
+        if self.__parsed_name is None:
+            self.__parsed_name = self._parse_name()
+        return self.__parsed_name
+
+    @property
     def namespace_name(self) -> str:
-        return str(self._parse_name()[0]).strip()
+        return str(self._parsed_name_cached[0]).strip()
 
     @property
     def function_name(self) -> str:
-        return " ".join(self._parse_name()[1:]).strip()
+        return " ".join(self._parsed_name_cached[1:]).strip()
 
     @property
     def start_time(self) -> int:
         return self.value["ts"]
 
-    @property
+    @cached_property
     def duration(self) -> int:
         return self.value.get("dur", 0)
 
@@ -118,7 +126,10 @@ class StackNode(ProfilerNode):
         It can help us rapidly locate the module layer in the stack tree.
         """
         # return "_call_impl" in self.function_name
-        return "nn.Module" in self.namespace_name or "transformers/loss/loss_utils.py" in self.namespace_name
+        return (
+            "nn.Module" in self.namespace_name
+            or "transformers/loss/loss_utils.py" in self.namespace_name
+        )
 
     @property
     def is_getattr(self) -> bool:

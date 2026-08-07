@@ -277,7 +277,8 @@ class IterationData:
         if self._layer is None:
             import copy
 
-            layers = copy.deepcopy(self._cat.get("layer", {}))
+            orig = self._cat.get("layer", {})
+            layers = {name: Layer(layer._node) for name, layer in orig.items()}
             parent_layers = []
             for name, layer in layers.items():
                 back_trace = [
